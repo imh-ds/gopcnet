@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from itertools import product
 
 import matplotlib
 import numpy as np
@@ -33,6 +34,37 @@ def _partition(raw: pd.DataFrame, bounds: tuple[int, int]) -> pd.DataFrame:
 def _target_sample_sizes(config: Stage1Config) -> tuple[int, ...]:
     """Use the frozen large-N gate cells that are present in this configuration."""
     return tuple(n for n in config.sample_sizes if n >= 500)
+
+
+def _has_complete_evidence(
+    raw: pd.DataFrame,
+    config: Stage1Config,
+    bounds: tuple[int, int],
+    taus: tuple[float, ...],
+) -> bool:
+    """Require exactly one successful row for every frozen gate condition."""
+    expected = pd.MultiIndex.from_tuples(
+        list(
+            product(
+                ("chain", "fork", "triangle"),
+                _target_sample_sizes(config),
+                config.strengths,
+                taus,
+                range(bounds[0], bounds[1] + 1),
+            )
+        ),
+        names=["motif", "n", "strength", "tau", "replicate"],
+    )
+    observed = _partition(raw, bounds)
+    observed = observed.loc[
+        observed["motif"].isin(("chain", "fork", "triangle"))
+        & observed["n"].isin(_target_sample_sizes(config))
+        & observed["strength"].isin(config.strengths)
+        & observed["tau"].isin(taus),
+        ["motif", "n", "strength", "tau", "replicate"],
+    ]
+    observed_index = pd.MultiIndex.from_frame(observed)
+    return not observed_index.has_duplicates and observed_index.sort_values().equals(expected.sort_values())
 
 
 def aggregate_stage1(raw: pd.DataFrame) -> pd.DataFrame:
@@ -79,6 +111,10 @@ def select_tau_pair(raw: pd.DataFrame, config: Stage1Config) -> tuple[float, flo
         return None
     target_n = _target_sample_sizes(config)
     development = _partition(raw, config.development_replicates)
+    if not _has_complete_evidence(
+        development, config, config.development_replicates, tuple(config.taus)
+    ):
+        return None
     development = development.loc[development["n"].isin(target_n)]
     ordered_taus = tuple(sorted(config.taus))
     for left, right in zip(ordered_taus, ordered_taus[1:]):
@@ -110,12 +146,23 @@ def evaluate_stage1_gate(raw: pd.DataFrame, config: Stage1Config) -> GateDecisio
     if raw.empty or not raw["status"].eq("ok").all():
         failures.append("estimator, DGP, or Cholesky errors")
 
+    development = _partition(raw, config.development_replicates)
+    if not _has_complete_evidence(
+        development, config, config.development_replicates, tuple(config.taus)
+    ):
+        failures.append("missing development evidence")
+
     selected = select_tau_pair(raw, config)
     if selected is None:
         failures.append("no eligible development tau pair")
         return GateDecision("REASSESS", None, {}, tuple(failures))
 
     validation = _partition(raw.loc[raw["status"] == "ok"], config.validation_replicates)
+    if not _has_complete_evidence(validation, config, config.validation_replicates, selected):
+        failures.append("missing validation evidence")
+        metrics: dict[str, object] = {"selected_tau_pair": list(selected)}
+        return GateDecision("REASSESS", selected, metrics, tuple(failures))
+
     target_n = _target_sample_sizes(config)
     cells: list[dict[str, object]] = []
     missing_cell = False
