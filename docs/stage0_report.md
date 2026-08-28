@@ -1,6 +1,7 @@
 # Stage 0.1 Gaussian MI Report
 
-Date: 2026-08-28  
+Date: 2026-08-28
+
 Stage: R1 — Gaussian MI estimator viability
 
 ## Decision: PROCEED

@@ -2,9 +2,12 @@
 
 ## D-001: Proceed from Gaussian MI validation to Stage 1 chartering
 
-Date: 2026-08-28  
-Stage: R1 / Stage 0.1  
-Status: PROCEED  
+Date: 2026-08-28
+
+Stage: R1 / Stage 0.1
+
+Status: PROCEED
+
 Decision timing: Predeclared gate evaluated after results
 
 Question: Is the in-repository bivariate KSG-1 estimator viable at the
