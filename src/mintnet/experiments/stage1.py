@@ -82,10 +82,16 @@ def _condition_seed(
     return int(sequence.generate_state(1)[0])
 
 
-def _git_commit() -> str | None:
+def _repository_root(config: Stage1Config) -> Path:
+    if config.source_path is not None:
+        return config.source_path.parent.parent
+    return Path(__file__).resolve().parents[3]
+
+
+def _git_commit(repository_root: Path) -> str | None:
     try:
         return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL
+            ["git", "rev-parse", "HEAD"], cwd=repository_root, text=True, stderr=subprocess.DEVNULL
         ).strip()
     except (OSError, subprocess.CalledProcessError):
         return None
@@ -115,11 +121,12 @@ def _write_evidence(
     with (output_dir / "resolved_config.yaml").open("w", encoding="utf-8") as stream:
         yaml.safe_dump(_resolved_config(config), stream, sort_keys=True)
 
-    charter = Path("docs/stage1_charter.md")
+    repository_root = _repository_root(config)
+    charter = repository_root / "docs/stage1_charter.md"
     charter_hash = hashlib.sha256(charter.read_bytes()).hexdigest() if charter.is_file() else None
     metadata = {
         "charter_sha256": charter_hash,
-        "git_commit": _git_commit(),
+        "git_commit": _git_commit(repository_root),
         "python": sys.version,
         "platform": platform.platform(),
         "recorded_at_utc": datetime.now(UTC).isoformat(),
