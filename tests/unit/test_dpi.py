@@ -8,8 +8,18 @@ def test_dpi_prunes_only_when_weakest_edge_is_strictly_below_threshold():
     mi = np.array([[0, 0.9, 0.63], [0.9, 0, 0.8], [0.63, 0.8, 0.0]])
     assert not prune_tolerant_dpi(mi, 0.20)[0, 2]
 
-    equal = np.array([[0, 0.9, 0.64], [0.9, 0, 0.8], [0.64, 0.8, 0.0]])
+    equal_threshold = (1.0 - 0.20) * 0.8
+    equal = np.array(
+        [[0, 0.9, equal_threshold], [0.9, 0, 0.8], [equal_threshold, 0.8, 0.0]]
+    )
     assert prune_tolerant_dpi(equal, 0.20)[0, 2]
+
+
+def test_dpi_prunes_one_float_below_threshold():
+    threshold = (1.0 - 0.20) * 0.8
+    weak = np.nextafter(threshold, -np.inf)
+    mi = np.array([[0.0, 0.9, weak], [0.9, 0.0, 0.8], [weak, 0.8, 0.0]])
+    assert not prune_tolerant_dpi(mi, 0.20)[0, 2]
 
 
 def test_dpi_is_invariant_to_simultaneous_node_permutation():

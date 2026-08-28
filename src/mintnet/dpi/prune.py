@@ -42,10 +42,7 @@ def prune_tolerant_dpi(mi_matrix: np.ndarray, tau: float) -> np.ndarray:
             continue
         stronger = np.delete(edges, weakest)
         threshold = (1.0 - tau_value) * np.min(stronger)
-        # Move the computed boundary down one representable float so values
-        # mathematically equal to the strict threshold are retained even when
-        # multiplication rounds upward.
-        if edges[weakest] < np.nextafter(threshold, -np.inf):
+        if edges[weakest] < threshold:
             edge_pairs = ((i, j), (i, k), (j, k))
             left, right = edge_pairs[weakest]
             adjacency[left, right] = False
