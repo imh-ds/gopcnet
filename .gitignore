@@ -182,3 +182,7 @@ cython_debug/
 
 # Outline and planning
 outline/
+
+# Local Codex worktrees and generated experiment evidence
+.worktrees/
+results/generated/
