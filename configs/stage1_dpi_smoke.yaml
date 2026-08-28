@@ -1,0 +1,11 @@
+sample_sizes: [100]
+strengths: [0.5]
+triangle_families: [moderate]
+k: 5
+taus: [0.0, 0.20]
+replicates: 2
+master_seed: 20260829
+development_replicates: [0, 0]
+validation_replicates: [1, 1]
+minimum_indirect_prune_tpr: 0.80
+maximum_triangle_true_edge_prune_fpr: 0.10
