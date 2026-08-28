@@ -207,6 +207,11 @@ def run_stage1(config: Stage1Config, output_dir: Path) -> pd.DataFrame:
                         )
     raw = pd.DataFrame(rows)
     _write_evidence(config, output_dir, raw, time.perf_counter() - run_started)
+    # Keep the raw-evidence runner independent at import time while ensuring
+    # every CLI invocation leaves the aggregate R2 gate evidence alongside it.
+    from mintnet.experiments.stage1_reporting import write_stage1_report
+
+    write_stage1_report(raw, config, output_dir)
     return raw
 
 
