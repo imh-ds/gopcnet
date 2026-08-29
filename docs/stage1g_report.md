@@ -33,7 +33,7 @@ worst-case slack across all cells simultaneously — not just at the single
 outcome the charter intended: a pair chosen for robustness across the full
 evidence, not the first one to cross zero.
 
-## Exploratory evidence: confidence-score calibration (non-gating)
+## Exploratory evidence: `1 - p_value` as a candidate confidence-style score (non-gating; not a validated calibration)
 
 Brier score of `1 - p_value` against ground truth (development replicates,
 naive baseline `.25`), unchanged in character from every prior round:

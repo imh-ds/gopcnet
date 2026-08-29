@@ -58,7 +58,7 @@ evidence against the conditional-independence mechanism itself — the
 fixed-`alpha` trend table above is what actually answers the power
 question, and it answers it well.
 
-## Exploratory evidence: confidence-score calibration (non-gating)
+## Exploratory evidence: `1 - p_value` as a candidate confidence-style score (non-gating; not a validated calibration)
 
 Brier score of `1 - p_value` against ground truth (development replicates),
 naive-uninformative baseline `.25`:

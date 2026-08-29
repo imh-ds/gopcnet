@@ -109,9 +109,10 @@ triangle families pass cleanly. The `strong` family's FPR improves
 monotonically with `N` at every alpha (e.g., `alpha=.05`: `.187` at `N=500`
 down to `.111` at `N=1000`, development replicates), unlike D-002's
 `N`-invariant floor. See `docs/stage1b_report.md` for the full breakdown.
-Exploratory (non-gating) calibration of the confidence score `1 - p_value`
-against ground truth gives a pooled Brier score of `.081` (naive-baseline
-`.25`), improving with `N`.
+Exploratory (non-gating) tracking of `1 - p_value` as a candidate
+confidence-style score (not a validated calibration) against ground truth
+gives a pooled Brier score of `.081` against a flat `.25` baseline,
+improving with `N`.
 
 Decision: Reassess. Do not select a public default alpha, and do not
 proceed to Stage 2 candidate-edge screening on this evidence.
@@ -128,11 +129,13 @@ seeing results.
 Consequences: Stage 2 and later layers remain blocked. A follow-up charter
 extending the `N` floor or refining the alpha grid near `[.05, .10]` — frozen
 before new results, per the outline's mechanism-by-mechanism rule — is a
-reasonable next step given the trend evidence. Separately, the calibration
-result is promising enough to be worth a dedicated future charter for a
-confidence-scored edge representation, per `docs/stage1b_charter.md`'s
-consequences section; this remains an executive decision, not an automatic
-next step.
+reasonable next step given the trend evidence. Separately, the exploratory
+`1 - p_value` score result is promising enough to be worth a dedicated
+future charter for a confidence-scored edge representation — one that
+would need to include a proper reliability diagram and a prevalence-
+adjusted baseline before calling it calibrated — per
+`docs/stage1b_charter.md`'s consequences section; this remains an
+executive decision, not an automatic next step.
 
 ## D-004: Reassess higher-N-floor conditional-independence validation (Stage 1c / R2c)
 
@@ -169,9 +172,10 @@ pulled the pooled average under the FPR threshold even though `N =
 750`/`1000` alone remained above it. `(0.05, 0.10)` would have passed every
 validation cell individually with real margin but was never reached, because
 the ascending scan stops at the first pooled-passing pair. See
-`docs/stage1c_report.md` for the full breakdown. Exploratory calibration
-(Brier score, non-gating) stayed stable and well below the naive baseline
-(`.25`) across the full `N` range (`.073`-`.094`).
+`docs/stage1c_report.md` for the full breakdown. An exploratory-score
+check on `1 - p_value` (Brier score against a flat baseline, non-gating,
+not a calibration claim) stayed stable and well below `.25` across the
+full `N` range (`.073`-`.094`).
 
 Decision: Reassess. Do not select a public default alpha or `N` floor, and
 do not proceed to Stage 2 candidate-edge screening on this evidence.
@@ -282,8 +286,9 @@ errors, a real failure, not noise (it was `<1` SE at 250 replicates).
 `alpha = .20`'s failing chain/fork TPR cells dropped from 12 to 8, and most
 remaining misses are now well under 1 SE, consistent with convergence
 toward passing, though a couple remain marginal (up to `1.26` SE). See
-`docs/stage1e_report.md` for the full breakdown. Exploratory calibration
-(Brier score) remained stable (`.074`-`.096` by `N`, pooled `.080`),
+`docs/stage1e_report.md` for the full breakdown. An exploratory-score
+check on `1 - p_value` (Brier score, not a calibration claim) remained
+stable (`.074`-`.096` by `N`, pooled `.080`),
 consistent with R2c/R2d.
 
 Decision: Reassess. Do not select a public default alpha, and do not
@@ -394,9 +399,10 @@ Evidence: `results/generated/stage1g_dpi/decision.json` records
 strengths, both alpha values) passes individually, with a worst-case
 chain/fork TPR margin of `.031` above the `.80` gate and a worst-case
 triangle FPR margin of `.021` below the `.10` gate — both well outside the
-`~.01` standard error at 1000 validation replicates. Exploratory
-calibration (Brier score of `1 - p_value` against ground truth) remained
-stable at `.074`-`.096` by `N`, pooled `.080`, consistent with every prior
+`~.01` standard error at 1000 validation replicates. An exploratory-score
+check on `1 - p_value` (Brier score against ground truth, not a
+calibration claim) remained stable at `.074`-`.096` by `N`, pooled `.080`,
+consistent with every prior
 round. `(0.10, 0.11)`, flagged as a promising candidate in D-007, was not
 selected; the margin-robust rule found `(0.14, 0.15)` has more worst-case
 slack across the full cell grid, not just at the one cell that broke
@@ -423,8 +429,11 @@ select a public default alpha beyond this pair and does not by itself fix
 a specific Stage 2 design; Stage 2 candidate-edge screening must receive
 its own frozen charter, DGP, and gate before implementation, per the
 outline's mechanism-by-mechanism rule. The confidence-scored-edge-
-representation option from D-003 remains open, supported by consistently
-low and stable Brier scores across every round from R2b through R2g.
+representation option from D-003 remains open; the exploratory `1 -
+p_value` score has stayed informative (consistently low Brier score
+against a flat baseline) across every round from R2b through R2g, though
+this is not itself a calibration finding — a reliability diagram and a
+prevalence-adjusted baseline would be needed before making that claim.
 
 ## D-009: Per-N alpha table (Stage 1h / R2h)
 
@@ -478,21 +487,32 @@ default rule.
 
 Rationale: Different sample sizes needed, and got, different treatment,
 per this charter's explicit executive framing. The `N >= 750` finding
-strengthens D-008 (now five independent, well-margined points instead of
-one) with a clean, monotonic `alpha`-vs-`N` shape. The `N < 750` findings
-are informative in their own right: `N <= 300` is a decisive structural
-limit of this mechanism at this DGP, not a tuning problem, while `N = 500`
-quantitatively confirms — rather than merely re-asserts — R2c's original
-choice of a `750` floor, by showing `500` sits almost exactly on the
-boundary rather than comfortably on either side of it.
+strengthens D-008 with five sample sizes now showing a clean, monotonic
+`alpha`-vs-`N` shape instead of one — but this is a predeclared
+**reanalysis under a new per-N selection rule, not five independent fresh
+replications**: `N = 750, 1000, 1500, 2000` reuse the exact same
+simulated data as R2c through R2g (identical seeds; only `N = 3000` is
+genuinely new data). The value of this result is the new selection rule
+and the shape it reveals, not additional independent statistical power at
+those four `N` values. The `N < 750` findings are informative in their own
+right, scoped to the alpha grid actually tested (`[.0001, .50]` at this
+resolution): `N <= 300` shows no alpha in that grid where both criteria
+hold at once — a decisive structural limit within the tested range, not a
+tuning problem, though not a proof about every conceivable alpha value
+outside it. `N = 500` quantitatively confirms — rather than merely
+re-asserts — R2c's original choice of a `750` floor, by showing `500`
+sits almost exactly on the boundary rather than comfortably on either
+side of it.
 
 Consequences: A future charter may (a) fit and freeze a specific
 `alpha(N)` default rule from the `N >= 750` table (e.g., a smooth
-decreasing function of `N`, validated at held-out `N` values), and/or (b)
-check whether the `N = 500` gap closes with finer alpha resolution, purely
-out of curiosity about the boundary shape — `N <= 300` does not warrant
-that check, since its gap is wide and decisive. Neither is required before
-Stage 2 planning, which may proceed using the `N >= 750` result from D-008
-and this table's confirmation of it. The confidence-scored-edge-
-representation option from D-003 remains open, supported by stable Brier
-scores across the full `100`-`3000` range tested here.
+decreasing function of `N`, validated at genuinely new, held-out `N`
+values), and/or (b) check whether the `N = 500` gap closes with finer
+alpha resolution, purely out of curiosity about the boundary shape —
+`N <= 300` does not warrant that check within the tested grid, since its
+gap is wide and decisive there. Neither is required before Stage 2
+planning, which may proceed using the `N >= 750` result from D-008 and
+this table's reanalysis of it. The confidence-scored-edge-representation
+option from D-003 remains open; the exploratory `1 - p_value` score
+stayed informative (stable Brier score against a flat baseline, not a
+calibration finding) across the full `100`-`3000` range tested here.

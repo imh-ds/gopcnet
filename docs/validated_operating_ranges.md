@@ -29,7 +29,7 @@ is only as good as the evidence behind it, cited in the Source column.
 |---|---|---|---|
 | Bivariate association estimation (KSG-1 mutual information, `k=20`, continuous Gaussian) | `N >= 100` (validated `100`-`1000`; gate specifically checked at `N=300, 500`) | Not separately tested below `N=100`; no evidence of a lower-bound problem in the tested range | Stage 0, `docs/decision_log.md` D-001 |
 | DPI edge pruning — binary retain/prune decision (conditional-independence via partial correlation, three-node chain/fork/triangle motifs) | `N >= 750`, with alpha decreasing from `~0.15` at `750` to `~0.07` at `3000` (see per-`N` table below) | `N <= 300`: decisive, structural gap — no alpha value makes the binary decision reliable, not a tuning problem. `N = 500`: boundary case, gap of only one grid step in the tested alpha resolution — plausibly closeable with finer resolution, but thin-margin even so; treat as unreliable for autonomous use until (and unless) separately validated | Stage 1g/1h, `docs/decision_log.md` D-008, D-009 |
-| DPI edge confidence score (`1 - p_value`, continuous, non-binary) | Informative (well-calibrated, Brier score well below the naive `0.25` baseline) across the *entire* tested range, `N = 100`-`3000` | Not yet chartered as a formal mechanism with its own gate — currently exploratory evidence only, tracked alongside every Stage 1 charter since R2b but never itself validated as a decision rule | D-003 through D-009 (exploratory sections); no dedicated charter yet |
+| `1 - p_value` as a candidate confidence-style score (continuous, non-binary) | Informative (Brier score well below a flat `0.25` baseline) across the *entire* tested range, `N = 100`-`3000` — **not** a validated calibration claim: no reliability diagram or prevalence-adjusted baseline has been computed, only a pooled Brier score against a flat baseline | Not yet chartered as a formal mechanism with its own gate — currently exploratory tracking only, alongside every Stage 1 charter since R2b, never itself validated as a decision rule or as calibrated | D-003 through D-009 (exploratory sections); no dedicated charter yet |
 
 ## Per-N alpha table for DPI pruning (from Stage 1h, `N >= 750`)
 
@@ -51,9 +51,10 @@ firmly below `N <= 300`): do not let the automatic significance test
 decide whether an edge is real. Use it as one input among others —
 alongside prior domain knowledge, theoretical justification, or
 qualitative reasoning the researcher states and defends — and let the
-confidence score (which stays informative even at small `N`) flag which
-specific edges are most uncertain and therefore most in need of that
-justification, rather than using it to make the cut itself.
+`1 - p_value` score (which stays informative, though not itself
+validated as calibrated, even at small `N`) flag which specific edges are
+most uncertain and therefore most in need of that justification, rather
+than using it to make the cut itself.
 
 ## Maintenance
 

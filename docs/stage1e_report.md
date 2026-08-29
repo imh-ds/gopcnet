@@ -54,9 +54,10 @@ This is a grid-resolution problem, not a replicate-count problem or a
 mechanism problem: per `docs/stage1e_charter.md`'s consequences, the next
 lever is a finer alpha grid near `[.05, .20]`, not more replicates again.
 
-Exploratory calibration (Brier score of `1 - p_value` against ground truth,
-development replicates, naive baseline `.25`) remains stable and low across
-the full `N` range (`.074`-`.096`, pooled `.080`), consistent with R2c/R2d.
+An exploratory-score check on `1 - p_value` (Brier score against ground
+truth, development replicates, flat baseline `.25`; not a calibration
+claim) remains stable and low across the full `N` range (`.074`-`.096`,
+pooled `.080`), consistent with R2c/R2d.
 
 See `raw_metrics.csv`, `aggregate_metrics.csv`, `decision.json`,
 `calibration_summary.csv`, and the generated figures under

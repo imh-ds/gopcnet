@@ -62,7 +62,7 @@ like a sample-size/power limitation specific to detecting `strong`'s weakest
 edge (partial correlation ~0.08) at the frozen `N` floor, not a structural
 confound in the mechanism.
 
-## Exploratory evidence: confidence-score calibration (non-gating)
+## Exploratory evidence: `1 - p_value` as a candidate confidence-style score (non-gating; not a validated calibration)
 
 `calibration_summary.csv`, Brier score of `1 - p_value` against ground truth
 (development replicates only; naive-uninformative baseline is `0.25`):
@@ -71,10 +71,11 @@ confound in the mechanism.
 |---|---|---|---|---|---|---|---|
 | Brier | .094 | .086 | .082 | .078 | .073 | .076 | .081 |
 
-The confidence score is informative (well below the naive baseline) and
+The `1 - p_value` score is informative (well below a flat baseline) and
 improves with `N`. This is promising exploratory support for a future
-confidence-scored edge representation, but per `docs/stage1b_charter.md` it
-does not gate this decision.
+confidence-scored edge representation — pending a proper reliability
+diagram and prevalence-adjusted baseline, which have not been computed —
+but per `docs/stage1b_charter.md` it does not gate this decision.
 
 ## Outcome
 
