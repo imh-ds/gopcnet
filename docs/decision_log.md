@@ -250,3 +250,62 @@ this fine. Given the accumulated evidence, this looks like a matter of
 statistical resolution rather than a mechanism or methodology problem. The
 confidence-scored-edge-representation option from D-003 remains open and
 unaffected by this result.
+
+## D-006: Reassess higher-replicate-count per-cell selection (Stage 1e / R2e)
+
+Date: 2026-08-28
+
+Stage: R2e / Stage 1e
+
+Status: REASSESS
+
+Decision timing: Predeclared gate evaluated after results
+
+Question: Does quadrupling development replicates (250 to 1000) resolve
+D-005's near-misses at `alpha = .05` and `alpha = .20`, which were each
+smaller than one standard error at 250 replicates?
+
+Prior specification: `docs/stage1e_charter.md` froze R2d's DGP, mechanism,
+`N` grid, alpha grid, and per-cell selection rule, increasing replicates
+from 500 to 2000 (development 0-999, validation 1000-1999) — a statistical-
+power change to the evaluation, not a new design, decided from the observed
+noise magnitude in D-005.
+
+Evidence: `results/generated/stage1e_dpi/decision.json` records 1,296,000
+raw rows, zero errors, and again `"no eligible development alpha pair"`:
+only `alpha = 0.10` passes every cell, with no adjacent partner. But the
+extra replicates changed the picture rather than merely repeating it. At
+1000 development replicates (SE `~.0095` for FPR at `.10`; `~.0126` for TPR
+at `.80`): `alpha = .05`'s one remaining failing cell (`strong` family,
+`N = 750`) now misses by `.128` against the `.10` gate — nearly 3 standard
+errors, a real failure, not noise (it was `<1` SE at 250 replicates).
+`alpha = .20`'s failing chain/fork TPR cells dropped from 12 to 8, and most
+remaining misses are now well under 1 SE, consistent with convergence
+toward passing, though a couple remain marginal (up to `1.26` SE). See
+`docs/stage1e_report.md` for the full breakdown. Exploratory calibration
+(Brier score) remained stable (`.074`-`.096` by `N`, pooled `.080`),
+consistent with R2c/R2d.
+
+Decision: Reassess. Do not select a public default alpha, and do not
+proceed to Stage 2 candidate-edge screening on this evidence.
+
+Rationale: More replicates sharpened the boundary rather than dissolving
+it into noise, which is itself informative: `alpha = .05` is now a
+confirmed real failure, while `.20`'s issues are shrinking but not fully
+resolved. This is consistent with a real, narrow valid region sitting near
+`alpha = .10` that the frozen grid's coarse steps (`.05` to `.10` to `.20`)
+straddle without another tested point landing inside it. Per
+`docs/stage1e_charter.md`'s consequences, this is now a grid-resolution
+problem, not a replicate-count problem — more replicates would sharpen the
+picture further but would not manufacture an adjacent passing pair where
+the grid has no point to land on.
+
+Consequences: Stage 2 and later layers remain blocked. The next charter
+should add finer alpha resolution between `.05` and `.20` (e.g. `.06`
+through `.19` in fine steps) rather than increasing replicates again,
+frozen before new results. Given four converging rounds of evidence
+(D-003's balanced/moderate pass, D-004's power trend to near-zero FPR,
+D-005's isolated clean point, D-006's sharpening boundary), the mechanism
+itself is well supported; what remains is locating the passing alpha
+region precisely enough to select an adjacent pair. The confidence-scored-
+edge-representation option from D-003 remains open and unaffected.
