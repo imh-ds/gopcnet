@@ -180,11 +180,16 @@ def run_stage2b(config: Stage2bConfig, output_dir: Path) -> pd.DataFrame:
                 )
                 evidence = compute_pairwise_screening_evidence(data)
                 screened = screen_uncorrected(evidence, config.screening_alpha)
-                final, triad_flags = compose_screen_then_prune(data, screened, dpi_alpha)
+                final, shapes = compose_screen_then_prune(data, screened, dpi_alpha)
                 metrics = _score(screened, final, p)
-                chain_is_triad = float(triad_flags.get(MOTIF_COMPONENTS["chain"], False))
-                fork_is_triad = float(triad_flags.get(MOTIF_COMPONENTS["fork"], False))
-                triangle_is_triad = float(triad_flags.get(MOTIF_COMPONENTS["triangle"], False))
+
+                def _validated(component: frozenset[int]) -> float:
+                    shape = shapes.get(component)
+                    return float(shape["is_validated_shape"]) if shape is not None else 0.0
+
+                chain_is_triad = _validated(MOTIF_COMPONENTS["chain"])
+                fork_is_triad = _validated(MOTIF_COMPONENTS["fork"])
+                triangle_is_triad = _validated(MOTIF_COMPONENTS["triangle"])
             except Exception as exc:  # raw evidence must retain pipeline failures
                 row_status, row_error = "error", f"{type(exc).__name__}: {exc}"
 

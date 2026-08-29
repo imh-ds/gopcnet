@@ -1,5 +1,15 @@
 """Composition of screening and DPI pruning mechanisms."""
 
-from .compose import compose_screen_then_prune, connected_components
+from .compose import (
+    VALIDATED_CLIQUE_SIZES,
+    compose_screen_then_prune,
+    connected_components,
+    describe_component,
+)
 
-__all__ = ["compose_screen_then_prune", "connected_components"]
+__all__ = [
+    "compose_screen_then_prune",
+    "connected_components",
+    "describe_component",
+    "VALIDATED_CLIQUE_SIZES",
+]
