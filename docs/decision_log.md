@@ -516,3 +516,61 @@ this table's reanalysis of it. The confidence-scored-edge-representation
 option from D-003 remains open; the exploratory `1 - p_value` score
 stayed informative (stable Brier score against a flat baseline, not a
 calibration finding) across the full `100`-`3000` range tested here.
+
+## D-010: Locate the N=500-750 crossover (Stage 1i / R2i)
+
+Date: 2026-08-29
+
+Stage: R2i / Stage 1
+
+Status: Per-N table (no single global status)
+
+Decision timing: Predeclared gate evaluated after results
+
+Question: `N=500` came within one grid step of passing (D-009) while
+`N=750` passed comfortably (D-008); does the actual minimum viable `N`
+lie somewhere in the untested gap between them?
+
+Prior specification: `docs/stage1i_charter.md` froze fresh simulation for
+`N = [550, 600, 650, 700]`, reusing R2h's `N=500, 750` rows as bookends,
+under the same per-N margin-robust selection rule as R2h/R2g.
+
+Evidence: `results/generated/stage1i_dpi/decision.json` records 2,484,000
+raw rows (1,656,000 newly simulated), zero errors:
+
+| N | status | alpha pair | margin |
+|---|---|---|---|
+| 500 | REASSESS | none | — |
+| 550 | REASSESS | none | — |
+| 600 | REASSESS | none | — |
+| 650 | REASSESS | (0.14, 0.16), failed validation | .018 (dev) |
+| 700 | PROCEED | (0.14, 0.16) | .012 |
+| 750 | PROCEED | (0.14, 0.16) | .032 |
+
+`N <= 600` finds no development-eligible pair at all. `N=650` is a
+near-miss (development-eligible, fails validation). `N=700` is the first
+sample size to PROCEED, but with a margin (`.012`) close to the `~.0095`
+-`.0126` standard error established at D-006/D-009 — a real pass, not a
+comfortable one. `N=750` remains the first sample size with a clearly
+robust margin (`.032`, roughly `3`-`4`x the noise level). See
+`docs/stage1i_report.md` for the full breakdown.
+
+Decision: The transition is broadly monotonic (REASSESS through `600`,
+near-miss at `650`, thin-margin PROCEED at `700`, comfortable PROCEED at
+`750`) rather than the noisy, non-monotonic pattern that would have
+warranted treating the gap as unresolved. `N=700` is a legitimate,
+evidence-based floor for a thin-margin use case; `N=750` remains the floor
+for a comfortable, noise-robust margin.
+
+Rationale: The gap was real, not an artifact of the round number `750`
+chosen in D-004 — but it was also narrower than it might have been: `500`
+through `600` are decisively not viable, and the actual crossover sits in
+a tight `650`-`700` band, not spread evenly across the whole `500`-`750`
+range.
+
+Consequences: `docs/validated_operating_ranges.md` should record both
+`700` (thin margin) and `750` (comfortable margin) explicitly, rather than
+collapsing to one number, so a downstream user can choose based on how
+much margin they need. No further replicate or grid-resolution charter is
+required to act on this finding; `N=700`'s thin margin is disclosed as
+such rather than treated as fully resolved.
