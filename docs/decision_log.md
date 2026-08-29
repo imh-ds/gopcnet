@@ -667,3 +667,55 @@ this charter's validated scope. `docs/validated_operating_ranges.md`
 should record the formula alongside the existing per-`N` table as a
 candidate default, not a replacement for the floor recommendation in
 D-011.
+
+## D-013: Candidate-edge screening passes in isolation (Stage 2 / R3)
+
+Date: 2026-08-29
+
+Stage: R3 / Stage 2
+
+Status: PROCEED at both tested `N`
+
+Decision timing: Predeclared gate evaluated after results
+
+Question: Does per-pair Fisher-z screening on raw correlation correctly
+separate genuinely-associated pairs from genuinely-independent ones in a
+`p=15` network, at Stage 1's validated `N`, and is BH correction
+necessary to do so?
+
+Prior specification: `docs/stage2_charter.md` froze a known-ground-truth
+`p=15` network (chain, fork, `moderate` triangle embedded in 6 noise
+columns: 9 true candidate pairs, 96 null pairs), `N = [750, 1500]`, seven
+candidate rules (uncorrected `alpha in [.001, .005, .01, .05, .10]`, BH
+`q in [.05, .10]`), gated on development recall `>= .80` and FDR `<= .10`,
+validated independently per `N`, with a predeclared tiebreak preferring
+the simplest eligible rule.
+
+Evidence: `results/generated/stage2_screening/decision.json` records
+28,000 raw rows, zero errors, and PROCEED at both `N`, selecting
+uncorrected `alpha = .001` at both (validation recall `.9999`/`1.0000`,
+FDR `.0109`/`.0094`). The full operating table shows recall is
+essentially `1.0` at *every* tested threshold — power was never the
+constraint — while FDR scales with `alpha` almost exactly as predicted by
+the charter's pre-registered back-of-envelope arithmetic (`alpha=.001`
+predicted `~.012`, observed `.010`-`.011`). Both BH thresholds also pass
+at both `N`, but lose the tiebreak to the simpler uncorrected rule. See
+`docs/stage2_report.md` for the full breakdown.
+
+Decision: Proceed. Screening validated in isolation at `p=15`,
+`N in [750, 1500]`.
+
+Rationale: This is the first Stage 2 charter to PROCEED on its first
+attempt, unlike every Stage 1 charter after R2. The charter's
+pre-registered arithmetic anticipating the FDR/alpha relationship before
+any simulation ran (given the 96:9 null:true imbalance) matched the
+observed results closely, which is itself evidence the mechanism and its
+evaluation are well understood, not merely lucky.
+
+Consequences: This does not authorize composing screening with Stage 1's
+validated DPI pruning into one pipeline — per the outline's Section 2.1,
+that composition is its own mechanism-interaction question and needs its
+own charter. It also does not authorize `p=30` or other network sizes,
+which remain untested. `docs/validated_operating_ranges.md` should record
+this component's validated range (`p=15`, `N in [750, 1500]`, uncorrected
+`alpha=.001` sufficient, BH available but not required).
