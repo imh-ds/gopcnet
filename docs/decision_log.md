@@ -309,3 +309,61 @@ D-005's isolated clean point, D-006's sharpening boundary), the mechanism
 itself is well supported; what remains is locating the passing alpha
 region precisely enough to select an adjacent pair. The confidence-scored-
 edge-representation option from D-003 remains open and unaffected.
+
+## D-007: Reassess fine alpha-resolution per-cell selection (Stage 1f / R2f)
+
+Date: 2026-08-28
+
+Stage: R2f / Stage 1f
+
+Status: REASSESS
+
+Decision timing: Predeclared gate evaluated after results
+
+Question: Does a 0.01-resolution alpha grid across `[.06, .25]` contain an
+adjacent pair that passes the per-cell development-and-validation gate,
+where the coarse grid was too widely spaced to find one?
+
+Prior specification: `docs/stage1f_charter.md` froze R2e's DGP, mechanism,
+`N` grid, replicate count, and per-cell selection rule, narrowing the
+alpha grid to 20 points at 0.01 steps spanning the region bounded by R2e's
+confirmed failure at `.05` and decisive failure at `.30`.
+
+Evidence: `results/generated/stage1f_dpi/decision.json` records 2,880,000
+raw rows, zero errors. Development selection found adjacent pair `(0.09,
+0.10)`, which fails validation at exactly one cell (`strong` family,
+`N = 750`, `alpha = 0.09`, FPR `.104` against the `.10` gate) by `.004` —
+under half a standard error at 1000 replicates (`SE ~ .0095`), the smallest
+margin failure in this line of charters. Reading the same cell across
+`alpha = .08`-`.11` on both development and validation data shows `alpha =
+0.09` was development-eligible only by a `.008` margin (also under 1 SE)
+and landed on the wrong side of the gate on independent validation data,
+while `alpha = 0.10` and `0.11` both hold comfortably on both development
+and validation. A pair of `(0.10, 0.11)` was never evaluated against
+validation, because the frozen selection rule returns the first ascending
+adjacent pair that is development-eligible, and `(0.09, 0.10)` qualified
+first — the rule has no way to prefer a pair with a larger, more robust
+margin over one that barely and noisily cleared the development threshold.
+See `docs/stage1f_report.md` for the full breakdown.
+
+Decision: Reassess. Do not select a public default alpha, and do not
+proceed to Stage 2 candidate-edge screening on this evidence.
+
+Rationale: This is a second, distinct selection-methodology gap, different
+from D-004's pooling artifact: a "first eligible pair wins" rule offers no
+protection against selecting a pair whose eligibility was itself a
+coin-flip-margin call. Unlike D-002's structural confound or D-006's
+grid-resolution gap, there is now strong, specific evidence (not merely a
+trend) that an untested-on-validation pair in the same grid would pass.
+Per this charter, that evidence cannot be used to retroactively substitute
+`(0.10, 0.11)` for the rule's actual selection.
+
+Consequences: Stage 2 and later layers remain blocked. The next charter
+should revise the selection rule to prefer development-eligible pairs with
+adequate margin above the threshold (not merely the first pair found) —
+frozen before new results, reusing R2f's existing evidence rather than
+re-simulating, exactly as R2d reused R2c's. This is the third selection-
+methodology fix in this line (after D-004's pooling correction and R2d's
+per-cell correction), on top of six rounds of accumulated support for the
+underlying mechanism. The confidence-scored-edge-representation option
+from D-003 remains open and unaffected.
