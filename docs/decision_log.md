@@ -836,3 +836,72 @@ composed pipeline beyond exact 3-node triads to hub-shaped candidate
 components now exist, though wiring that extension into the actual
 pipeline (`mintnet.pipeline.compose`) has not itself been done or
 chartered yet.
+
+## D-016: Wired hub conditioning into the pipeline; mixed-shape composition passes (R3d)
+
+Date: 2026-08-29
+
+Stage: R3d / Stage 2
+
+Status: PROCEED at both tested `N`
+
+Decision timing: Predeclared gate evaluated after results; a pre-charter
+simulation check (1500 replicates) was run before freezing to catch a
+misleading noisy estimate from an even smaller initial check, not treated
+as evidence itself
+
+Question: Does the composed pipeline correctly handle a single network
+containing both a 3-node triad shape and a 4-node hub-clique shape at
+once, using one general conditioning rule for both?
+
+Two things happened here, in order:
+
+1. **Code generalization.** `mintnet.pipeline.compose` was rewritten to
+   replace its triad-only special case with one general rule: apply
+   multi-variable conditioning within any candidate component that is a
+   validated clique shape (size 3, from D-008 through D-012, or size 4,
+   from D-015); pass through every other shape unmodified. This was
+   justified by proving the general multi-variable mechanism
+   (`mintnet.dpi.multi_conditional`) is numerically identical to Stage
+   1's original one-variable closed-form when there is exactly one
+   conditioning variable (see `tests/unit/test_multi_conditional.py`),
+   and verified safe by re-running D-014's exact original configuration
+   through the new code and confirming byte-for-byte identical
+   `decision.json` output before proceeding.
+2. **New evidence.** `docs/stage2c_charter.md` froze a `p=15` network
+   combining Stage 2b's chain/fork motifs with Stage 1k's hub motif in a
+   single network (replacing the triangle from D-014), `N in [750,
+   1500]`, same screening/DPI alphas as D-014.
+
+Evidence: `results/generated/stage2c_composition/decision.json` records
+4,000 raw rows, zero errors, PROCEED at both `N`:
+
+| N | indirect TPR | true-edge FPR | screening FER | final FER | shape-validated rate |
+|---|---|---|---|---|---|
+| 750 | .820 | .000 | .00101 | .00101 | .965 |
+| 1500 | .853 | .000 | .00120 | .00120 | .958 |
+
+Every prior finding replicated: screening and final false-edge rates are
+identical at both `N` (D-014's "no rescue" finding, now confirmed
+alongside hub components too); true-edge retention is perfect; the
+`~.96` shape-validated rate matches D-014's triad-only rate closely. The
+`N=750` indirect TPR (`.820`) landed almost exactly on a pre-charter
+1500-replicate simulation's prediction (`.823 +/- .005`), itself evidence
+against an unpredicted interaction between the two shapes. See
+`docs/stage2c_report.md` for the full breakdown.
+
+Decision: Proceed. The generalized pipeline is validated for networks
+mixing 3-node triad and 4-node hub-clique candidate components, at
+`p=15`, `N in [750, 1500]`.
+
+Rationale: This closes the loop opened at D-015's consequences: the hub
+mechanism is now not just validated in isolation but actually wired into,
+and confirmed working within, the composed pipeline — and confirmed not
+to interact badly with the triad mechanism it now runs alongside.
+
+Consequences: `docs/validated_operating_ranges.md` should record the
+generalized composed pipeline's validated range, noting it now covers
+mixed 3-node/4-node candidate components, not just uniform triads.
+Non-clique components, cliques of any other size, larger networks, and
+components sharing variables across motifs remain untested and out of
+scope.
