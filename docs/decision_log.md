@@ -719,3 +719,66 @@ own charter. It also does not authorize `p=30` or other network sizes,
 which remain untested. `docs/validated_operating_ranges.md` should record
 this component's validated range (`p=15`, `N in [750, 1500]`, uncorrected
 `alpha=.001` sufficient, BH available but not required).
+
+## D-014: Screening + DPI composition passes (Stage 2b / R3b)
+
+Date: 2026-08-29
+
+Stage: R3b / Stage 2
+
+Status: PROCEED at both tested `N`
+
+Decision timing: Predeclared gate evaluated after results, including a
+predeclared quantitative expectation (final false-edge rate should track
+screening's own rate, stated before running anything)
+
+Question: Does composing Stage 2's validated screening with Stage 1's
+validated DPI pruning, applied only within clean 3-node candidate triads,
+correctly recover the true network structure end to end?
+
+Prior specification: `docs/stage2b_charter.md` froze the pipeline
+(screen at D-013's winning `alpha=.001`; group candidate edges into
+connected components; apply DPI, at the D-012 formula's `alpha(N)`, only
+within components that are exactly a 3-node candidate triad; pass every
+other shape through unmodified), reusing Stage 2's exact `p=15` DGP and
+`N in [750, 1500]` specifically so "which variable to condition on" has
+an unambiguous answer.
+
+Evidence: `results/generated/stage2b_composition/decision.json` records
+4,000 raw rows, zero errors, PROCEED at both `N`:
+
+| N | indirect TPR | true-edge FPR | screening FER | final FER | triad rate |
+|---|---|---|---|---|---|
+| 750 | .818 | .0053 | .00115 | .00115 | .961 |
+| 1500 | .861 | .0004 | .00100 | .00100 | .963 |
+
+`screening_false_edge_rate` and `final_false_edge_rate` are identical at
+both `N`, confirming the charter's predeclared expectation exactly: DPI
+essentially never rescues a screening false positive, because false
+positives are almost always isolated single edges with no shared
+neighbor to condition on. Indirect-edge TPR (`.818`/`.861`) is a little
+below Stage 1's isolated-motif numbers at similar alpha (D-009: `~.85`-
+`.87` at `N=750`), explained by the `~4%` of replicates (`triad_rate ~
+.96`) where a true motif's candidate component was not a clean triad and
+so skipped DPI entirely. See `docs/stage2b_report.md` for the full
+breakdown.
+
+Decision: Proceed. The composed pipeline is validated for disjoint,
+non-overlapping 3-node motifs at `p=15`, `N in [750, 1500]`.
+
+Rationale: This is the first charter to test an actual interaction
+between two independently-validated mechanisms, and the result is not
+just a pass but an explained one — both the "no false-edge rescue" and
+the "small TPR gap" findings match predeclared or immediately traceable
+mechanistic reasons, rather than being accepted as an opaque aggregate
+number the way early Stage 1 charters sometimes had to be before their
+underlying cause was understood.
+
+Consequences: This does not validate general-shaped candidate graphs —
+overlapping motifs, hub variables, or components larger than 3 nodes
+remain a distinct, open, harder question needing its own DGP and charter
+before Stage 3 (bootstrap) or a full continuous MVP can be responsibly
+attempted. `docs/validated_operating_ranges.md` should record the
+composed pipeline's validated range separately from screening-alone
+(D-013) and DPI-alone (D-008/D-012), since composition was not guaranteed
+by either mechanism's individual validation.
