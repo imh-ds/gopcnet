@@ -425,3 +425,74 @@ its own frozen charter, DGP, and gate before implementation, per the
 outline's mechanism-by-mechanism rule. The confidence-scored-edge-
 representation option from D-003 remains open, supported by consistently
 low and stable Brier scores across every round from R2b through R2g.
+
+## D-009: Per-N alpha table (Stage 1h / R2h)
+
+Date: 2026-08-29
+
+Stage: R2h / Stage 1
+
+Status: Per-N table (no single global status — see rationale)
+
+Decision timing: Predeclared gate evaluated after results
+
+Question: Does each sample size have its own passing alpha region, and if
+so, what is the relationship between `N` and the validated alpha?
+
+Prior specification: `docs/stage1h_charter.md` froze an executive change
+to the gate structure: select and validate an alpha pair independently per
+`N`, rather than requiring one pair across a pooled `N` range. Extended
+`N` to `[100, 200, 300, 500, 750, 1000, 1500, 2000, 3000]` and widened the
+alpha grid to `[.0001 ... .50]` (23 points) to give smaller `N` a fair
+search.
+
+Evidence: `results/generated/stage1h_dpi/decision.json` records 3,726,000
+raw rows, zero errors, and a per-`N` table:
+
+| N | status | alpha pair | margin |
+|---|---|---|---|
+| 100 | REASSESS | none | — |
+| 200 | REASSESS | none | — |
+| 300 | REASSESS | none | — |
+| 500 | REASSESS | none | — |
+| 750 | PROCEED | (0.14, 0.16) | .032 |
+| 1000 | PROCEED | (0.12, 0.14) | .041 |
+| 1500 | PROCEED | (0.10, 0.12) | .075 |
+| 2000 | PROCEED | (0.08, 0.10) | .087 |
+| 3000 | PROCEED | (0.06, 0.08) | .099 |
+
+At `N >= 750`, alpha decreases and margin increases monotonically with
+`N` — a clean, usable trend. Below `750`, the worst-case TPR- and
+FPR-satisfying alpha regions were checked for overlap across the full
+alpha sweep: `N = 100, 200, 300` show a wide, decisive gap (raising alpha
+enough to fix triangle FPR destroys chain/fork TPR long before the two
+regions meet); `N = 500` shows a gap of only one grid step (`.18` passes
+TPR, `.20` passes FPR), plausibly resolvable with finer resolution but
+likely thin-margin even so. See `docs/stage1h_report.md` for the full
+breakdown.
+
+Decision: This charter does not produce a single PROCEED/REASSESS by
+design. It produces the per-`N` evidence table above, which is the
+required input to a future charter proposing a specific `alpha(N)`
+default rule.
+
+Rationale: Different sample sizes needed, and got, different treatment,
+per this charter's explicit executive framing. The `N >= 750` finding
+strengthens D-008 (now five independent, well-margined points instead of
+one) with a clean, monotonic `alpha`-vs-`N` shape. The `N < 750` findings
+are informative in their own right: `N <= 300` is a decisive structural
+limit of this mechanism at this DGP, not a tuning problem, while `N = 500`
+quantitatively confirms — rather than merely re-asserts — R2c's original
+choice of a `750` floor, by showing `500` sits almost exactly on the
+boundary rather than comfortably on either side of it.
+
+Consequences: A future charter may (a) fit and freeze a specific
+`alpha(N)` default rule from the `N >= 750` table (e.g., a smooth
+decreasing function of `N`, validated at held-out `N` values), and/or (b)
+check whether the `N = 500` gap closes with finer alpha resolution, purely
+out of curiosity about the boundary shape — `N <= 300` does not warrant
+that check, since its gap is wide and decisive. Neither is required before
+Stage 2 planning, which may proceed using the `N >= 750` result from D-008
+and this table's confirmation of it. The confidence-scored-edge-
+representation option from D-003 remains open, supported by stable Brier
+scores across the full `100`-`3000` range tested here.
