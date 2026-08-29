@@ -133,3 +133,65 @@ result is promising enough to be worth a dedicated future charter for a
 confidence-scored edge representation, per `docs/stage1b_charter.md`'s
 consequences section; this remains an executive decision, not an automatic
 next step.
+
+## D-004: Reassess higher-N-floor conditional-independence validation (Stage 1c / R2c)
+
+Date: 2026-08-28
+
+Stage: R2c / Stage 1c
+
+Status: REASSESS
+
+Decision timing: Predeclared gate evaluated after results
+
+Question: Does raising the gate's minimum sample size from `N = 500` to
+`N = 750` resolve D-003's failure, where the `strong`-family triangle FPR
+cleared the gate at `N = 750`/`1000` but not `N = 500`, improving
+monotonically with `N`?
+
+Prior specification: `docs/stage1c_charter.md` froze R2b's DGP, mechanism,
+seeds, and alpha grid, extending `sample_sizes` with `N = 1500, 2000` and
+raising the gate floor to `N >= 750`, decided from the shape of the R2b
+trend before any new evidence.
+
+Evidence: `results/generated/stage1c_dpi/decision.json` records 324,000 raw
+estimates, zero errors. Development selection chose adjacent pair `(0.005,
+0.01)`, which fails validation on triangle FPR at `strong`-family cells
+`N = 750, 1000`. Reading `strong`-family FPR at fixed `alpha` across the
+full extended `N` range (development replicates) shows a clean, continuing
+decline — `alpha = .05`: `.187` (`N=500`) to `.015` (`N=2000`); `alpha =
+.10`: `.141` to `.007` — confirming the sample-size/power hypothesis
+directly. The gate nonetheless failed because development selection scans
+`alpha` ascending and returns the first pair whose **pooled** average across
+all `N >= 750` and all strengths clears both thresholds; at `alpha =
+.005`/`.01`, strong performance at the newly added `N = 1500`/`2000` cells
+pulled the pooled average under the FPR threshold even though `N =
+750`/`1000` alone remained above it. `(0.05, 0.10)` would have passed every
+validation cell individually with real margin but was never reached, because
+the ascending scan stops at the first pooled-passing pair. See
+`docs/stage1c_report.md` for the full breakdown. Exploratory calibration
+(Brier score, non-gating) stayed stable and well below the naive baseline
+(`.25`) across the full `N` range (`.073`-`.094`).
+
+Decision: Reassess. Do not select a public default alpha or `N` floor, and
+do not proceed to Stage 2 candidate-edge screening on this evidence.
+
+Rationale: The charter's scientific question — is the R2b failure a
+sample-size/power limitation — is answered yes, clearly, by the fixed-alpha
+trend. But the formal PROCEED/REASSESS gate is decided by the frozen
+development-selection rule, and that rule's pooled-average selection is
+blind to per-`N` variation once a wide, heterogeneous `N` range is pooled
+together — the same blind spot D-002 identified between pooled-family and
+per-family evidence, now appearing between pooled-`N` and per-`N`. Per this
+charter, seeing that `(0.05, 0.10)` would have passed cannot be used to
+retroactively substitute it for the rule's actual selection; that would be
+exactly the kind of post hoc re-selection the process forbids.
+
+Consequences: Stage 2 and later layers remain blocked. The natural next
+charter is a revision to the *development-selection rule itself* — for
+example, requiring every individual `N` cell (not just the pooled average)
+to clear the threshold before an alpha pair is eligible — frozen before new
+results. This is a change to the evaluation methodology, not the pruning
+mechanism, which the accumulated R2b/R2c evidence supports well. The
+confidence-scored-edge-representation option from D-003 remains open and
+unaffected by this result.
