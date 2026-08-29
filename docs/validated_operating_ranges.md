@@ -46,8 +46,24 @@ is only as good as the evidence behind it, cited in the Source column.
 | 2000 | PROCEED | (0.08, 0.10) | .087 |
 | 3000 | PROCEED | (0.06, 0.08) | .099 |
 
-Not yet fit to a formula; see D-009's consequences for the proposed
-follow-up.
+## Candidate alpha(N) formula (from Stage 1j, D-012)
+
+```
+alpha(N) = 0.5222 - 0.0566 * ln(N)
+```
+
+Fit on the six points above (`R^2 = .997`) and validated by predicting a
+single alpha (no grid search) at four interpolated, held-out `N` values
+never used in fitting — all four passed with comfortable margin (`.039`
+to `.097`, all `>= .02`; see `docs/decision_log.md` D-012 and
+`docs/stage1j_report.md`).
+
+**Scope: interpolation only, `N` in `[700, 3000]`.** Do not extrapolate
+below `700` (the D-010/D-011 floor) or above `3000` (edge of the tested
+range) — both are outside this formula's validated scope, regardless of
+what the formula computes there. This is a *candidate* default rule for a
+future production implementation, not itself a production default; that
+adoption decision is separate and has not been made.
 
 ## Recommended default floor: N = 750, not N = 700
 

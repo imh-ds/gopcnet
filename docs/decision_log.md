@@ -615,3 +615,55 @@ explicitly (see "Recommended default floor" section). Any future Stage 2+
 work, or production default-selection logic, should treat `750` as the
 recommended floor unless a specific downstream use case has reason to
 accept `700`'s thinner margin instead.
+
+## D-012: Fit and validate an alpha(N) formula (Stage 1j / R2j)
+
+Date: 2026-08-29
+
+Stage: R2j / Stage 1
+
+Status: PROCEED
+
+Decision timing: Predeclared gate evaluated after results (fitting form
+selection was also predeclared and required no results-dependent choice,
+since `linear_log_n` won outright)
+
+Question: Can a smooth `alpha(N)` formula, fit only from the six known
+validated points, correctly predict a working alpha at sample sizes it
+never saw?
+
+Prior specification: `docs/stage1j_charter.md` froze four candidate
+functional forms, a fitting procedure using the six D-008/D-009/D-010
+points (no new simulation), and a held-out validation requirement at four
+interpolated, previously-untested `N` values (`900, 1250, 1750, 2500`),
+gated on the single predicted alpha clearing a `.02` margin — not merely
+passing — at every held-out `N`.
+
+Evidence: `linear_log_n` fit the six known points with `R^2 = .997`, more
+than `.005` ahead of every other candidate (linear `N`: `.952`; power
+law: `.987`; inverse-sqrt: `.989`) — selected outright, no tiebreak
+needed. `results/generated/stage1j_dpi/decision.json` records 72,000 raw
+rows, zero errors, and PROCEED at all four held-out `N`, with margins
+increasing with `N` exactly as every prior charter in this line found:
+`900`: `.039`; `1250`: `.069`; `1750`: `.079`; `2500`: `.097`. None are
+thin-margin passes. See `docs/stage1j_report.md` for the full breakdown.
+
+Decision: Proceed. The fitted formula `alpha(N) = 0.5222 - 0.0566 *
+ln(N)` is a candidate default rule, validated by interpolation across
+`N in [700, 3000]`.
+
+Rationale: Curve-fit quality alone would not have been sufficient
+evidence — a formula can fit six known points closely and still fail
+between them. It did not fail here: every held-out prediction not only
+passed but passed comfortably, which is the actual claim a default rule
+needs to support.
+
+Consequences: This is a candidate for a production default, not itself
+one — adopting it requires a separate, later decision, consistent with
+every prior "this stage does not authorize the next" boundary in this
+line. The formula must not be extrapolated below `N=700` (the D-010/D-011
+floor) or above `N=3000` (the edge of the tested range); both are outside
+this charter's validated scope. `docs/validated_operating_ranges.md`
+should record the formula alongside the existing per-`N` table as a
+candidate default, not a replacement for the floor recommendation in
+D-011.
