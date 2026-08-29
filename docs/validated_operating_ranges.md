@@ -49,11 +49,50 @@ is only as good as the evidence behind it, cited in the Source column.
 Not yet fit to a formula; see D-009's consequences for the proposed
 follow-up.
 
+## Recommended default floor: N = 750, not N = 700
+
+Both `700` and `750` PROCEED, but they should not be treated as
+interchangeable. **`N = 750` is the recommended default floor for
+autonomous use; `N = 700` is documented as an available thin-margin
+option, not a default.**
+
+Justification:
+
+1. **Margin size relative to noise.** `700`'s margin (`.012`) sits at
+   roughly `1.3` standard errors above the pass/fail line at 1000
+   validation replicates (`~.0095`-`.0126`, D-006/D-009). `750`'s margin
+   (`.032`) sits at roughly `3`-`4` standard errors. A floor meant for
+   *autonomous* use — the whole point of a "reliable without researcher
+   oversight" threshold — needs to hold up under the ordinary sampling
+   variation of a real dataset, not just the specific replicate draw that
+   happened to pass in this simulation. `700`'s margin is the kind that
+   has, in this exact project, previously flipped sides on independent
+   re-checks (D-005, D-007). `750`'s has not.
+2. **`650` is a near-miss right next door.** The evidence chain from
+   `650` (fails) to `700` (barely passes) to `750` (comfortably passes)
+   is a fast transition over a short interval, not a flat plateau. Being
+   one step past a demonstrated failure case, at a margin close to the
+   size of the step itself, is a fragile place to set a default.
+3. **The floor's job is to be trustworthy without inspection.** Per this
+   document's own stated stance (top of this file), the value of an
+   "autonomous use" floor is that a researcher doesn't have to
+   double-check it case by case. A thin-margin floor partially defeats
+   that purpose — it would still warrant the researcher-judgment caveat
+   this document recommends for below-floor `N`, just less severely.
+
+`N = 700` remains a legitimate, disclosed option for a user who
+understands and accepts the thinner margin (e.g., a researcher who cannot
+collect more data and wants the best validated option available, with the
+explicit caveat that it is close to the noise floor). It is not withheld
+— it is labeled honestly.
+
 ## Practical translation for smaller-`N` datasets
 
-For DPI edge-pruning decisions below `N = 700` (firmly below `N <= 600`,
-and decisively below `N <= 300`): do not let the automatic significance test
-decide whether an edge is real. Use it as one input among others —
+For DPI edge-pruning decisions below the recommended default (`N < 750`;
+`N = 700` is a disclosed thin-margin exception, not part of "below the
+floor"; firmly below `N <= 600`; decisively below `N <= 300`): do not let
+the automatic significance test decide whether an edge is real. Use it as
+one input among others —
 alongside prior domain knowledge, theoretical justification, or
 qualitative reasoning the researcher states and defends — and let the
 `1 - p_value` score (which stays informative, though not itself

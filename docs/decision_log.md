@@ -574,3 +574,44 @@ collapsing to one number, so a downstream user can choose based on how
 much margin they need. No further replicate or grid-resolution charter is
 required to act on this finding; `N=700`'s thin margin is disclosed as
 such rather than treated as fully resolved.
+
+## D-011: Recommend N=750 as the default floor, not N=700
+
+Date: 2026-08-29
+
+Stage: Policy (post-Stage 1, using D-010's evidence; no new simulation)
+
+Status: Executive decision
+
+Decision timing: Made after seeing D-010's results, since it is an
+interpretation of existing evidence, not a predeclared statistical gate
+
+Question: D-010 showed both `N=700` and `N=750` PROCEED. Should the
+project recommend one as the default floor for autonomous use?
+
+Evidence: `N=700`'s validation margin (`.012`) is roughly `1.3` standard
+errors above the pass/fail line at 1000 replicates; `N=750`'s (`.032`) is
+roughly `3`-`4` standard errors. `N=650`, one step below `700`, fails.
+This project has twice before (D-005, D-007) seen a margin of this size
+flip sides on an independent re-check.
+
+Decision: Recommend `N >= 750` as the default floor for autonomous DPI
+edge-pruning decisions. Retain `N = 700` as a documented, available
+option for a researcher who cannot collect more data and explicitly
+accepts the thinner, noise-adjacent margin — not withheld, but not the
+default.
+
+Rationale: An "autonomous use" floor's value is specifically that a
+researcher does not need to inspect or second-guess it case by case
+(per `docs/validated_operating_ranges.md`'s stated stance). A margin of
+`1.3` SE, sitting one step past a demonstrated failure at `N=650`,
+partially defeats that purpose even though it technically passed its own
+validation split. This is a judgment call about acceptable risk, not a
+new empirical finding — the underlying D-010 evidence is unchanged and
+both options remain visible.
+
+Consequences: `docs/validated_operating_ranges.md` records this
+explicitly (see "Recommended default floor" section). Any future Stage 2+
+work, or production default-selection logic, should treat `750` as the
+recommended floor unless a specific downstream use case has reason to
+accept `700`'s thinner margin instead.
