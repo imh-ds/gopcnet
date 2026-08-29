@@ -367,3 +367,61 @@ methodology fix in this line (after D-004's pooling correction and R2d's
 per-cell correction), on top of six rounds of accumulated support for the
 underlying mechanism. The confidence-scored-edge-representation option
 from D-003 remains open and unaffected.
+
+## D-008: Proceed on margin-robust selection (Stage 1g / R2g)
+
+Date: 2026-08-29
+
+Stage: R2g / Stage 1
+
+Status: PROCEED
+
+Decision timing: Predeclared gate evaluated after results
+
+Question: Does selecting the adjacent development-eligible alpha pair with
+the largest worst-case margin, rather than the first eligible pair found,
+yield a pair that passes validation with real margin?
+
+Prior specification: `docs/stage1g_charter.md` froze a selection-rule
+change only, reusing R2f's raw evidence verbatim: among adjacent alpha
+pairs where both members individually pass every `(N, strength)` cell,
+select the pair maximizing the minimum cell margin across both members,
+rather than the lexicographically first such pair.
+
+Evidence: `results/generated/stage1g_dpi/decision.json` records
+`"status": "PROCEED"`, selected pair `(0.14, 0.15)`. Every validation cell
+(all three triangle families, `N in [750, 1000, 1500, 2000]`, all three
+strengths, both alpha values) passes individually, with a worst-case
+chain/fork TPR margin of `.031` above the `.80` gate and a worst-case
+triangle FPR margin of `.021` below the `.10` gate — both well outside the
+`~.01` standard error at 1000 validation replicates. Exploratory
+calibration (Brier score of `1 - p_value` against ground truth) remained
+stable at `.074`-`.096` by `N`, pooled `.080`, consistent with every prior
+round. `(0.10, 0.11)`, flagged as a promising candidate in D-007, was not
+selected; the margin-robust rule found `(0.14, 0.15)` has more worst-case
+slack across the full cell grid, not just at the one cell that broke
+`(0.09, 0.10)`. See `docs/stage1g_report.md` for the full breakdown.
+
+Decision: Proceed. This closes the R2 through R2g line of Stage 1
+tolerant/conditional-independence-DPI motif validation. Stage 2
+candidate-edge screening may be planned.
+
+Rationale: This is the first PROCEED in this line, reached only after
+diagnosing and correcting three separate flaws — a structural confound in
+magnitude-ratio DPI (D-002, resolved by switching to conditional
+independence at D-003), a pooled-average selection artifact (D-004,
+resolved by per-cell selection at D-005), and a "first eligible pair"
+selection artifact with no margin awareness (D-007, resolved here). Seven
+prior rounds of REASSESS were each a legitimate falsification of a
+specific, narrow hypothesis, not repeated failures of the same claim; the
+mechanism itself was never the thing that kept failing.
+
+Consequences: The validated scope is specifically continuous Gaussian
+data, `N >= 750`, three-node motifs, conditional-independence pruning via
+Gaussian partial correlation, `alpha` near `0.14`-`0.15`. This does not
+select a public default alpha beyond this pair and does not by itself fix
+a specific Stage 2 design; Stage 2 candidate-edge screening must receive
+its own frozen charter, DGP, and gate before implementation, per the
+outline's mechanism-by-mechanism rule. The confidence-scored-edge-
+representation option from D-003 remains open, supported by consistently
+low and stable Brier scores across every round from R2b through R2g.
