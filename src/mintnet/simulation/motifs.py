@@ -53,6 +53,25 @@ def sample_measured_fork(
     return np.column_stack((x1, x2, x3))
 
 
+def sample_hub(n: int, strength: float, children: int, rng: np.random.Generator) -> np.ndarray:
+    """Draw a unit-variance Gaussian hub with a shared cause and independent children.
+
+    Column 0 is the hub; columns 1..children are its children, each an
+    independent noisy copy of the hub at the given strength. The
+    direct three-or-more-child generalization of sample_measured_fork's
+    two-child case.
+    """
+    n = _validate_n(n)
+    strength = _validate_strength(strength)
+    if not isinstance(children, int) or children < 2:
+        raise ValueError("children must be an integer at least 2")
+    hub = rng.normal(size=n)
+    columns = [hub]
+    for _ in range(children):
+        columns.append(strength * hub + np.sqrt(1.0 - strength**2) * rng.normal(size=n))
+    return np.column_stack(columns)
+
+
 def triangle_precisions() -> dict[str, np.ndarray]:
     """Return copies of the named positive-definite precision fixtures."""
     return {name: precision.copy() for name, precision in _TRIANGLE_PRECISIONS.items()}

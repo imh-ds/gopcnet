@@ -1,0 +1,82 @@
+import numpy as np
+import pytest
+
+from mintnet.dpi import compute_partial_correlation_evidence, prune_pair
+from mintnet.simulation import sample_hub
+
+
+def test_child_pair_conditioned_on_hub_alone_is_near_independent():
+    """The one-conditioning-variable case should match the existing partial-corr identity."""
+    rng = np.random.default_rng(1)
+    data = sample_hub(200000, 0.6, children=2, rng=rng)  # columns: hub=0, child1=1, child2=2
+
+    evidence = compute_partial_correlation_evidence(data, 1, 2, conditioning=[0])
+
+    assert abs(evidence.partial_correlation) < 0.02
+
+
+def test_hub_child_edge_survives_conditioning_on_other_children():
+    rng = np.random.default_rng(2)
+    data = sample_hub(200000, 0.6, children=3, rng=rng)  # hub=0, children=1,2,3
+
+    evidence = compute_partial_correlation_evidence(data, 0, 1, conditioning=[2, 3])
+
+    assert abs(evidence.partial_correlation) > 0.3
+
+
+def test_child_child_pair_becomes_independent_once_hub_and_other_child_conditioned_out():
+    rng = np.random.default_rng(3)
+    data = sample_hub(200000, 0.6, children=3, rng=rng)
+
+    evidence = compute_partial_correlation_evidence(data, 1, 2, conditioning=[0, 3])
+
+    assert abs(evidence.partial_correlation) < 0.02
+
+
+def test_empty_conditioning_set_matches_plain_correlation():
+    rng = np.random.default_rng(4)
+    data = rng.normal(size=(500, 3))
+    data[:, 1] = 0.5 * data[:, 0] + np.sqrt(0.75) * data[:, 1]
+
+    evidence = compute_partial_correlation_evidence(data, 0, 1, conditioning=[])
+
+    expected_r = np.corrcoef(data[:, 0], data[:, 1])[0, 1]
+    assert evidence.partial_correlation == pytest.approx(expected_r, abs=1e-9)
+
+
+@pytest.mark.parametrize(
+    ("i", "j", "conditioning"),
+    [
+        (0, 0, [1]),  # i == j
+        (0, 1, [0]),  # i in conditioning
+        (0, 1, [1]),  # j in conditioning
+        (0, 5, [1]),  # out of range
+    ],
+)
+def test_rejects_invalid_column_selection(i, j, conditioning):
+    data = np.random.default_rng(0).normal(size=(500, 4))
+    with pytest.raises(ValueError):
+        compute_partial_correlation_evidence(data, i, j, conditioning)
+
+
+def test_prune_pair_retains_iff_p_value_within_alpha():
+    rng = np.random.default_rng(5)
+    data = sample_hub(500, 0.6, children=3, rng=rng)
+    evidence = compute_partial_correlation_evidence(data, 0, 1, conditioning=[2, 3])
+
+    assert prune_pair(data, 0, 1, [2, 3], alpha=0.5) == (evidence.p_value <= 0.5)
+
+
+@pytest.mark.parametrize("alpha", [-0.01, 0.0, 1.0, np.nan, np.inf])
+def test_prune_pair_rejects_invalid_alpha(alpha):
+    data = sample_hub(200, 0.6, children=3, rng=np.random.default_rng(6))
+    with pytest.raises(ValueError):
+        prune_pair(data, 0, 1, [2, 3], alpha)
+
+
+def test_sample_hub_shape_and_validation():
+    data = sample_hub(300, 0.5, children=4, rng=np.random.default_rng(7))
+    assert data.shape == (300, 5)
+
+    with pytest.raises(ValueError):
+        sample_hub(300, 0.5, children=1, rng=np.random.default_rng(8))
