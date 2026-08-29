@@ -195,3 +195,58 @@ results. This is a change to the evaluation methodology, not the pruning
 mechanism, which the accumulated R2b/R2c evidence supports well. The
 confidence-scored-edge-representation option from D-003 remains open and
 unaffected by this result.
+
+## D-005: Reassess per-cell development selection (Stage 1d / R2d)
+
+Date: 2026-08-28
+
+Stage: R2d / Stage 1d
+
+Status: REASSESS
+
+Decision timing: Predeclared gate evaluated after results
+
+Question: Does requiring every individual `(N, strength)` development cell
+to pass (not just the pooled average) find an adjacent alpha pair that R2c's
+pooled rule missed?
+
+Prior specification: `docs/stage1d_charter.md` froze a change to the
+development-selection rule only — an alpha is eligible only if every
+individual cell, `N >= 750`, passes both criteria. DGP, mechanism, seeds,
+`N` grid, and alpha grid are unchanged from R2c; R2c's raw evidence is
+reused verbatim rather than re-simulated.
+
+Evidence: `results/generated/stage1d_dpi/decision.json` records
+`"no eligible development alpha pair"`. Checking every alpha individually:
+only `alpha = 0.10` is per-cell eligible, with no adjacent eligible partner.
+`alpha = .05` fails only two cells (both `strong`-family, FPR `.117`/`.111`
+against the `.10` gate); `alpha = .20` fails several chain/fork TPR cells,
+all in the `.76`-`.80` range against the `.80` gate. With 250 development
+replicates per cell, the binomial standard error is `~.025` at `.80` and
+`~.019` at `.10`; every failing cell above misses its threshold by less
+than one standard error. See `docs/stage1d_report.md` for the full
+breakdown.
+
+Decision: Reassess. Do not select a public default alpha, and do not
+proceed to Stage 2 candidate-edge screening on this evidence.
+
+Rationale: This is a third distinct finding, different in kind from D-002
+(structural confound) and D-004 (pooling artifact). The per-cell rule,
+honestly applied, finds a single isolated passing alpha surrounded by
+near-misses consistent with replicate-count sampling noise rather than a
+systematic gap. That points at the development replicate count (250 per
+cell) being too small for a per-cell decision rule at this alpha grid's
+resolution, not at a remaining flaw in the conditional-independence
+mechanism, which by this point has been supported by three converging
+lines of evidence (D-003's balanced/moderate pass, D-004's power trend to
+near-zero FPR, and D-005's isolated-but-clean single point).
+
+Consequences: Stage 2 and later layers remain blocked. Two legitimate next
+directions, each requiring its own charter frozen before new results: (a)
+more development replicates (the mechanism and grid are unchanged, so this
+is a straightforward re-run at higher replicate count, not a new design),
+or (b) a coarser alpha grid step that does not require resolving a boundary
+this fine. Given the accumulated evidence, this looks like a matter of
+statistical resolution rather than a mechanism or methodology problem. The
+confidence-scored-edge-representation option from D-003 remains open and
+unaffected by this result.
