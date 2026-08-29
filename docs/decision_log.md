@@ -782,3 +782,57 @@ attempted. `docs/validated_operating_ranges.md` should record the
 composed pipeline's validated range separately from screening-alone
 (D-013) and DPI-alone (D-008/D-012), since composition was not guaranteed
 by either mechanism's individual validation.
+
+## D-015: Multi-variable conditioning passes on a hub motif (Stage 1k / R3c)
+
+Date: 2026-08-29
+
+Stage: R3c / Stage 1
+
+Status: PROCEED at both tested `N`
+
+Decision timing: Predeclared gate evaluated after results; a quick
+non-charter simulation check was run before freezing to confirm the
+design was well-posed (not treated as evidence, only as a sanity check
+before committing compute)
+
+Question: Does conditioning on every other node in a candidate component
+— the direct generalization of Stage 1's one-variable partial
+correlation — correctly separate direct from indirect edges when a
+component has more than 3 nodes, and does the existing D-012 `alpha(N)`
+formula (fit only for one-variable conditioning) still work unmodified?
+
+Prior specification: `docs/stage1k_charter.md` froze a minimal 4-node hub
+DGP (1 hub, 3 independent children), `N in [750, 1500]`, testing the
+D-012 formula's predicted `alpha_hat` directly (no new grid search),
+gated on indirect-edge TPR `>= .80`, true-edge FPR `<= .10`, and a `.02`
+required margin on both.
+
+Evidence: `results/generated/stage1k_hub/decision.json` records 4,000 raw
+rows, zero errors, PROCEED at both `N`: `750` (TPR `.854`, FPR `0`,
+margin `.054`); `1500` (TPR `.887`, FPR `0`, margin `.087`). Both clear
+the required margin comfortably, not as thin-margin passes. A
+pre-charter sanity simulation predicted `TPR ~ .858`/`.882`, `FPR = 0` —
+the actual results landed almost exactly there. See
+`docs/stage1k_report.md` for the full breakdown.
+
+Decision: Proceed. Multi-variable conditioning, using the unmodified
+D-012 formula, is validated for this 4-node hub shape at `N in [750,
+1500]`.
+
+Rationale: This is a genuinely informative, non-obvious result: a formula
+fit only against one-variable-conditioning evidence did not need
+refitting to also work for two-variable conditioning. That the actual
+outcome matched a quick pre-registered simulation almost exactly is
+further evidence the mechanism is understood, not merely lucky —
+consistent with D-013's similar experience.
+
+Consequences: This validates the multi-variable conditioning mechanism
+only for the hub shape tested (one shared cause, several independent
+children) — not for components formed by two motifs sharing a node, or
+larger components generally, which remain open questions for a future
+charter. Combined with D-014, the pieces needed to extend Stage 2b's
+composed pipeline beyond exact 3-node triads to hub-shaped candidate
+components now exist, though wiring that extension into the actual
+pipeline (`mintnet.pipeline.compose`) has not itself been done or
+chartered yet.
