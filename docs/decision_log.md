@@ -1538,3 +1538,63 @@ bootstrap stability at `p=30` (Stage 3's line of work remains `p=15`-
 only), nor `p` values beyond `30`. `docs/validated_operating_ranges.md`
 should record this as a new row alongside D-023's `p=30` screening-alone
 entry.
+
+## D-025: Hub-composed pipeline scales to p=30, exactly as predicted (R3i)
+
+Date: 2026-08-30
+
+Stage: R3i / Stage 2
+
+Status: PROCEED at both `N = 750` and `N = 1500`
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage2g_charter.md`
+
+Question: Does the composed pipeline, with a hub candidate component
+instead of a third triad, behave at `p=30` the way it did at `p=15`
+(D-016), using D-023's `p=30` screening threshold reused without
+re-derivation?
+
+Prior specification: `docs/stage2g_charter.md` predicted, by combining
+D-023 (screening's per-edge FPR `~.00012` at `alpha=.0001`, `p`- and
+shape-independent), D-024 (composition doesn't disturb that rate at
+`p=30`), and D-016 (hub composes cleanly at `p=15`, indirect TPR
+`.820`-`.853`): PROCEED at both `N`, final false-edge rate `~.0001`,
+indirect TPR `~.82`-`.85` (plausibly a little higher, per D-024's own
+observed shape-rate increase), true-edge FPR `~0`.
+
+Evidence: `results/generated/stage2g_hub_composition_p30/decision.json`,
+4,000 raw rows, zero errors, runtime 109s. Final false-edge rate
+`.000121`/`.000099` (`N=750`/`N=1500`), identical to screening-alone at
+both `N` — D-014's "no rescue" finding, now replicated on a second
+candidate shape at `p=30`; indirect TPR `.839`/`.883`, landing inside
+the predicted range and, like D-024, at the higher end of it; true-edge
+FPR exactly `0` at both `N`; shape-validated rate `.984`/`.991`, closely
+matching D-024's own `.983`/`.994` for the triangle-shape charter at the
+same `p`. See `docs/stage2g_report.md`, `false_edge_rate_comparison.png`.
+
+Decision: Proceed. The composed pipeline is validated at `p=30` for a
+network containing a 4-node hub-clique candidate component (alongside
+disjoint triads), using D-023's screening threshold and D-012's DPI
+formula, reused without modification for either.
+
+Rationale: Like D-024 and unlike D-023, this charter's predeclared
+expectations held without needing correction. Combined, D-024 and D-025
+show the `p=30` scale-up story is now consistent across both tested
+candidate shapes: the same screening threshold, the same DPI formula,
+and closely matching final-false-edge-rate and shape-validation figures
+regardless of whether the third motif is a triangle or a hub. This is
+the same "no shape-specific surprise" pattern D-016 established at
+`p=15` (D-014's triad-only result transferring cleanly to the mixed
+triad/hub network), now confirmed to hold across `p` as well as across
+shape.
+
+Consequences: Both tested candidate shapes' composition (disjoint
+triads: D-024; hub-containing: D-025) are validated at `p=30`,
+`N in [750, 1500]`, using screening `alpha=.0001` and DPI `alpha=f(N)`.
+This does **not** validate the shared-node-overlap shape at `p=30`
+(explicitly deferred by this charter's own consequences — and the one
+shape where D-018's `N=750` weak-signal caveat makes a safe-transfer
+assumption least justified), bootstrap stability at `p=30` for either
+tested shape, or `p` values beyond `30`. `docs/validated_operating_ranges.md`
+should record this alongside D-024's own `p=30` composition row.
