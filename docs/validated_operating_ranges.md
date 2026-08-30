@@ -106,6 +106,36 @@ collect more data and wants the best validated option available, with the
 explicit caveat that it is close to the noise floor). It is not withheld
 — it is labeled honestly.
 
+## Caveat: weak-signal overlapping shapes need N = 1500, not the general N = 750 floor
+
+The `N = 750` default above applies to the DPI mechanism itself and to
+every candidate shape tested so far *except one*. **The shared-node-
+overlap shape (two motifs meeting at one variable, D-017/D-018) requires
+`N >= 1500` in a full pipeline, not `750`**, even though `750` clears
+every other bar in this document (the general DPI floor, and the DPI
+mechanism's own accuracy on this exact shape when handed a clean
+component directly).
+
+The reason is specific and does not generalize to other shapes: at
+`N=750`, screening only detects this shape's weak (`~.135`) cross-branch
+correlation `~66%` of the time per edge, so all four cross-branch edges
+are simultaneously detected — the condition needed to form a clean,
+DPI-eligible candidate clique — only `~29%` of the time. The other `71%`
+of the time, DPI is correctly *not* applied (per the pipeline's
+conservative design), and un-pruned candidate edges pass straight
+through, dragging the overlap-specific indirect-edge accuracy down to
+`.569`, below the `.80` gate. At `N=1500`, per-edge detection is `~98%`,
+clean-clique formation is `~92%`, and the shape clears the gate
+comfortably (`.817`).
+
+**This caveat is shape-specific, not a general revision to the `N=750`
+floor.** The hub shape (D-015/D-016) has a stronger signal and does not
+share it — it clears the gate at `N=750` in the full pipeline just as
+reliably as it does as an isolated mechanism test. Before trusting any
+*new* multi-node candidate shape at the general `N=750` floor, check its
+screening-detection power specifically, the way D-018 did — do not assume
+it transfers from the hub case.
+
 ## Practical translation for smaller-`N` datasets
 
 For DPI edge-pruning decisions below the recommended default (`N < 750`;
