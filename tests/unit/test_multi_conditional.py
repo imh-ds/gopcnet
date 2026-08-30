@@ -93,6 +93,31 @@ def test_prune_pair_rejects_invalid_alpha(alpha):
         prune_pair(data, 0, 1, [2, 3], alpha)
 
 
+def test_rejects_zero_variance_target_column():
+    """A constant column i or j must raise, not silently produce a NaN p-value
+    that downstream alpha comparisons (nan <= alpha == False) would misread
+    as 'not significant' rather than 'undefined'."""
+    rng = np.random.default_rng(9)
+    data = rng.normal(size=(200, 4))
+    data[:, 1] = 5.0  # column 1 is constant
+
+    with pytest.raises(ValueError, match="zero variance"):
+        compute_partial_correlation_evidence(data, 0, 1, conditioning=[2])
+    with pytest.raises(ValueError, match="zero variance"):
+        compute_partial_correlation_evidence(data, 1, 0, conditioning=[2])
+
+
+def test_rejects_perfect_collinearity_after_conditioning():
+    """If conditioning fully explains column i (or j), the residual has zero
+    variance and the partial correlation is undefined -- must raise, not NaN."""
+    rng = np.random.default_rng(10)
+    data = rng.normal(size=(200, 3))
+    data[:, 0] = 2.0 * data[:, 2]  # column 0 is an exact linear function of column 2
+
+    with pytest.raises(ValueError, match="collinear|undefined"):
+        compute_partial_correlation_evidence(data, 0, 1, conditioning=[2])
+
+
 def test_sample_hub_shape_and_validation():
     data = sample_hub(300, 0.5, children=4, rng=np.random.default_rng(7))
     assert data.shape == (300, 5)

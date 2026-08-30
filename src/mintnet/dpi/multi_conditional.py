@@ -55,6 +55,10 @@ def compute_partial_correlation_evidence(
     degrees_of_freedom = n - 3 - len(conditioning)
     if degrees_of_freedom <= 0:
         raise ValueError("not enough rows for this conditioning set size")
+    if values[:, i].std(ddof=1) == 0.0:
+        raise ValueError(f"column {i} has zero variance; partial correlation is undefined")
+    if values[:, j].std(ddof=1) == 0.0:
+        raise ValueError(f"column {j} has zero variance; partial correlation is undefined")
 
     if conditioning:
         cond_data = values[:, conditioning]
@@ -64,7 +68,23 @@ def compute_partial_correlation_evidence(
         resid_i = values[:, i] - values[:, i].mean()
         resid_j = values[:, j] - values[:, j].mean()
 
+    # Use a relative tolerance, not exact equality: OLS residuals from an
+    # (near-)collinear conditioning set are numerically ~1e-15, not exactly
+    # 0.0, but are pure floating-point noise rather than a meaningful signal.
+    relative_tolerance = 1e-8
+    if resid_i.std(ddof=1) <= relative_tolerance * (values[:, i].std(ddof=1)):
+        raise ValueError(
+            f"column {i}'s residual variance is ~zero after conditioning (perfect collinearity); "
+            "partial correlation is undefined"
+        )
+    if resid_j.std(ddof=1) <= relative_tolerance * (values[:, j].std(ddof=1)):
+        raise ValueError(
+            f"column {j}'s residual variance is ~zero after conditioning (perfect collinearity); "
+            "partial correlation is undefined"
+        )
     r = float(np.corrcoef(resid_i, resid_j)[0, 1])
+    if not np.isfinite(r):
+        raise ValueError("partial correlation is undefined for this input (non-finite result)")
     r = float(np.clip(r, -1.0 + 1e-12, 1.0 - 1e-12))
     z = float(np.arctanh(r) * np.sqrt(degrees_of_freedom))
     p_value = float(2.0 * norm.sf(abs(z)))

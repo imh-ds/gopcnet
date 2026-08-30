@@ -29,6 +29,9 @@ def _validate_data(data: np.ndarray) -> np.ndarray:
         raise ValueError("data must contain only finite values")
     if values.shape[0] < 4:
         raise ValueError("data must have at least 4 rows for the Fisher z correlation test")
+    zero_variance = np.where(values.std(axis=0, ddof=1) == 0.0)[0]
+    if zero_variance.size > 0:
+        raise ValueError(f"column(s) {list(zero_variance)} have zero variance; correlation is undefined")
     return values
 
 
@@ -43,6 +46,8 @@ def compute_pairwise_screening_evidence(data: np.ndarray) -> ScreeningEvidence:
     values = _validate_data(data)
     n, p = values.shape
     correlation_matrix = np.corrcoef(values, rowvar=False)
+    if not np.isfinite(correlation_matrix).all():
+        raise ValueError("correlation matrix contains non-finite values; input is degenerate")
 
     z_stat = np.zeros((p, p))
     p_value = np.ones((p, p))

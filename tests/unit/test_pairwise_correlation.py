@@ -79,6 +79,18 @@ def test_benjamini_hochberg_flags_no_more_pairs_than_uncorrected_at_the_same_lev
     assert bh_flagged.sum() <= uncorrected_flagged.sum()
 
 
+def test_rejects_zero_variance_column():
+    """A constant column must raise, not silently propagate NaN through the
+    correlation/p-value matrices that screen_uncorrected would then misread
+    as 'not significant' (nan <= alpha == False)."""
+    rng = np.random.default_rng(11)
+    data = rng.normal(size=(200, 3))
+    data[:, 1] = 3.0  # column 1 is constant
+
+    with pytest.raises(ValueError, match="zero variance"):
+        compute_pairwise_screening_evidence(data)
+
+
 def test_benjamini_hochberg_matches_hand_worked_example():
     """p=4 gives m=C(4,2)=6 tests. p-values .01, .04, .30 plus three untested
     pairs at 1.0. Sorted ranks/thresholds at q=.10: rank1 .01<=.1/6=.0167 (pass),
