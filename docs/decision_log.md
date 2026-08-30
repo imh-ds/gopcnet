@@ -958,3 +958,66 @@ characterize how often a clean shape actually forms, not just assume it
 does because the mechanism works when handed one. That remains a distinct
 future charter. `docs/validated_operating_ranges.md` should record this
 mechanism-level result separately from any pipeline-wiring claim.
+
+## D-018: Overlap wiring confirms the predicted screening-power split (R3f)
+
+Date: 2026-08-29
+
+Stage: R3f / Stage 2
+
+Status: REASSESS at `N=750`, PROCEED at `N=1500` (predicted split outcome)
+
+Decision timing: Predeclared gate evaluated after results; the specific
+split outcome was predicted, in writing, by a pre-charter simulation
+before any frozen results existed
+
+Question: Does the shared-node-overlap motif, embedded in a network and
+run through the full screen-then-prune pipeline (with
+`VALIDATED_CLIQUE_SIZES` extended to include 5, per D-017), behave the
+way its screening-power limitation predicted?
+
+Prior specification: `docs/stage2d_charter.md` froze a `p=15` network
+(chain, fork, the overlap motif, 4 noise columns), extended
+`VALIDATED_CLIQUE_SIZES` to `{3, 4, 5}`, and gated **per motif**
+(chain/fork/overlap TPR each individually `>= .80`, not pooled — a
+deliberate design choice to avoid the D-004 pooling blind spot). It
+explicitly predicted, before results: `N=750` overlap TPR `~.59`,
+clean-clique rate `~26%` (REASSESS); `N=1500` overlap TPR `~.82`,
+clean-clique rate `~89%` (PROCEED).
+
+Evidence: `results/generated/stage2d_composition/decision.json` records
+4,000 raw rows, zero errors. Observed: `N=750` overlap TPR `.569`
+(predicted `.59`), clean-clique rate `.287` (predicted `.26`) — REASSESS.
+`N=1500` overlap TPR `.817` (predicted `.82`), clean-clique rate `.921`
+(predicted `.89`) — PROCEED. Chain and fork TPR (`.815`-`.868` across
+both `N`) behaved normally at both `N`, matching every prior charter. A
+pooled average at `N=750` (`(.816+.815+.569)/3 = .733`) would also have
+failed, but by a smaller, less diagnostic margin than the per-motif
+breakdown gave. See `docs/stage2d_report.md` for the full breakdown.
+
+Decision: Confirmed as predicted. Extending `VALIDATED_CLIQUE_SIZES` to
+include size 5 is safe and correct when the mechanism gets a chance to
+run (consistent with D-017), but for this DGP's weak cross-branch
+signal, screening reliably provides that chance only from `N=1500`, not
+`N=750`, despite `N=750` already being comfortably above the DPI
+mechanism's own established floor (D-010/D-011).
+
+Rationale: This is a genuinely new, narrower bottleneck, distinct from
+every `N`-floor question characterized so far: it is a property of
+*screening's* detection power for a specific weak-signal DGP shape, not
+of the DPI conditioning mechanism (which D-017 already showed works
+correctly whenever it runs) or of the general `N >= 700`-`750` floor
+(D-010/D-011, which concerns DPI's own power, not screening's). That the
+outcome was predicted almost exactly by pre-charter arithmetic is strong
+evidence this bottleneck is now genuinely understood, not merely
+observed.
+
+Consequences: Trusting a validated clique size for a given DGP shape
+should not be assumed safe at every `N` where the DPI mechanism itself is
+validated — screening's detection power for that specific shape's signal
+strength must be separately checked, as this charter did. This is not a
+general statement that `VALIDATED_CLIQUE_SIZES = {3,4,5}` is unsafe (the
+hub shape, D-016, worked fine at both tested `N`); it is specific to
+weak-signal shapes like this one. `docs/validated_operating_ranges.md`
+should record this as a distinct, DGP-dependent caveat rather than folding
+it into the general `N`-floor entries.
