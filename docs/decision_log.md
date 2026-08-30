@@ -1476,3 +1476,65 @@ ratios. `docs/validated_operating_ranges.md` should record this as a
 new row, explicitly correcting the "BH becomes more valuable as `p`
 grows" intuition this charter's own drafting initially reached for, in
 favor of the narrower, evidence-backed statement above.
+
+## D-024: Composed pipeline scales to p=30, exactly as predicted (R3h)
+
+Date: 2026-08-30
+
+Stage: R3h / Stage 2
+
+Status: PROCEED at both `N = 750` and `N = 1500`
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage2f_charter.md`
+
+Question: Does the composed screen-then-prune pipeline (screening's
+D-023 `p=30` rule, unmodified DPI) behave the way it did at `p=15`
+(D-014) when wired into one pipeline at `p=30`?
+
+Prior specification: `docs/stage2f_charter.md` predicted, from D-023's
+own per-edge FPR finding (`.00012` at `alpha=.0001`, essentially exactly
+`alpha` itself) and D-014's "DPI cannot rescue an isolated false
+positive" finding: final false-edge rate `~.0001`, true-edge FPR `~0`,
+indirect TPR similar to D-014's `~.80`-`.82`, and PROCEED at both `N`.
+
+Evidence: `results/generated/stage2f_composition_p30/decision.json`,
+4,000 raw rows, zero errors, runtime 173s. **Every prediction landed
+close to its predicted value**: final false-edge rate `.000146`/
+`.000101` (`N=750`/`N=1500`, vs. predicted `~.00012`), identical to the
+screening-alone rate at both `N` — D-014's "no rescue" finding
+replicated exactly, now at `p=30`; true-edge FPR `.0054`/`.0004` (small,
+consistent with `~0`); indirect TPR `.838`/`.891` (comfortably above
+the `.80` gate, similar order to D-014's `.82`/`.87`, if a little
+higher); triad-formation rate `.983`/`.994`, slightly *higher* than
+D-014's `~.96` — plausibly because the much stricter `p=30` screening
+`alpha` (`.0001` vs. `.001`) makes it marginally less likely for a true
+motif's candidate component to pick up an extra spurious neighbor edge
+from a nearby noise correlation, though this charter did not set out to
+test that specific mechanism and treats it as a descriptive observation,
+not a new finding to build on. See `docs/stage2f_report.md`,
+`false_edge_rate_comparison.png`.
+
+Decision: Proceed. The composed pipeline is validated at `p=30` for
+disjoint 3-node motifs, using D-023's `p=30` screening threshold and
+D-012's unchanged DPI formula.
+
+Rationale: Unlike D-023 (which needed a correction to its own selected-
+rule and practical-takeaway predictions), this charter's predeclared
+expectations held without needing correction — the composition
+mechanism itself was already known to work (D-014), and this charter
+only needed to confirm that wiring D-023's specific `p=30` threshold
+into that already-validated mechanism didn't introduce a new
+interaction. It didn't. This is the cleanest kind of confirmatory
+result this project produces: a prediction stated in enough numeric
+detail to be falsified, that wasn't falsified.
+
+Consequences: The composed pipeline is validated at `p=30`,
+`N in [750, 1500]`, for disjoint 3-node motifs, using screening
+`alpha=.0001` and DPI `alpha=f(N)`. This does **not** validate hub,
+overlap, or other candidate shapes at `p=30` (each would need its own
+charter, mirroring how Stage 2c/2d followed Stage 2b at `p=15`), nor
+bootstrap stability at `p=30` (Stage 3's line of work remains `p=15`-
+only), nor `p` values beyond `30`. `docs/validated_operating_ranges.md`
+should record this as a new row alongside D-023's `p=30` screening-alone
+entry.
