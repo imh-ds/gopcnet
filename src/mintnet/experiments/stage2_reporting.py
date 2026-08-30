@@ -39,10 +39,24 @@ def _partition(raw: pd.DataFrame, bounds: tuple[int, int]) -> pd.DataFrame:
 
 
 def _rule_metrics(rows: pd.DataFrame, n: int, rule_kind: str, threshold: float) -> tuple[float, float] | None:
+    """Pooled recall and pooled FDR across replicates, per the charter's frozen
+    definition ("fraction of all flagged pairs, across all 96+9 possible pairs,
+    that are actually null") -- sum of counts across replicates, not a mean of
+    per-replicate ratios. The two differ whenever replicates have unequal
+    numbers of flagged pairs (e.g. a replicate with zero flagged pairs
+    contributes a 0.0 ratio to a mean, but should contribute nothing to a
+    pooled fraction)."""
     subset = rows.loc[(rows["n"] == n) & (rows["rule_kind"] == rule_kind) & (rows["threshold"] == threshold)]
-    if subset.empty or not np.isfinite(subset[["recall", "false_discovery_rate"]]).all().all():
+    count_columns = ["true_positives", "false_positives", "total_flagged", "true_pair_count"]
+    if subset.empty or not np.isfinite(subset[count_columns]).all().all():
         return None
-    return float(subset["recall"].mean()), float(subset["false_discovery_rate"].mean())
+    total_true_positives = float(subset["true_positives"].sum())
+    total_false_positives = float(subset["false_positives"].sum())
+    total_flagged = float(subset["total_flagged"].sum())
+    total_true_pairs = float(subset["true_pair_count"].sum())
+    recall = total_true_positives / total_true_pairs
+    fdr = (total_false_positives / total_flagged) if total_flagged > 0 else 0.0
+    return recall, fdr
 
 
 def _rule_candidates(config: Stage2Config) -> list[tuple[str, float]]:
@@ -102,17 +116,37 @@ def evaluate_stage2_gate(raw: pd.DataFrame, config: Stage2Config) -> GateDecisio
     return GateDecision(tuple(evaluate_n(raw, n, config) for n in config.sample_sizes))
 
 
+def _pooled_recall_and_fdr(rows: pd.DataFrame) -> pd.Series:
+    """Pooled (sum-of-counts), matching `_rule_metrics` -- see its docstring."""
+    ok = rows.loc[rows["status"] == "ok"]
+    if ok.empty or not np.isfinite(ok[["true_positives", "false_positives", "total_flagged", "true_pair_count"]]).all().all():
+        return pd.Series({"recall": np.nan, "false_discovery_rate": np.nan})
+    total_flagged = float(ok["total_flagged"].sum())
+    return pd.Series(
+        {
+            "recall": float(ok["true_positives"].sum()) / float(ok["true_pair_count"].sum()),
+            "false_discovery_rate": (float(ok["false_positives"].sum()) / total_flagged)
+            if total_flagged > 0
+            else 0.0,
+        }
+    )
+
+
 def aggregate_stage2(raw: pd.DataFrame) -> pd.DataFrame:
     grouped = raw.groupby(["n", "rule_kind", "threshold"], as_index=False)
+    counts = grouped.agg(
+        replicates=("replicate", "size"),
+        successful_replicates=("status", lambda values: int(values.eq("ok").sum())),
+        per_edge_fpr=("per_edge_fpr", "mean"),
+        family_wise_any_false_edge_rate=("any_false_edge", "mean"),
+    )
+    pooled = (
+        raw.groupby(["n", "rule_kind", "threshold"])
+        .apply(_pooled_recall_and_fdr, include_groups=False)
+        .reset_index()
+    )
     return (
-        grouped.agg(
-            replicates=("replicate", "size"),
-            successful_replicates=("status", lambda values: int(values.eq("ok").sum())),
-            recall=("recall", "mean"),
-            false_discovery_rate=("false_discovery_rate", "mean"),
-            per_edge_fpr=("per_edge_fpr", "mean"),
-            family_wise_any_false_edge_rate=("any_false_edge", "mean"),
-        )
+        counts.merge(pooled, on=["n", "rule_kind", "threshold"])
         .sort_values(["n", "rule_kind", "threshold"])
         .reset_index(drop=True)
     )

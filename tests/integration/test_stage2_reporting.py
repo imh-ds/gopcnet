@@ -24,12 +24,21 @@ def _config() -> Stage2Config:
 
 
 def _row(n, rule_kind, threshold, replicate, recall, fdr) -> dict[str, object]:
+    # Unit-weight synthetic counts (true_pair_count=1, total_flagged=1 per
+    # row) so the pooled sum-of-counts computation in _rule_metrics exactly
+    # reproduces these per-replicate recall/fdr values -- valid here because
+    # every replicate within a given (n, rule_kind, threshold) group below
+    # uses the same recall/fdr, so pooling and averaging coincide.
     return {
         "n": n,
         "replicate": replicate,
         "seed": 1,
         "rule_kind": rule_kind,
         "threshold": threshold,
+        "true_positives": recall,
+        "false_positives": fdr,
+        "total_flagged": 1.0,
+        "true_pair_count": 1.0,
         "recall": recall,
         "false_discovery_rate": fdr,
         "per_edge_fpr": 0.01,

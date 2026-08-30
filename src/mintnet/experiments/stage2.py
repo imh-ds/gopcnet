@@ -135,6 +135,16 @@ def _score_flagged(flagged: np.ndarray, p: int) -> dict[str, float]:
     false_positives = sum(1 for i, j in null_pairs if flagged[i, j])
     total_flagged = true_positives + false_positives
     return {
+        # Raw counts, kept so the FDR gate can be computed pooled across
+        # replicates (sum FP / sum total flagged, per the charter's
+        # "fraction of all flagged pairs" definition) rather than as a mean
+        # of per-replicate ratios, which is a different (and biased, for
+        # replicates with few or zero flagged pairs) quantity.
+        "true_positives": true_positives,
+        "false_positives": false_positives,
+        "total_flagged": total_flagged,
+        "true_pair_count": len(TRUE_PAIR_INDICES),
+        "null_pair_count": len(null_pairs),
         "recall": true_positives / len(TRUE_PAIR_INDICES),
         "false_discovery_rate": (false_positives / total_flagged) if total_flagged > 0 else 0.0,
         "per_edge_fpr": false_positives / len(null_pairs),
@@ -168,6 +178,11 @@ def run_stage2(config: Stage2Config, output_dir: Path) -> pd.DataFrame:
             for rule_kind, threshold in rules:
                 row_status, row_error = status, error
                 metrics: dict[str, float] = {
+                    "true_positives": np.nan,
+                    "false_positives": np.nan,
+                    "total_flagged": np.nan,
+                    "true_pair_count": np.nan,
+                    "null_pair_count": np.nan,
                     "recall": np.nan,
                     "false_discovery_rate": np.nan,
                     "per_edge_fpr": np.nan,
