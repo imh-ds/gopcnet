@@ -1158,3 +1158,93 @@ DGP itself, measurably improve topology quality there, per Section
 section, `pi_final` must continue to be reported as a
 resampling-reproducibility statistic, never as a p-value or confidence
 level, in any report built on this evidence.
+
+## D-020: Bootstrap stability filtering rescues the overlap DGP's N=750 failure (R4b)
+
+Date: 2026-08-30
+
+Stage: R4b / Stage 3
+
+Status: PROCEED at both `N = 750` and `N = 1500`
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage3b_charter.md`
+
+Question: Does a post-hoc bootstrap-stability filter (drop an edge from
+the final graph if `pi_final < pi_min`, calibrated on the overlap DGP
+itself) clear D-018's `.80` overlap indirect-edge TPR gate at `N=750`,
+without wrongly removing true direct edges or regressing `N=1500`?
+
+Prior specification: `docs/stage3b_charter.md` corrected D-019's pooled
+`pi_final` framing (wrongly-retained overlap edges are, split by the
+point estimate's own decision, *more* stable — mean `.737` — than the
+pooled `.53` figure suggested) and predicted PROCEED at `N=750` with a
+selected `pi_min` somewhere in `{.90, .95, .98}`. Candidate grid: `{.80,
+.90, .95, .98}`. Gate per `N`: overlap indirect TPR `>= .80`, true-edge
+FPR `<= .10`, chain/fork indirect TPR no worse than baseline
+(safe-by-construction), final false-edge rate within `.01` of baseline
+(also safe-by-construction) — select smallest eligible `pi_min` on
+development (0-29), confirm on validation (30-59).
+
+Evidence: `results/generated/stage3b_stability_filter/decision.json`,
+12,600 raw rows, zero errors, runtime 689s. **`N=750`**: baseline
+(unfiltered) overlap TPR `.633` (development) / `.558` (validation) —
+below the `.80` gate, replicating D-018's failure on fresh evidence.
+Every candidate `pi_min` was eligible on development; the smallest,
+`pi_min=.80`, was selected and cleared validation: overlap TPR
+`.867`, true-edge FPR `0`, chain TPR `.867`, fork TPR `.933`, final
+false-edge rate `0`. **`N=1500`**: baseline overlap TPR `.692`
+(development) / `.808` (validation) — the development-partition dip
+below `.80` is 60-replicate sampling noise (D-018's original,
+2000-replicate estimate was `.817`; this run's own validation partition
+recovers `.808`, consistent with D-018), not a new finding that `N=1500`
+newly fails without filtering. `pi_min=.80` selected and validated:
+overlap TPR `.883`, true-edge FPR `0`. See `docs/stage3b_report.md`,
+`overlap_tpr_vs_pi_min.png`, `before_after_filtering.png`.
+
+Decision: **Stability filtering rescues `N=750`.** The smallest
+candidate threshold, `pi_min=.80`, was sufficient — lower than the
+`{.90, .95, .98}` range the pre-charter conditional analysis predicted,
+meaning the true separation between wrongly-retained overlap edges and
+true edges is *cleaner* at full statistical resolution (60 replicates,
+formally gated) than the 30-replicate exploratory slice suggested. True
+direct edges were never wrongly removed at any tested `pi_min`, at
+either `N` — true-edge FPR was exactly `0` throughout, matching the
+pre-charter check's `0%`-cost observation exactly, now on independent,
+gated evidence.
+
+Rationale: This is the first charter in this project to demonstrate a
+genuine *repair* of a previously identified failure mode without
+collecting more data, not merely a validation or invalidation of an
+existing mechanism (contrast with every prior R-series charter). The
+repair works because the two conditions this DGP creates are
+distinguishable in a way pure point estimation cannot see but resampling
+can: an edge the point estimate barely, contingently kept (because this
+replicate's specific draw happened to push a weak `~.135` correlation's
+p-value under `alpha` for 4 simultaneous cross-branch pairs) tends to
+*not* survive most of that same replicate's own bootstrap resamples as
+reliably as a genuinely strong edge does — even though, per the D-019
+correction, it survives more resamples than a purely null edge would.
+The gap between "survives most resamples" (true edges, `~1.0`) and
+"survives about three-quarters" (wrongly-kept overlap edges, mean
+`.737`) turned out to be wide enough for a `pi_min=.80` cut to fall
+cleanly between them on real gated evidence, even though the
+exploratory pre-check's own numbers suggested needing to go higher.
+
+Consequences: Bootstrap stability filtering, calibrated at `pi_min=.80`
+via `B=500` row bootstraps, is validated as a rescue mechanism
+specifically for the shared-node-overlap DGP (`p=15`, `N in [750,
+1500]`, `~.135` cross-branch correlation). This does **not** validate:
+stability filtering for other under-powered shapes, weaker or stronger
+signals, other `B` values, or a `pi_min` outside `{.80, .90, .95, .98}`
+— a finer grid below `.80` was never tested, so whether an even lower,
+cheaper-to-satisfy threshold would also work is unknown. It does **not**
+authorize adding a stability-filter stage to `mintnet.pipeline.compose`
+as a production default — that is a separate architecture decision, and
+the `B=500` bootstrap cost (roughly 500x the base pipeline's per-dataset
+cost) is a real, unresolved practical concern for that future decision,
+not resolved by this charter's PROCEED. `docs/validated_operating_ranges.md`
+should record this as a distinct rescue-mechanism entry, not folded into
+the existing overlap-DGP caveat (D-017/D-018), since it changes what is
+achievable at `N=750` for this shape when filtering is applied, without
+changing the underlying `N=750` screening-power limitation itself.
