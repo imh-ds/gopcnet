@@ -1678,3 +1678,73 @@ D-010/D-011's own floor-location exercise) would search for the new
 attempt that, only establishes that `1500` is no longer sufficient.
 Neither this result, nor Stage 2f/2g's clean PROCEEDs, should be
 generalized to shapes or signal strengths not yet tested at `p=30`.
+
+## D-027: Located the overlap shape's p=30 floor between N=1600 and 1750 (R3k)
+
+Date: 2026-08-30
+
+Stage: R3k / Stage 2
+
+Status: REASSESS at `N=1500`/`1600`; **PROCEED from `N=1750` onward**
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage2i_charter.md`
+
+Question: Where, between D-026's near-miss `N=1500` and comfortably
+above it, does the overlap shape's `p=30` composed pipeline start to
+clear the `.80` gate?
+
+Prior specification: `docs/stage2i_charter.md` reused D-026's `N=1500`
+evidence as a bookend and simulated four new sample sizes (`1600, 1750,
+2000, 2500`), predicting — from the same Fisher-z power calculation
+used throughout this line, adjusted by D-026's own observed
+correlation-correction factor — a crossover landing somewhere in
+`[1600, 1750]`.
+
+Evidence: `results/generated/stage2i_overlap_floor_p30/decision.json`,
+10,000 raw rows (2,000 reused `N=1500` + 8,000 fresh), zero errors,
+runtime 150s. **A clean, monotonic transition, landing exactly where
+predicted**:
+
+| `N` | status | overlap TPR | overlap clean-clique rate |
+|---|---|---|---|
+| `1500` (reused) | REASSESS | `.762` | `.753` |
+| `1600` | REASSESS (near-miss) | `.786` | `.781` |
+| `1750` | **PROCEED** | `.815` | `.872` |
+| `2000` | PROCEED | `.872` | `.942` |
+| `2500` | PROCEED | `.906` | `.988` |
+
+Chain/fork TPR (`.889`-`.910` throughout) and true-edge FPR (`0` at
+every `N`) behaved normally at every sample size, isolating the effect
+to the overlap motif exactly as every prior charter in this line
+predicted.
+
+Decision: **The `p=30` floor for the shared-node-overlap shape, at this
+specific signal strength (`~.135` cross-branch correlation) and
+screening threshold (D-023's `alpha=.0001`), is `N=1750`.** `N=1600` is
+a genuine near-miss (`.786`, `.014` below gate) — closer to the
+boundary than `N=1500` was, consistent with a real, locatable crossover
+rather than noise, per this charter's own non-monotonicity caveat
+(which did not trigger here: the transition was clean).
+
+Rationale: This is the second charter in the `p=30` overlap line (after
+D-026) to land a numeric prediction almost exactly on target — the
+crossover fell inside the single 150-unit-wide predicted interval, not
+merely somewhere in a vague "higher `N`" direction. Combined with
+D-010/D-011's original `N=700`-`750` floor-location exercise for the
+general DPI mechanism, this project now has two independently derived,
+methodologically identical examples of the same finding: a
+back-of-envelope power calculation, checked against one or two real
+data points, can locate an operational floor to within a narrow range
+before running the full search — evidence the underlying detection-
+power model is doing real explanatory work, not just curve-fitting
+after the fact.
+
+Consequences: `docs/validated_operating_ranges.md`'s D-026 REASSESS row
+should be updated: the shared-node-overlap shape's `p=30` floor is
+**`N=1750`, not merely ">1500, unlocated."** `N=1500` and `N=1600`
+remain REASSESS and should not be used for this shape at `p=30`. This
+floor is specific to this DGP's exact signal strength (`~.135`) and
+D-023's exact screening threshold (`alpha=.0001`) — a different weak
+signal strength, or a different `p`-driven threshold, would need its
+own floor search, not an assumption that `1750` transfers.
