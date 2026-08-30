@@ -20,17 +20,23 @@ via the generalized `mintnet.pipeline.compose` at `alpha=f(N)`, `N =
 
 ## Every prior finding replicated in the mixed-shape network
 
-- **Screening and final false-edge rates are identical at both `N`**,
-  exactly reproducing D-014's finding that DPI cannot rescue isolated
-  false positives — now confirmed in a network where DPI is also acting
-  on 4-node hub components, not only 3-node triads.
+- **Screening and final false-edge rates are identical at `N=1500`**
+  (`.0012043` both) and **nearly identical at `N=750`** (screening
+  `.00101075` vs. final `.00100000` — one fewer false edge survives to
+  the final rate, not literally zero difference), closely reproducing
+  D-014's finding that DPI cannot rescue isolated false positives — now
+  in a network where DPI is also acting on 4-node hub components, not
+  only 3-node triads. (Corrected 2026-08-30, second peer review: the
+  original text overstated this as "identical" at both `N`.)
 - **True-edge retention is perfect** (`FPR = 0` at both `N`), matching
   both D-014 (triads) and D-015 (hub in isolation).
 - **Indirect-edge TPR landed almost exactly where the pre-charter check
   predicted** (`.820` observed vs. `.823 +/- .005` predicted at `N=750`
-  from a 1500-replicate simulation run before freezing the charter),
-  itself a useful confirmation that composing two validated shapes in one
-  network doesn't introduce a new, unpredicted interaction.
+  from a 1500-replicate simulation run before freezing the charter) — a
+  successful pre-specified prediction, not independent confirmation
+  (the pre-charter check and the frozen run share the same DGP and code
+  assumptions), but still useful evidence that composing two validated
+  shapes in one network doesn't introduce a new, unpredicted interaction.
 - **Shape-validation rate** (`~.96`) matches D-014's own `~.96` for the
   triad-only network, suggesting the rate at which a motif fails to form
   its clean candidate shape is a property of screening noise in general,

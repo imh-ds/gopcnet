@@ -694,13 +694,36 @@ the simplest eligible rule.
 Evidence: `results/generated/stage2_screening/decision.json` records
 28,000 raw rows, zero errors, and PROCEED at both `N`, selecting
 uncorrected `alpha = .001` at both (validation recall `.9999`/`1.0000`,
-FDR `.0109`/`.0094`). The full operating table shows recall is
+FDR `.0121`/`.0106`). The full operating table shows recall is
 essentially `1.0` at *every* tested threshold — power was never the
-constraint — while FDR scales with `alpha` almost exactly as predicted by
-the charter's pre-registered back-of-envelope arithmetic (`alpha=.001`
-predicted `~.012`, observed `.010`-`.011`). Both BH thresholds also pass
-at both `N`, but lose the tiebreak to the simpler uncorrected rule. See
+constraint — while FDR scales with `alpha` in the direction the charter's
+pre-registered back-of-envelope arithmetic anticipated (`alpha=.001`
+predicted `~.012`, observed `.011`-`.012`) — a successful pre-specified
+prediction of the FDR/alpha relationship's shape, not an independent
+confirmation, since the arithmetic and the simulation share the same
+96:9 null:true DGP assumption. Both BH thresholds also pass at both `N`,
+but lose the tiebreak to the simpler uncorrected rule. See
 `docs/stage2_report.md` for the full breakdown.
+
+**Correction (2026-08-30, second peer review):** the FDR figures above
+were originally computed as a mean of each replicate's own FDR ratio
+(`.0109`/`.0094`), which does not match this charter's frozen pooled
+definition ("fraction of *all* flagged pairs, across all 96+9 possible
+pairs, that are actually null" — i.e. total false discoveries / total
+discoveries, summed across replicates, not averaged per-replicate
+ratios). `src/mintnet/experiments/stage2_reporting.py`'s `_rule_metrics`
+and `aggregate_stage2` were corrected to pool by summed counts
+(`src/mintnet/experiments/stage2.py`'s raw evidence now also records
+`true_positives`/`false_positives`/`total_flagged` per row so this is
+possible), and Stage 2's evidence was regenerated
+(`results/generated/stage2_screening/`). The corrected pooled FDR is
+`.0121` at `N=750` and `.0106` at `N=1500` — both still comfortably under
+the `.10` gate, so this decision's PROCEED status and selected rule
+(`uncorrected, alpha=.001`, at both `N`) are unchanged. The two FDR
+values happened to move in opposite directions under the fix (`N=750`'s
+figure rose, `N=1500`'s fell), consistent with mean-of-ratios and
+pooled-counts being genuinely different statistics rather than the same
+number reached two ways.
 
 Decision: Proceed. Screening validated in isolation at `p=15`,
 `N in [750, 1500]`.
@@ -709,8 +732,9 @@ Rationale: This is the first Stage 2 charter to PROCEED on its first
 attempt, unlike every Stage 1 charter after R2. The charter's
 pre-registered arithmetic anticipating the FDR/alpha relationship before
 any simulation ran (given the 96:9 null:true imbalance) matched the
-observed results closely, which is itself evidence the mechanism and its
-evaluation are well understood, not merely lucky.
+observed results closely — a successful pre-specified prediction, which
+is evidence the mechanism and its evaluation are well understood, though
+not independent confirmation given the shared DGP assumption noted above.
 
 Consequences: This does not authorize composing screening with Stage 1's
 validated DPI pruning into one pipeline — per the outline's Section 2.1,
@@ -882,13 +906,18 @@ Evidence: `results/generated/stage2c_composition/decision.json` records
 | 1500 | .853 | .000 | .00120 | .00120 | .958 |
 
 Every prior finding replicated: screening and final false-edge rates are
-identical at both `N` (D-014's "no rescue" finding, now confirmed
-alongside hub components too); true-edge retention is perfect; the
-`~.96` shape-validated rate matches D-014's triad-only rate closely. The
-`N=750` indirect TPR (`.820`) landed almost exactly on a pre-charter
-1500-replicate simulation's prediction (`.823 +/- .005`), itself evidence
-against an unpredicted interaction between the two shapes. See
-`docs/stage2c_report.md` for the full breakdown.
+identical at `N=1500` (`.0012043` both) and nearly identical at `N=750`
+(screening `.00101075` vs. final `.00100000` — the displayed 5-figure
+table above rounds this to the same `.00101` at both, masking a real but
+tiny difference; corrected 2026-08-30, second peer review) — D-014's "no
+rescue" finding, essentially confirmed alongside hub components too;
+true-edge retention is perfect; the `~.96` shape-validated rate matches
+D-014's triad-only rate closely. The `N=750` indirect TPR (`.820`)
+landed almost exactly on a pre-charter 1500-replicate simulation's
+prediction (`.823 +/- .005`) — a successful pre-specified prediction,
+not independent evidence against an unpredicted interaction, since the
+pre-charter check shares the same DGP and code assumptions as the frozen
+run. See `docs/stage2c_report.md` for the full breakdown.
 
 Decision: Proceed. The generalized pipeline is validated for networks
 mixing 3-node triad and 4-node hub-clique candidate components, at
@@ -959,17 +988,20 @@ does because the mechanism works when handed one. That remains a distinct
 future charter. `docs/validated_operating_ranges.md` should record this
 mechanism-level result separately from any pipeline-wiring claim.
 
-## D-018: Overlap wiring confirms the predicted screening-power split (R3f)
+## D-018: Overlap wiring matches the pre-specified screening-power split prediction (R3f)
 
 Date: 2026-08-29
 
 Stage: R3f / Stage 2
 
-Status: REASSESS at `N=750`, PROCEED at `N=1500` (predicted split outcome)
+Status: REASSESS at `N=750`, PROCEED at `N=1500` (matches the pre-specified split prediction)
 
 Decision timing: Predeclared gate evaluated after results; the specific
 split outcome was predicted, in writing, by a pre-charter simulation
-before any frozen results existed
+before any frozen results existed — this is a successful pre-specified
+prediction, not independent confirmation, since the pre-charter
+simulation and the frozen run share the same DGP and code assumptions
+(second peer review, 2026-08-30; see the correction note below)
 
 Question: Does the shared-node-overlap motif, embedded in a network and
 run through the full screen-then-prune pipeline (with
@@ -995,12 +1027,12 @@ pooled average at `N=750` (`(.816+.815+.569)/3 = .733`) would also have
 failed, but by a smaller, less diagnostic margin than the per-motif
 breakdown gave. See `docs/stage2d_report.md` for the full breakdown.
 
-Decision: Confirmed as predicted. Extending `VALIDATED_CLIQUE_SIZES` to
-include size 5 is safe and correct when the mechanism gets a chance to
-run (consistent with D-017), but for this DGP's weak cross-branch
-signal, screening reliably provides that chance only from `N=1500`, not
-`N=750`, despite `N=750` already being comfortably above the DPI
-mechanism's own established floor (D-010/D-011).
+Decision: The observed split matches the pre-specified prediction.
+Extending `VALIDATED_CLIQUE_SIZES` to include size 5 is safe and correct
+when the mechanism gets a chance to run (consistent with D-017), but for
+this DGP's weak cross-branch signal, screening reliably provides that
+chance only from `N=1500`, not `N=750`, despite `N=750` already being
+comfortably above the DPI mechanism's own established floor (D-010/D-011).
 
 Rationale: This is a genuinely new, narrower bottleneck, distinct from
 every `N`-floor question characterized so far: it is a property of
@@ -1008,9 +1040,12 @@ every `N`-floor question characterized so far: it is a property of
 of the DPI conditioning mechanism (which D-017 already showed works
 correctly whenever it runs) or of the general `N >= 700`-`750` floor
 (D-010/D-011, which concerns DPI's own power, not screening's). That the
-outcome was predicted almost exactly by pre-charter arithmetic is strong
-evidence this bottleneck is now genuinely understood, not merely
-observed.
+outcome matched pre-charter arithmetic closely is a successful
+pre-specified prediction and evidence the bottleneck's *mechanism* was
+understood well enough to anticipate its numeric size correctly — but
+not independent confirmation, since the pre-charter check and the frozen
+run share the same DGP and code assumptions rather than being derived
+two separate ways (correction, second peer review, 2026-08-30).
 
 Consequences: Trusting a validated clique size for a given DGP shape
 should not be assumed safe at every `N` where the DPI mechanism itself is
