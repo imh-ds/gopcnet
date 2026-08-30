@@ -1598,3 +1598,83 @@ shape where D-018's `N=750` weak-signal caveat makes a safe-transfer
 assumption least justified), bootstrap stability at `p=30` for either
 tested shape, or `p` values beyond `30`. `docs/validated_operating_ranges.md`
 should record this alongside D-024's own `p=30` composition row.
+
+## D-026: p=30's stricter screening threshold pushes the overlap DGP's N floor beyond 1500 (R3j)
+
+Date: 2026-08-30
+
+Stage: R3j / Stage 2
+
+Status: **REASSESS at both `N = 750` and `N = 1500`**
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage2h_charter.md`
+
+Question: Does `p=30`'s stricter, automatically-selected screening
+threshold (D-023: `alpha=.0001`, chosen for the multiple-testing
+burden, not any specific motif's signal strength) turn the overlap
+DGP's already-marginal `N=750` weak-signal problem (D-018) into
+something worse, and does it put `N=1500` — comfortably passing at
+`p=15` — at risk too?
+
+Prior specification: `docs/stage2h_charter.md` recomputed D-018's own
+Fisher-z power calculation at `alpha=.0001` instead of `.001`, predicting
+naive clean-clique rates of `.034` (`N=750`, down from `.194` at
+`p=15`'s threshold) and `.697` (`N=1500`, down from `.905`). It predicted
+`N=750` would REASSESS decisively (even after applying D-018's own
+`~1.5x` observed correction factor), and left `N=1500` explicitly
+uncertain — the naive estimate was below gate, but D-018's actual
+result had run well above its own naive estimate at the harder cell.
+
+Evidence: `results/generated/stage2h_overlap_composition_p30/decision.json`,
+4,000 raw rows, zero errors, runtime 62s. **`N=750`**: overlap indirect
+TPR `.6365` (REASSESS, decisive failure as predicted, but well above
+the naive `.034`/corrected `~.05` estimate); clean-clique rate `.080`
+(vs. naive `.034` — an observed correction factor of `~2.35x`, larger
+than D-018's own `~1.5x` at `p=15`, suggesting the positive correlation
+among the four cross-branch tests matters *more*, not less, at a
+stricter threshold). Chain/fork TPR (`.840`/`.839`) and true-edge FPR
+(`0`) behaved normally, as predicted. **`N=1500`**: overlap indirect TPR
+`.762` — **REASSESS, but a near-miss** (`.038` below the `.80` gate, not
+a decisive failure), unlike D-018's own comfortable `.817` PROCEED at
+`p=15`'s threshold. Clean-clique rate `.753` (vs. naive `.697`, a
+smaller `~8%` relative correction near the ceiling, as expected). Final
+false-edge rate (`.000122`/`.000107`) tracked screening-alone exactly at
+both `N`, replicating D-014's finding on a third shape now. See
+`docs/stage2h_report.md`, `overlap_clean_clique_vs_tpr.png`.
+
+Decision: **REASSESS at both `N`.** This is the outcome the charter's
+own predeclared table treated as the central open question (not the
+"both PROCEED" case its Consequences section called more surprising),
+and it resolved toward the harder side: `N=1500`, previously a
+comfortable PROCEED for this shape at `p=15`, no longer clears the gate
+once `p=30`'s stricter automatic threshold is applied.
+
+Rationale: **This is the first charter in the `p=30` line to find a
+genuinely new problem, not confirm a prediction of success.** D-023 and
+D-024/D-025 established that `p=30`'s stricter threshold is harmless
+for signals strong enough to have near-total detection power at either
+`alpha` — but the overlap DGP's weak `~.135` correlation was never in
+that category, and this charter's own predeclared power calculation
+correctly anticipated that reusing an automatically-selected,
+signal-agnostic threshold would matter here specifically. The `N=1500`
+near-miss (`.762` vs. `.80`) is the most actionable part of this
+result: it is close enough to the gate that the true floor for this
+shape at `p=30` is plausibly just above `1500`, not far beyond it — a
+locatable question, not an open-ended one, the same kind of question
+D-010/D-011 answered for the general DPI floor.
+
+Consequences: **A `p`-driven screening threshold, selected without
+regard for individual motif signal strength (as D-023's own selection
+procedure does, by design — it only ever looks at recall/FDR against
+whatever DGP it is run on), cannot be assumed to transfer safely to
+every candidate shape at that `p`.** This is now demonstrated, not
+hypothetical. `docs/validated_operating_ranges.md` must record the
+shared-node-overlap shape as **REASSESS at both tested `N` at `p=30`**,
+distinct from and not overwriting the `p=15` entry (D-017/D-018), where
+`N=1500` PROCEEDs. A natural, well-scoped follow-up charter (mirroring
+D-010/D-011's own floor-location exercise) would search for the new
+`N` floor at `p=30` for this shape specifically — this charter does not
+attempt that, only establishes that `1500` is no longer sufficient.
+Neither this result, nor Stage 2f/2g's clean PROCEEDs, should be
+generalized to shapes or signal strengths not yet tested at `p=30`.
