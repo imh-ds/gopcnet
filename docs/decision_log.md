@@ -1391,3 +1391,88 @@ questions about the same DGP, never merged into one line that could
 read as inconsistent. No further charter is needed to establish that
 this general gate "works" on the overlap DGP — that question is now
 closed on all three tested shapes.
+
+## D-023: Screening scales to p=30, with a comfortable margin once the grid was extended low enough (R3g)
+
+Date: 2026-08-30
+
+Stage: R3g / Stage 2
+
+Status: PROCEED at both `N = 750` and `N = 1500`
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage2e_charter.md`
+
+Question: Does Stage 2's per-pair screening mechanism and rule-
+selection framework, completely unmodified, still work at `p=30` (9
+true pairs, 426 null pairs — a `~4.4x` worse true:null ratio than
+Stage 2's `p=15`)?
+
+Prior specification: `docs/stage2e_charter.md` predeclared an FDR-vs-
+`alpha` table from D-013's own recall findings, before running
+anything, and extended the candidate grid below Stage 2's own lower
+bound (`.0001`, `.0005`, alongside Stage 2's original `.001`-`.10`) for
+the same "give the uncorrected rule a fair chance" reasoning Stage 2's
+own charter used to set its bound.
+
+Evidence: `results/generated/stage2e_screening_p30/decision.json`,
+36,000 raw rows, zero errors, runtime 154s. **The predeclared table was
+almost exactly right** — predicted vs. observed FDR: `alpha=.0001`
+`.005` vs. `.0056`/`.0056`; `.0005` `.023` vs. `.0248`/`.0247`; `.001`
+`.045` vs. `.0487`/`.0446`; `.005` `.191` vs. `.194`/`.188`; `.01`
+`.321` vs. `.322`/`.320` (`N=750`/`N=1500`) — every value within `.005`
+of prediction, and the predicted pass/fail boundary (pass at `<=.001`,
+fail at `>=.005`) landed exactly where predicted. Selected rule at both
+`N`: **uncorrected `alpha=.0001`** (validation recall `.999`/`1.0`, FDR
+`.0068`/`.0048`). BH also passed at `q=.05` (`FDR .059`/`.054`) but
+**BH `q=.10` narrowly failed its own nominal level** (`FDR .113`/
+`.106`, both just over `.10`) — a secondary, unpredicted finding: BH's
+FDR control is asymptotic/average-case, not a per-realization guarantee,
+and `q=.10` ran slightly hot here. See `docs/stage2e_report.md`,
+`screening_operating_curve.png`.
+
+**Correction to this charter's own prediction, made immediately rather
+than left standing:** the charter's Consequences section anticipated
+`alpha=.001` (FDR `~.045`) would be the selected rule, since it was the
+smallest value from Stage 2's *original* grid predicted to pass. But
+the charter's own predeclared table already showed `.0001` and `.0005`
+passing even more comfortably (`.005`, `.023`) — and Stage 2's frozen
+tiebreak rule selects the *smallest* eligible uncorrected `alpha`, not
+the smallest from the old grid specifically. Applied consistently, the
+charter's own table implied `.0001` would win the tiebreak, not `.001`
+— the observed result is not a surprise given the table, only a
+prediction I stated imprecisely when writing the Consequences section
+before checking it against the tiebreak rule.
+
+Decision: Proceed. Screening's mechanism and rule-selection framework
+are validated at `p=30`, `N in [750, 1500]`, with the same 9 true
+signals as Stage 2's `p=15` test.
+
+Rationale: **This also corrects the charter's practical takeaway, not
+just its selected-rule prediction.** The Consequences section argued
+that `p=30`'s thinner margin (at a grid capped at Stage 2's original
+`.001` floor) would make BH "more valuable, not merely available" going
+forward. The actual result undercuts that framing: once the uncorrected
+grid was extended low enough (exactly the "fair chance" principle the
+charter itself invoked), the selected rule's margin (`.0068`/`.0048`)
+is *comparable to or better than* Stage 2's own `p=15` margin
+(`.011`/`.012`), achieved with the same simple uncorrected mechanism,
+no correction procedure needed. The real lesson is narrower and more
+precise than originally framed: **the multiple-testing burden from
+added noise variables is fully compensated by extending the uncorrected
+alpha grid downward** for this specific true-signal count and effect
+size — BH is not thereby more necessary, it is simply one of several
+methods that happen to work here, and in fact BH's own nominal level
+ran slightly hot at `q=.10`, which the uncorrected rule did not.
+
+Consequences: Screening is validated at `p=30`, `N in [750, 1500]`,
+uncorrected `alpha=.0001` sufficient (BH available at `q=.05` but not
+required, and `q=.10` should not be trusted at this true:null ratio
+without further checking, given its narrow miss here). This does not
+authorize composing screening with DPI pruning at `p=30` (its own
+composition question, per Section 2.1, and a natural next charter), nor
+`p` values beyond `30`, nor different true-signal counts or true:null
+ratios. `docs/validated_operating_ranges.md` should record this as a
+new row, explicitly correcting the "BH becomes more valuable as `p`
+grows" intuition this charter's own drafting initially reached for, in
+favor of the narrower, evidence-backed statement above.
