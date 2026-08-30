@@ -1056,3 +1056,94 @@ hub shape, D-016, worked fine at both tested `N`); it is specific to
 weak-signal shapes like this one. `docs/validated_operating_ranges.md`
 should record this as a distinct, DGP-dependent caveat rather than folding
 it into the general `N`-floor entries.
+
+## D-019: Bootstrap edge stability separates true from false edges; a known pruning failure shows partial, not complete, stability (R4)
+
+Date: 2026-08-30
+
+Stage: R4 / Stage 3
+
+Status: PROCEED at both `N = 750` and `N = 1500` (primary DGP);
+secondary DGP is diagnostic only, no PROCEED/REASSESS status
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage3_charter.md`
+
+Question: Does bootstrap resampling of the composed screen-then-prune
+pipeline produce a final-edge stability statistic (`pi_final`) that
+meaningfully separates true edges from false ones under a calibrated
+threshold — and does the outline's Section 17.5 predicted failure mode
+("high bootstrap stability can occur for wrong edges") actually occur?
+
+Prior specification: `docs/stage3_charter.md` froze a two-DGP design.
+**Primary (gated)**: Stage 2b's disjoint chain/fork/triangle network
+(already PROCEED at both `N`, D-014), `N = [750, 1500]`, 500-bootstrap
+row resampling, 30 development + 30 validation outer replicates per
+`N`. Per `N`, select the smallest `pi_min in {.70, .80, .90}` meeting,
+on development, stability recall `>= .90`, pooled stability FDR
+`<= .10`, and a stability-filtered final false-edge rate within `.01`
+of the point-estimate baseline; the selected `pi_min` must meet the
+same three criteria again on validation to PROCEED. **Secondary
+(diagnostic only)**: Stage 2d's shared-node-overlap network at
+`N = 750` — the specific condition D-018 found REASSESS on (overlap
+indirect-edge pruning TPR `~.59`) — 30 replicates, no gate, reported
+descriptively to answer Section 17.5 directly.
+
+Evidence: `results/generated/stage3_bootstrap/decision.json`, 15,750
+raw per-pair rows (12,600 primary + 3,150 secondary), zero errors,
+runtime 333s. **Primary**: at both `N`, every candidate `pi_min`
+(`.70`/`.80`/`.90`) was eligible on development; the smallest,
+`pi_min = .70`, was selected and PROCEEDed on validation — `N=750`:
+recall `.9952`, FDR `0`, stability-filtered final false-edge rate `0`
+vs. baseline `.00069`; `N=1500`: recall `1.0`, FDR `0`, same `0` vs.
+`.00069` comparison. **Secondary** (descriptive, `N=750`): mean
+`pi_final` by category — `true_direct` `.99999`, `indirect_chain`
+`.6338`, `indirect_fork` `.6345`, `indirect_overlap` `.5295`
+(median `.545`), `null` `.0210`. See `docs/stage3_report.md`,
+`stability_by_category.png`, and `secondary_overlap_diagnostic.png`.
+
+Decision: **PROCEED for the primary DGP at both `N`.** Final-edge
+bootstrap stability separates true direct edges (`pi_final ~1.0`) from
+null pairs (`pi_final ~0.02`) almost completely, and the least
+conservative eligible threshold (`pi_min = .70`) recovers essentially
+every true edge while adding no measurable false-edge cost beyond the
+point estimate's own baseline. **The secondary DGP's descriptive result
+answers Section 17.5 directly, but only partially in the direction the
+outline flagged as a risk**: D-018's known-mispruned `indirect_overlap`
+edges do show elevated stability relative to null pairs (`.53` vs.
+`.02`, roughly 25x) — confirming that a wrongly-retained edge is not
+automatically unstable — but their stability is well below true edges'
+(`.53` vs. `~1.0`) and even below the network's correctly-pruned chain
+and fork indirect edges (`~.63`). At the primary DGP's own selected
+`pi_min = .70`, these overlap edges would in fact fall below threshold
+most of the time — an observation, not a validated fix, since the
+secondary DGP carries no gate and this pi_min was calibrated on a
+different DGP.
+
+Rationale: The primary result is the charter's central question,
+answered cleanly: bootstrap stability is not statistical noise here,
+it is a genuinely separating statistic, at least for a composed
+pipeline already known to work well (D-014). The secondary result is
+more nuanced than the outline's Section 17.5 framing implies "high
+stability for wrong edges" as a binary risk — here, wrongness produces
+*intermediate*, not *high*, stability, still clearly distinguishable
+from both extremes with enough resolution to matter. This is exactly
+why Section 17.5 asks for this test explicitly rather than assuming
+bootstrap either always helps or never does: the answer is graded, not
+binary, and depends on how weak the underlying signal driving the
+mispruning is (D-018 already established the overlap DGP's cross-branch
+correlation is weak, `~.135`).
+
+Consequences: Bootstrap edge stability is validated as a meaningfully
+separating statistic for `p=15`, `N in [750, 1500]`, on a disjoint-triad
+composed pipeline, at `B=500` row bootstraps — not validated for hub or
+overlap-containing networks' own gate criteria, other resampling
+schemes, or other `B` values. The secondary finding — that a threshold
+calibrated on the primary DGP would have incidentally suppressed most of
+D-018's mispruned overlap edges — is a promising lead for a future
+charter (does stability filtering, properly gated on the overlap DGP
+itself, measurably improve topology quality there, per Section 17.6's
+second bullet?), not a claim that it already does. Per this charter's
+explicit non-goals section, `pi_final` must continue to be reported as a
+resampling-reproducibility statistic, never as a p-value or confidence
+level, in any report built on this evidence.
