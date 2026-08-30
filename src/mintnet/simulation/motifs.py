@@ -72,6 +72,28 @@ def sample_hub(n: int, strength: float, children: int, rng: np.random.Generator)
     return np.column_stack(columns)
 
 
+def _build_overlapping_triangles_precision() -> np.ndarray:
+    precision = np.eye(5)
+    for i, j in ((0, 1), (0, 2), (1, 2), (2, 3), (2, 4), (3, 4)):
+        precision[i, j] = precision[j, i] = -0.25
+    return precision
+
+
+_OVERLAPPING_TRIANGLES_PRECISION: np.ndarray = _build_overlapping_triangles_precision()
+
+
+def sample_overlapping_triangles(n: int, rng: np.random.Generator) -> np.ndarray:
+    """Draw two `balanced`-style triangles sharing one node (column 2).
+
+    Columns 0,1,2 form one triangle; columns 2,3,4 form another. Column 2
+    is the shared node. Verified positive definite at import time.
+    """
+    n = _validate_n(n)
+    covariance = np.linalg.inv(_OVERLAPPING_TRIANGLES_PRECISION)
+    data = rng.multivariate_normal(np.zeros(5), covariance, size=n)
+    return (data - data.mean(axis=0)) / data.std(axis=0, ddof=1)
+
+
 def triangle_precisions() -> dict[str, np.ndarray]:
     """Return copies of the named positive-definite precision fixtures."""
     return {name: precision.copy() for name, precision in _TRIANGLE_PRECISIONS.items()}
