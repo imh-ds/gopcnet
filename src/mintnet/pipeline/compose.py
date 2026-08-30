@@ -1,5 +1,5 @@
-"""Screen-then-prune pipeline composition, per docs/stage2b_charter.md and
-docs/stage2c_charter.md.
+"""Screen-then-prune pipeline composition, per docs/stage2b_charter.md,
+docs/stage2c_charter.md, and docs/stage2d_charter.md.
 
 Screening produces a candidate-edge graph. Candidate edges are grouped
 into connected components; DPI conditioning (general multi-variable
@@ -9,11 +9,17 @@ exactly one conditioning variable, see
 tests/unit/test_multi_conditional.py) is applied only within components
 that are a *validated clique shape*: every pair within the component is
 itself a candidate edge, and the component has 3 nodes (Stage 1's
-original triad, D-008-D-012) or 4 nodes (the hub shape, D-015). Every
-other component -- non-clique shapes, or cliques of any other size -- is
-passed through unmodified. This is a stated scope boundary, not an
+original triad, D-008-D-012), 4 nodes (the hub shape, D-015), or 5 nodes
+(shared-node overlap, D-017; extended to any 5-node clique per
+docs/stage2d_charter.md, since screening cannot reveal which specific
+5-node topology a clean clique represents -- only that it is one).
+Every other component -- non-clique shapes, or cliques of any other size
+-- is passed through unmodified. This is a stated scope boundary, not an
 oversight: the code can mechanically run the conditioning test on any
-component size, but only these two shapes have supporting evidence.
+component size, but only these three sizes have supporting evidence, and
+even for validated sizes, whether screening reliably *produces* a clean
+clique in the first place is a separate, DGP-dependent question (see
+D-017's and D-016's discussion of detection power).
 """
 
 from itertools import combinations
@@ -23,7 +29,7 @@ from scipy.sparse.csgraph import connected_components as _scipy_connected_compon
 
 from mintnet.dpi import prune_pair
 
-VALIDATED_CLIQUE_SIZES: frozenset[int] = frozenset({3, 4})
+VALIDATED_CLIQUE_SIZES: frozenset[int] = frozenset({3, 4, 5})
 
 
 def connected_components(flagged: np.ndarray) -> list[frozenset[int]]:

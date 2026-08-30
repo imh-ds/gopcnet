@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from mintnet.pipeline import compose_screen_then_prune, connected_components
-from mintnet.simulation import sample_chain, sample_hub
+from mintnet.simulation import sample_chain, sample_hub, sample_overlapping_triangles
 
 
 def test_connected_components_groups_a_triangle_and_an_isolated_edge():
@@ -82,15 +82,33 @@ def test_compose_does_not_treat_a_3_node_path_as_a_candidate_clique():
     assert np.array_equal(final, flagged)  # passed through unmodified
 
 
-def test_compose_passes_through_a_5_node_clique_as_an_unvalidated_shape():
-    """A clique of size 5 is mechanically a clique but not a validated size."""
-    rng = np.random.default_rng(5)
-    data = rng.normal(size=(500, 5))
+def test_compose_prunes_within_a_5_node_clique_of_shared_node_overlap_shape():
+    """Size 5 is validated per D-017/docs/stage2d_charter.md: two triangles
+    sharing node 2 (columns 0,1,2 and 2,3,4)."""
+    rng = np.random.default_rng(6)
+    data = sample_overlapping_triangles(2000, rng)
     flagged = np.ones((5, 5), dtype=bool)
     np.fill_diagonal(flagged, False)
 
     final, shapes = compose_screen_then_prune(data, flagged, alpha=0.15)
 
     shape = shapes[frozenset({0, 1, 2, 3, 4})]
-    assert shape["size"] == 5 and shape["is_clique"] and not shape["is_validated_shape"]
+    assert shape["size"] == 5 and shape["is_clique"] and shape["is_validated_shape"]
+    for i, j in ((0, 1), (0, 2), (1, 2), (2, 3), (2, 4), (3, 4)):
+        assert final[i, j]  # within-triangle edges retained
+    for i, j in ((0, 3), (0, 4), (1, 3), (1, 4)):
+        assert not final[i, j]  # cross-branch edges pruned
+
+
+def test_compose_passes_through_a_6_node_clique_as_an_unvalidated_shape():
+    """A clique of size 6 is mechanically a clique but not a validated size."""
+    rng = np.random.default_rng(5)
+    data = rng.normal(size=(500, 6))
+    flagged = np.ones((6, 6), dtype=bool)
+    np.fill_diagonal(flagged, False)
+
+    final, shapes = compose_screen_then_prune(data, flagged, alpha=0.15)
+
+    shape = shapes[frozenset({0, 1, 2, 3, 4, 5})]
+    assert shape["size"] == 6 and shape["is_clique"] and not shape["is_validated_shape"]
     assert np.array_equal(final, flagged)  # passed through unmodified, not pruned
