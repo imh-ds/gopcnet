@@ -1114,11 +1114,20 @@ edges do show elevated stability relative to null pairs (`.53` vs.
 `.02`, roughly 25x) — confirming that a wrongly-retained edge is not
 automatically unstable — but their stability is well below true edges'
 (`.53` vs. `~1.0`) and even below the network's correctly-pruned chain
-and fork indirect edges (`~.63`). At the primary DGP's own selected
-`pi_min = .70`, these overlap edges would in fact fall below threshold
-most of the time — an observation, not a validated fix, since the
-secondary DGP carries no gate and this pi_min was calibrated on a
-different DGP.
+and fork indirect edges (`~.63`).
+
+**Correction (2026-08-30, while chartering the follow-up):** the
+preceding paragraph's `pi_min = .70` remark was based on the *pooled*
+mean across both correctly-pruned and wrongly-retained instances of the
+overlap-indirect edge type, which mixes two different populations and
+is not the right statistic for a filter that only ever acts on edges
+the point estimate already kept. Split by the point estimate's own
+decision, the wrongly-retained instances are *more* stable (mean
+`.737`, median `.745`, `n=60`) than the correctly-pruned ones (mean
+`.322`, `n=60`) — so a `pi_min = .70` filter would remove only `40%` of
+them, not "most." See `docs/stage3b_charter.md` for the corrected
+conditional analysis and the higher threshold range (`pi_min in {.80,
+.90, .95, .98}`) it motivates instead.
 
 Rationale: The primary result is the charter's central question,
 answered cleanly: bootstrap stability is not statistical noise here,
@@ -1138,12 +1147,14 @@ Consequences: Bootstrap edge stability is validated as a meaningfully
 separating statistic for `p=15`, `N in [750, 1500]`, on a disjoint-triad
 composed pipeline, at `B=500` row bootstraps — not validated for hub or
 overlap-containing networks' own gate criteria, other resampling
-schemes, or other `B` values. The secondary finding — that a threshold
-calibrated on the primary DGP would have incidentally suppressed most of
-D-018's mispruned overlap edges — is a promising lead for a future
-charter (does stability filtering, properly gated on the overlap DGP
-itself, measurably improve topology quality there, per Section 17.6's
-second bullet?), not a claim that it already does. Per this charter's
-explicit non-goals section, `pi_final` must continue to be reported as a
+schemes, or other `B` values. The secondary finding — that
+wrongly-retained overlap edges are stability-separable from true edges,
+at a materially higher threshold than the primary DGP's own `pi_min`
+(see the 2026-08-30 correction above) — is a promising lead for a
+future charter (does stability filtering, properly gated on the overlap
+DGP itself, measurably improve topology quality there, per Section
+17.6's second bullet?), not a claim that it already does; this is now
+`docs/stage3b_charter.md`. Per this charter's explicit non-goals
+section, `pi_final` must continue to be reported as a
 resampling-reproducibility statistic, never as a p-value or confidence
 level, in any report built on this evidence.
