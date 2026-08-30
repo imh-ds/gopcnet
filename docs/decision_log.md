@@ -1319,3 +1319,75 @@ extend the Stage 3 bootstrap-stability row to note the hub-shape
 confirmation, rather than adding a new row, since the validated range
 and selected `pi_min` are unchanged from Stage 3 — only the tested shape
 is new.
+
+## D-022: General stability gate transfers to the overlap DGP too, but says nothing about D-018 (R4d)
+
+Date: 2026-08-30
+
+Stage: R4d / Stage 3
+
+Status: PROCEED at both `N = 750` and `N = 1500` — **not a reassessment
+of D-018, which remains REASSESS at `N=750` for indirect-edge pruning**
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage3d_charter.md`
+
+Question: Does Stage 3's general stability-selection gate transfer,
+unmodified, to the shared-node-overlap DGP — the one DGP D-021 flagged
+as untested for this specific gate (Stage 3b only ever tested a
+different, filtering-specific gate on it)?
+
+Prior specification: `docs/stage3d_charter.md` predicted PROCEED at
+both `N`, *including* `N=750` despite D-018's REASSESS there, stated in
+advance and for a structural reason: the gate's three criteria (recall
+over `true_direct`, pooled FDR over `null`, no-regression on the
+`null`-only final false-edge rate) never reference the indirect-edge
+category where D-018's failure lives, so they cannot detect it
+regardless of `N`. The charter required descriptive (non-gated)
+reporting of the indirect categories alongside the gate, specifically
+so a PROCEED here could not later be misread as contradicting D-018.
+
+Evidence: `results/generated/stage3d_overlap_general_gate/decision.json`,
+12,600 raw rows, zero errors, runtime 551s. Every candidate `pi_min`
+was eligible on development at both `N`; the smallest, `pi_min=.70`,
+selected and PROCEEDed on validation at both (matching D-019's and
+D-021's selection on the other two DGPs) — `N=750`: recall `1.0`, FDR
+`0`; `N=1500`: recall `1.0`, FDR `0`. **Indirect-edge categories,
+reported descriptively and not part of the gate**: at `N=750`,
+`indirect_overlap` mean `pi_final` `.505` (median `.535`), with only
+`23%` of instances surviving even this charter's own selected
+`pi_min=.70` threshold — the gate's PROCEED and the indirect category's
+messy, still-partly-wrong behavior coexist in the same evidence, exactly
+as predicted. See `docs/stage3d_report.md`, `stability_by_category.png`.
+
+Decision: The general gate transfers to a third DGP shape, confirming
+the prediction. **This does not reassess, resolve, or otherwise touch
+D-018's finding.** The `.505` mean `indirect_overlap` stability here is
+consistent with, though not identical to, D-019's earlier `.53` pooled
+figure on the same category (small differences expected: 60 replicates
+here vs. 30 there, different replicate draws) — both readings describe
+the same known-messy category, from two separate charters that happened
+to look at it from different angles (general-gate context here;
+rescue-filter calibration in Stage 3b).
+
+Rationale: This result is exactly as informative as a predicted,
+structural result can be — it closes the specific gap D-021 named
+without producing any new surprise, because the charter correctly
+anticipated that this gate's blindness to indirect edges, not the
+overlap DGP's own weak signal, would determine the outcome. The
+substantive content of this charter is not the PROCEED itself but the
+explicit demonstration, in one piece of evidence, that a general
+stability gate passing is not a substitute for a mechanism-specific
+accuracy check — the same distinction Stage 3b's targeted, DGP-specific
+filtering gate exists to make.
+
+Consequences: Stage 3's general recall/FDR/no-regression gate is now
+confirmed on all three composed-pipeline DGPs studied so far (disjoint-
+triad D-019, hub D-021, overlap D-022), always selecting `pi_min=.70`,
+at `p=15`, `N in [750, 1500]`, `B=500`. Any future summary of this
+project's validated ranges must keep this gate's PROCEED status and
+D-018's indirect-edge REASSESS status recorded as answers to different
+questions about the same DGP, never merged into one line that could
+read as inconsistent. No further charter is needed to establish that
+this general gate "works" on the overlap DGP — that question is now
+closed on all three tested shapes.
