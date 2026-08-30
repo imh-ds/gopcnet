@@ -1248,3 +1248,74 @@ should record this as a distinct rescue-mechanism entry, not folded into
 the existing overlap-DGP caveat (D-017/D-018), since it changes what is
 achievable at `N=750` for this shape when filtering is applied, without
 changing the underlying `N=750` screening-power limitation itself.
+
+## D-021: Bootstrap stability's general selection gate transfers to the hub network (R4c)
+
+Date: 2026-08-30
+
+Stage: R4c / Stage 3
+
+Status: PROCEED at both `N = 750` and `N = 1500`
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage3c_charter.md`
+
+Question: Does Stage 3's general bootstrap-stability separation/
+selection gate (recall `>= .90`, pooled FDR `<= .10`, no false-edge
+regression, `pi_min in {.70, .80, .90}`) transfer, unmodified, to a
+structurally different composed-pipeline DGP — the chain/fork/hub
+network (D-016) — or was Stage 3's PROCEED specific to the
+disjoint-triad shape it was tested on?
+
+Prior specification: `docs/stage3c_charter.md` re-ran Stage 3's exact
+primary-DGP procedure on Stage 2c's DGP instead of Stage 2b's, with no
+new criteria or grid — explicitly *not* chasing a known failure (unlike
+Stage 3b), since D-016 already PROCEEDs cleanly at the point estimate
+(`.820`-`.853` indirect TPR, `.000` true-edge FPR at both `N`). The
+predeclared expectation was a clean PROCEED, stated as something to
+confirm rather than assume.
+
+Evidence: `results/generated/stage3c_hub_stability/decision.json`,
+12,600 raw rows, zero errors, runtime 758s. Every candidate `pi_min`
+was eligible on development at both `N`; the smallest, `pi_min=.70`,
+was selected and PROCEEDed on validation at both — `N=750`: recall
+`1.0`, FDR `0`, final false-edge rate `0` vs. baseline `0`; `N=1500`:
+recall `1.0`, FDR `0`, final false-edge rate `0` vs. baseline `.0007`.
+Development-stage FDR at `N=750` for the two lower thresholds
+(`pi_min=.70`: `.0073`; `pi_min=.80`: `.0041`) was nonzero but still
+comfortably under the `.10` gate — the only nonzero FDR values recorded
+across this charter's entire evidence, and still an order of magnitude
+below the bar. See `docs/stage3c_report.md`,
+`stability_by_category.png`.
+
+Decision: **The general stability-selection gate transfers cleanly to
+the hub shape**, exactly as predicted, at the same `pi_min=.70` that
+was selected on the disjoint-triad DGP in Stage 3. No new threshold
+range, no rescue needed, no surprises — this is a confirmation, not a
+repair (contrast with D-020).
+
+Rationale: Unlike the overlap DGP (D-018's known weak-signal failure,
+which needed Stage 3b's higher, DGP-specific `pi_min` range), the hub
+shape's signal is strong enough at the point estimate that bootstrap
+resampling reproduces the same clean separation Stage 3 found on the
+disjoint-triad DGP, with no adjustment. This is the useful negative
+result the charter set out to get: confirmation that Stage 3's original
+finding was not an artifact of the specific disjoint-triad shape it
+happened to be tested on, without having to assume that from a single
+data point.
+
+Consequences: Bootstrap edge stability's general recall/FDR/
+no-regression gate is now validated on two structurally different
+composed-pipeline DGPs (disjoint-triad, D-019; hub, D-021) at `p=15`,
+`N in [750, 1500]`, `B=500`, both selecting `pi_min=.70`. It remains
+**not** validated as this kind of general gate on the shared-node-
+overlap DGP (Stage 3b addressed that DGP only through a narrower,
+filtering-specific lens with a different threshold range) — whether the
+general gate itself, run unmodified on the overlap DGP the way this
+charter ran it on the hub DGP, would also transfer or would instead
+reproduce D-019's more nuanced intermediate-stability finding remains
+an open, untested question. `docs/validated_operating_ranges.md` should
+extend the Stage 3 bootstrap-stability row to note the hub-shape
+confirmation, rather than adding a new row, since the validated range
+and selected `pi_min` are unchanged from Stage 3 — only the tested shape
+is new.
