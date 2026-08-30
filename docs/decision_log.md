@@ -905,3 +905,56 @@ mixed 3-node/4-node candidate components, not just uniform triads.
 Non-clique components, cliques of any other size, larger networks, and
 components sharing variables across motifs remain untested and out of
 scope.
+
+## D-017: Multi-variable conditioning generalizes to shared-node overlap (R3e)
+
+Date: 2026-08-29
+
+Stage: R3e / Stage 1
+
+Status: PROCEED at both tested `N`
+
+Decision timing: Predeclared gate evaluated after results; a pre-charter
+power calculation (not simulation this time, closed-form) flagged that
+screening's detection of the weak cross-branch correlation is unreliable
+at `N=750` (`~66%` power) vs. `N=1500` (`~98%`) — this was used to scope
+the charter to the conditioning mechanism in isolation, not to predict
+its outcome
+
+Question: Does "condition on all other nodes in the candidate component"
+generalize to a topology genuinely different from Stage 1k's hub/star —
+two triangles overlapping at a single shared node — using the existing
+D-012 `alpha(N)` formula unmodified?
+
+Prior specification: `docs/stage1l_charter.md` froze a 5-variable DGP
+(two `balanced`-style triangles sharing node 2), `N in [750, 1500]`,
+testing the D-012 formula's predicted `alpha_hat` directly against a
+clean, hand-fed 5-node component (bypassing whether screening would
+actually detect it that cleanly — explicitly out of scope, deferred to a
+future wiring charter mirroring Stage 1k -> Stage 2c).
+
+Evidence: `results/generated/stage1l_overlap/decision.json` records 4,000
+raw rows, zero errors, PROCEED at both `N`: `750` (TPR `.858`, FPR `0`,
+margin `.058`); `1500` (TPR `.894`, FPR `0`, margin `.094`). Both clear
+the required margin comfortably. A pre-charter 1000-replicate simulation
+predicted `TPR ~ .847`/`.884` — close to the actual result. See
+`docs/stage1l_report.md` for the full breakdown.
+
+Decision: Proceed. Multi-variable conditioning generalizes to shared-node
+overlap topology, at `N in [750, 1500]`, using the unmodified D-012
+formula.
+
+Rationale: This is now the second distinct topology (after the hub) where
+the same general rule and the same formula work without modification,
+strengthening the case that the conditioning mechanism itself is broadly
+general rather than validated only for star-shaped structures.
+
+Consequences: This does **not** extend `VALIDATED_CLIQUE_SIZES` or wire
+anything into `mintnet.pipeline.compose` — unlike the hub case, this
+DGP's cross-branch signal is weak enough that screening frequently will
+not produce a clean 5-node candidate clique at `N=750` (the pre-charter
+power calculation), so a wiring charter here would need to separately
+characterize how often a clean shape actually forms, not just assume it
+does because the mechanism works when handed one. That remains a distinct
+future charter. `docs/validated_operating_ranges.md` should record this
+mechanism-level result separately from any pipeline-wiring claim.
