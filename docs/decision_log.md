@@ -2425,3 +2425,103 @@ follow-up, not assumed. `docs/validated_operating_ranges.md` should
 record this explanation and retract any implication that overlap's
 floor is favorable or unfavorable at any `N` below `750` until the
 recalibrated evidence exists.
+
+## D-035: Recalibrated alpha(N) PROCEEDs at every tested N — the conditioning mechanism is sound (R6f)
+
+Date: 2026-08-30
+
+Stage: R6f / Stage 4 (new engine)
+
+Status: PROCEED at all five held-out `N`
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage4g_charter.md`
+
+Question: Once the sequential engine's `alpha` is properly calibrated
+per `N` (mirroring D-012's own methodology), does the overlap shape's
+conditioning mechanism hold up across `N=[400, 550, 625, 675, 725]` —
+the first evidence for this shape collected under a threshold not
+already known to be miscalibrated (D-034)?
+
+Prior specification: `docs/stage4g_charter.md` fit four candidate
+`alpha(N)` forms from Stage 4e's own evidence (argmax `conditional_
+accuracy` per `N`, subject to true-edge FPR `<= .10`), selected by R²,
+then validated the single predicted `alpha_hat` at five interpolated
+held-out `N` never simulated before.
+
+**Implementation correction, made before any evidence was generated for
+this charter (`mintnet.experiments.stage4g_fit`'s own docstring):** the
+charter's literal fitting target (argmax accuracy alone) degenerates —
+accuracy rises monotonically as `alpha` shrinks while candidacy falls
+monotonically, so an unconstrained argmax always selects the single
+strictest grid value at every `N`, which is not a meaningful "best"
+alpha. A candidacy-rate floor of `.80` (matching this project's own
+standard threshold convention) was added to keep the fitting target
+interior and meaningful. Fitting points: `N=300` &rarr; `alpha=.2`;
+`500`/`600` &rarr; `.05`; `650`/`700` &rarr; `.01`; `750` &rarr; `.005`
+— a clean, monotonically decreasing curve, the expected shape.
+
+Evidence: `results/generated/stage4g_alpha_calibration/decision.json`,
+zero errors, runtime 22s. Selected form: **inverse_sqrt** (R² `.966`).
+
+| N | alpha_hat | status | candidacy rate | conditional accuracy | margin |
+|---|---|---|---|---|---|
+| 400 | `.1211` | PROCEED | `.881` | `.913` | `.100` |
+| 550 | `.0527` | PROCEED | `.890` | `.970` | `.100` |
+| 625 | `.0281` | PROCEED | `.886` | `.980` | `.100` |
+| 675 | `.0140` | PROCEED | `.855` | `.992` | `.100` |
+| 725 | `.0015` | PROCEED | `.688` | `.999` | `.100` |
+
+**All five held-out cells PROCEED comfortably** — conditional accuracy
+`.913`-`.999`, well above the `.80` gate at every point, with the
+binding margin constraint consistently the true-edge FPR side (FPR
+stays near `0` throughout, so its margin caps near the `.10` ceiling
+rather than accuracy driving the result).
+
+**One disclosed caveat, not smoothed over:** candidacy rate at the
+largest held-out `N` (`725`) drops to `.688` — well below the `.80`
+floor the fitting procedure itself required at the six known points.
+The fitted curve's predicted `alpha` becomes very strict at `N=725`
+(`.0015`), pushing accuracy toward `1.0` at the cost of candidacy. The
+smooth interpolating curve does not perfectly preserve the `.80`
+candidacy constraint everywhere between fitting points — it was fit to
+satisfy that constraint only at the six known `N`, not guaranteed
+in-between.
+
+Decision: **The sequential engine's conditioning mechanism itself is
+sound for the overlap shape across this entire held-out range, once
+`alpha` is properly calibrated to `N`.** D-034's anomaly is fully
+resolved: it was never a property of the engine's reasoning, only of
+testing it with a threshold that made low `N` look artificially easy.
+This does **not** mean "the overlap shape's floor is now `N=400`" —
+that claim would need the *candidacy* side of the picture reconciled
+too (a low candidacy rate, even alongside high accuracy, means many
+cross-branch pairs go unevaluated in practice), and this charter's own
+`N=725` cell already shows the fitted curve does not automatically keep
+both sides comfortable simultaneously.
+
+Rationale: This closes the loop opened by D-032 (the original metric
+artifact) through D-034 (the miscalibration explanation) — three
+charters were needed to go from "surprising number" to "explained and
+now correctable," each one narrowing the question rather than
+rationalizing the previous result. That the fix, once applied, produces
+clean PROCEEDs with large margins across the whole tested range is
+itself evidence the underlying diagnosis (D-034) was correct, not just
+plausible.
+
+Consequences: The sequential engine's overlap-shape conditioning
+mechanism is validated, under a calibrated `alpha(N)`, across `N in
+[400, 725]` (interpolation only — this charter's own fitting range is
+`[300, 750]`, do not extrapolate outside it). **This is still not a
+full floor recommendation**: a proper "how low can this go" answer
+needs the candidacy-rate side reconciled (e.g., a combined criterion
+requiring both `conditional_accuracy` and `candidacy_rate` to clear
+their own floors simultaneously, which this charter's fitted formula
+was not required to guarantee off the exact fitting points), and remains
+evidence from the isolated, no-noise overlap DGP, not a composed,
+screening-realistic `p=15` network. Stage 4c's cascading-error stress
+test remains the unconditional precondition for any user-facing claim,
+per the R6a milestone. `docs/validated_operating_ranges.md` should
+record this as: the conditioning mechanism is now trustworthy across
+this `N` range under calibration, but the practical floor question
+(accounting for candidacy) remains open.

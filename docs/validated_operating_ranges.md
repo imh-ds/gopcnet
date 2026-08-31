@@ -256,6 +256,23 @@ PROCEED result is unlikely to be affected given its much wider
 true/indirect signal separation, but has not been explicitly
 re-confirmed under a calibrated alpha either. See D-034.
 
+**Stage 4g recalibration — the conditioning mechanism is now validated
+under proper calibration, but the practical floor question remains
+open.** A fitted `alpha(N)` formula (inverse-sqrt, R² `.966`, fit from
+Stage 4e's own evidence with a `.80` candidacy-rate floor added during
+implementation to keep the fitting target meaningful) PROCEEDs at every
+held-out `N` tested — `[400, 550, 625, 675, 725]` — with conditional
+accuracy `.913`-`.999`, comfortably above the `.80` gate throughout.
+**This resolves D-034's anomaly**: the mechanism itself is sound across
+this whole range once `alpha` is not held fixed across `N`. **This is
+not yet a floor recommendation**, for two disclosed reasons: (1)
+candidacy rate — how often a cross-branch pair even gets evaluated at
+all — is not guaranteed to stay comfortable everywhere the fitted curve
+interpolates; it drops to `.688` at the largest held-out `N` (`725`)
+even though the fitting procedure required `>= .80` at the six known
+points. (2) This is still evidence from the isolated, no-noise overlap
+DGP, not a composed, screening-realistic network. See D-035.
+
 Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 
 ## Maintenance
