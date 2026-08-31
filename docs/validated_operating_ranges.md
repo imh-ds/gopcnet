@@ -475,6 +475,27 @@ Combined with D-037-D-042, overlap now has every named R6a-adjacent
 cascading-error question answered as thoroughly as chain/fork/hub's.
 See D-043.
 
+**Stage 4p canonical benchmark — a public-facing side-by-side table,
+with two disclosure-worthy findings, not a change to any prior
+verdict.** Both engines, both `p=15` networks (overlap-based, hub-
+based), one shared alpha-selection rule (D-012's general formula, not
+overlap's own specialized one), across `N=[400,500,600,750,1000,1500]`.
+Hub-based network: clean (one isolated, thin miss at `N=500`). Overlap-
+based network surfaces two things worth knowing before citing this
+table: **(1)** the conservative engine REASSESSes at every tested `N`
+including `1500` (`.791` vs. D-018's own `.817`) — not a contradiction,
+since D-018's own `N=1500` margin was already thin (`.017` above the
+gate) and this charter draws an independently-seeded sample; the newly-
+visible dip across intermediate `N` (worst at `750`) is itself new
+information D-018's own two-point test never had. **(2)** the sequential
+engine PROCEEDs at every tested `N` including `400`-`600`, but this
+uses the same coarse, pooled TPR metric D-032 already showed can be
+inflated by non-detection — this result should **not** be read as
+beating or superseding Stage 4g/4i/4j's own properly-decomposed
+`[400, 735]` finding, which remains the trustworthy source for that
+specific shape/engine combination. See D-045; `docs/stage4o_recommendation.md`'s
+own per-shape verdicts are unaffected.
+
 Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 
 ## Maintenance

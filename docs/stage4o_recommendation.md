@@ -8,6 +8,21 @@ inferring an answer.
 
 Date: 2026-08-31
 
+> **Addendum — 2026-08-31, D-045:** A separate, supplementary public
+> benchmark (`docs/stage4p_charter.md`) later ran both engines side by
+> side on a shared canonical `N` grid using D-012's general formula
+> (not overlap's own specialized one). It surfaced two disclosure-worthy
+> findings — a thin, sampling-sensitive margin at overlap/conservative's
+> own `N=1500` (diverging from D-018's recorded PROCEED by less than the
+> size of D-018's own margin), and a reminder that the sequential
+> engine's clean sweep there uses a coarser metric D-032 already showed
+> can be inflated by non-detection. **Neither finding changes any
+> verdict in this document** — see D-045 and
+> `docs/validated_operating_ranges.md` for detail — but any reader
+> comparing this document's own Section 2 table against Stage 4p's
+> benchmark table should read the two as answering related but distinct
+> questions, not as competing claims.
+
 ---
 
 ## 1. Per-shape verdict (the charter's own rubric, applied literally)

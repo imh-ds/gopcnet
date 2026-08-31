@@ -3383,3 +3383,105 @@ authorize any of them — each remains its own future charter's decision.
 This closes the R6a milestone as project governance; it does not close
 the project, and does not touch the outline's separate, unstarted R6
 milestone (broad benchmarking against incumbents).
+
+## D-045: Canonical benchmark reveals two disclosure-worthy findings — a thin, sampling-sensitive margin at overlap's own N=1500, and a metric caveat on the sequential engine's clean sweep (R6p)
+
+Date: 2026-08-31
+
+Stage: R6p / Stage 4 (public benchmark, both engines, both networks)
+
+Status: Data generated per `docs/stage4p_charter.md`. Hub-based network
+is clean, as expected. Overlap-based network surfaces two findings that
+must be disclosed alongside this benchmark's own headline table, not
+smoothed over.
+
+Decision timing: Gate evaluated after results, per
+`docs/stage4p_charter.md`. Both findings below were not predicted in
+advance — the charter explicitly anticipated overlap/sequential
+divergence from the specialized formula below `N=750`, but not these
+two specific patterns.
+
+Evidence: `results/generated/stage4p_canonical_benchmark/decision.json`,
+runtime `716s`.
+
+**Hub-based `p=15` network: clean, as the charter's own design intended.**
+Both engines PROCEED at every `N` except one thin, isolated miss
+(conservative, `N=500`, fork indirect TPR `.792`, `.008` below the
+`.80` floor — surrounded by clean PROCEEDs at `N=400` and `N=600`, read
+as an isolated sampling-noise miss, not a trend). This is new evidence:
+the conservative engine had never been run on this exact chain/fork/hub
+network before this charter.
+
+**Overlap-based `p=15` network, finding 1 — the conservative engine
+REASSESSes at every tested `N`, including `N=1500`, apparently
+diverging from D-018's own recorded `N=1500` PROCEED.** Composite
+overlap TPR: `.728`(`400`), `.648`(`500`), `.599`(`600`), `.579`(`750`),
+`.666`(`1000`), `.791`(`1500`) — a U-shaped dip, new information, since
+D-018 only ever tested `N=750` and `N=1500` and never saw the
+intermediate points. **The `N=1500` result specifically (`.791`) sits
+just under the `.80` gate, where D-018 recorded `.817`** — a `.026`
+difference. This is not read as a contradiction: D-018's own `N=1500`
+margin was already thin (`.817 - .80 = .017`, smaller than its own
+`N=750` REASSESS's distance from the line), and this charter draws an
+**independently seeded sample** (a new stream tag, not a replay of
+Stage 2d's own seeds) — a draw landing on the other side of an already-
+thin margin is plausible sampling variation, not evidence D-018 was
+wrong. The new, disclosure-worthy finding is that **this margin is
+thinner and more sampling-sensitive than D-018's own binary REASSESS-
+at-750/PROCEED-at-1500 framing suggested**, and the newly-visible dip at
+intermediate `N` (worst at `750`, exactly the point already flagged as
+REASSESS) is itself new information about the shape of this specific
+weak-signal problem across `N`, not previously observed.
+
+**Overlap-based `p=15` network, finding 2 — the sequential engine
+PROCEEDs at every tested `N` including `400`-`600`, but this specific
+result carries a known metric caveat and should not be read as beating
+or superseding Stage 4g/4i/4j's own `[400, 735]` finding.** This
+charter's gate uses the same coarse, pooled indirect-edge TPR metric
+Stage 2d/4h/4l always used (`_score`'s own `_tpr` computation: a pair
+that never becomes a candidate defaults to "pruned" in the final
+adjacency, exactly as a correctly-conditioned pair would) — **this is
+precisely the non-detection-conflation artifact D-032 diagnosed and
+built the candidacy-conditional metric to correct.** Direct check at
+`N=400`: `58.4%` of validation replicates already score a perfect
+`1.0` composite TPR, true-edge FPR is exactly `0`, and the DGP-specific
+candidacy decomposition this benchmark does not compute would be needed
+to confirm how much of this apparent strength reflects genuine correct
+conditioning versus pairs that simply never cleared screening. **This
+charter's own overlap/sequential PROCEED cells should therefore be read
+as descriptive, not as independently confirming viability below `N=400`
+the way Stage 4g/4i/4j's properly-decomposed metric does within its own
+`[400, 735]` range** — this is exactly the caveat the charter's own
+consequences section anticipated in spirit (divergence from the
+specialized findings is informative, not a contradiction), just
+manifesting as an inflated-agreement risk rather than a disagreement.
+
+Decision: **Report both findings plainly in the benchmark's own
+public-facing presentation, not only in this entry.** The side-by-side
+table stands as generated evidence, but any external presentation of
+this benchmark must carry: (1) a note that overlap/conservative's
+`N=1500` cell reflects a thin, sampling-sensitive margin, not a
+retraction of D-018; (2) a note that overlap/sequential's composite-TPR
+PROCEED cells use a metric known to be conflatable with non-detection,
+and Stage 4g/4i/4j's own decomposed `[400, 735]` finding remains the
+more trustworthy source for that specific shape/engine combination.
+
+Rationale: This project's own established discipline (D-032's own
+history) is exactly why this pattern was worth catching rather than
+reporting the clean-looking table at face value. Building a consistent,
+public-facing benchmark on a coarser, more comparable metric was a
+deliberate, disclosed tradeoff in `docs/stage4p_charter.md` (needed for
+apples-to-apples comparison against the conservative engine, which
+has no direct "candidacy" concept); this entry is the disclosure that
+tradeoff's own consequences require.
+
+Consequences: `docs/stage4o_recommendation.md`'s own per-shape verdicts
+and `N`-threshold matrix are **unaffected** — this benchmark does not
+change any prior charter's PROCEED/REASSESS finding, per
+`docs/stage4p_charter.md`'s own consequences section. The benchmark
+report and any future public-facing use of it must carry both caveats
+above. A genuine follow-up, if the thin `N=1500`/overlap/conservative
+margin ever matters for a specific decision, would be a dedicated
+repeated-sampling charter (multiple independent seeds at exactly
+`N=1500`) to characterize the margin's own sampling distribution rather
+than trusting either single draw (D-018's or this charter's).
