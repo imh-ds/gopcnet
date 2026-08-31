@@ -496,6 +496,25 @@ beating or superseding Stage 4g/4i/4j's own properly-decomposed
 specific shape/engine combination. See D-045; `docs/stage4o_recommendation.md`'s
 own per-shape verdicts are unaffected.
 
+**Stage 4q repair — a confident conservative floor at `N=1750`, and the
+composite-metric gap confirmed small.** Directly addressed both D-045
+findings. **Part A**: the conservative engine on the overlap-based
+`p=15` network PROCEEDs with real margin at `N=1750` (`.839` TPR,
+`.039` above the gate) and `N=2000` (`.850`, `.050` above) — margin
+*increasing* with `N`, the expected shape of a genuine floor.
+**`N=1750` is now the recommended threshold for the conservative engine
+on this shape**, superseding `N=1500` (`.817`, only `.017` margin,
+D-018) as the practical recommendation without retracting that earlier
+result. **Part B**: re-scored Stage 4p's own sequential-engine-on-
+overlap draws (bit-identical seeds and alpha) with the proper
+candidacy/conditional-accuracy decomposition. The non-detection gap
+D-045 flagged is real but small and shrinks toward zero as `N` grows —
+largest at `N=400` (composite `.869` vs. decomposed `.858`, gap
+`.011`), essentially zero by `N=1000`-`1500` as candidacy rate
+approaches `1.0`. **Conditional accuracy clears `.80` at every tested
+`N`**, confirming Stage 4p's own composite-TPR sweep was mostly
+genuine, not primarily an artifact. See D-046.
+
 Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 
 ## Maintenance

@@ -3485,3 +3485,89 @@ margin ever matters for a specific decision, would be a dedicated
 repeated-sampling charter (multiple independent seeds at exactly
 `N=1500`) to characterize the margin's own sampling distribution rather
 than trusting either single draw (D-018's or this charter's).
+
+## D-046: N=1750/2000 give the conservative engine a confident overlap floor; the sequential engine's composite-TPR sweep was mostly honest, with a small, shrinking gap (R6q)
+
+Date: 2026-08-31
+
+Stage: R6q / Stage 4 (benchmark repair, two independent parts)
+
+Status: Both parts complete. Part A: PROCEED with comfortable margin at
+both new `N`. Part B: descriptive re-scoring, `decomposed-metric
+PROCEED` at every `N`.
+
+Decision timing: Both gates/comparisons evaluated after results, per
+`docs/stage4q_charter.md`.
+
+Question: (A) Does the conservative engine reach a genuinely confident
+threshold on the overlap-based `p=15` network past `N=1500`'s thin
+margin? (B) How much of the sequential engine's clean composite-TPR
+sweep on the same network (Stage 4p, D-045) reflects genuine
+correctness versus non-detection inflation (D-032)?
+
+Evidence: `results/generated/stage4q_a_higher_n/decision.json` (runtime
+`29.4s`), `results/generated/stage4q_b_decomposed_metric/comparison.json`
+(runtime `72.3s`).
+
+**Part A — yes, a genuinely confident floor exists at `N=1750`.**
+
+| N | status | overlap TPR | margin above .80 | comfortable (`>=.032`)? |
+|---|---|---|---|---|
+| 1750 | PROCEED | `.839` | `.039` | yes |
+| 2000 | PROCEED | `.850` | `.050` | yes |
+
+Both new `N` clear not just the `.80` gate but the `.032` D-011-scale
+comfort threshold, with margin *increasing* from `1750` to `2000` — the
+expected shape of a genuine floor, not a knife-edge crossing. **`N=1750`
+is the recommended threshold for the conservative engine on this
+specific weak-signal shape at `p=15`** going forward, replacing
+`N=1500` as the point anyone should actually rely on, though `N=1500`'s
+own PROCEED (D-018) is not retracted — it remains a valid, just thin,
+result.
+
+**Part B — the composite metric's non-detection inflation is real but
+small, and shrinks toward zero as `N` grows.**
+
+| N | composite TPR | candidacy rate | conditional accuracy | gap |
+|---|---|---|---|---|
+| 400 | `.869` | `.922` | `.858` | `.011` |
+| 500 | `.873` | `.955` | `.867` | `.006` |
+| 600 | `.866` | `.974` | `.863` | `.004` |
+| 750 | `.867` | `.991` | `.865` | `.001` |
+| 1000 | `.883` | `.998` | `.883` | `.0003` |
+| 1500 | `.894` | `1.000` | `.894` | `.0000` |
+
+**Conditional accuracy clears `.80` at every single `N`**, including
+`400` (`.858`) — Stage 4p's own composite-TPR PROCEED sweep (D-045) was
+**not** primarily an artifact; it was mostly genuine, with a small,
+quantified inflation (largest at `N=400`, `.011`, about `1.1`
+percentage points) that shrinks as candidacy rate approaches `1.0`
+(essentially every cross-branch pair clears screening by `N=1000`).
+
+Decision: **Both findings resolve, rather than deepen, D-045's own
+disclosed concerns.** Part A gives the project a genuinely confident
+`N` recommendation for the conservative engine on this shape
+(`N=1750`), not just a barely-passing one. Part B confirms the
+sequential engine's own composite-TPR sweep on overlap was trustworthy
+in direction and magnitude, even though the specific metric used was
+known to carry inflation risk — the actual risk realized was small.
+
+Rationale: Both parts were designed to directly test, not assume, the
+size of the problems D-045 flagged, rather than either dismissing them
+or treating them as more severe than warranted without measurement.
+That the sequential/overlap gap shrinks monotonically with `N`
+(matching candidacy rate's own approach to `1.0`) is the expected
+signature of a genuine non-detection effect fading as screening power
+increases, not a coincidence.
+
+Consequences: `docs/validated_operating_ranges.md` should record
+`N=1750` as the conservative engine's own confident recommendation for
+the overlap shape at `p=15` (superseding `N=1500` as the practical
+recommendation, without retracting `N=1500`'s own valid-but-thin
+PROCEED). Part B's comparison table should be cited wherever Stage 4p's
+own overlap/sequential sweep is referenced, so the small, quantified
+non-detection gap travels with the result rather than being either
+ignored or overstated. `docs/stage4o_recommendation.md`'s own per-shape
+verdicts remain unaffected — this charter, like Stage 4p before it, is
+supplementary evidence, not a change to any prior PROCEED/REASSESS
+finding.
