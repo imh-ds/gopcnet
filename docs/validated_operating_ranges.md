@@ -393,6 +393,31 @@ recommendation**: this sweep is isolated-only (no screening, no noise,
 no composed pipeline), and Stage 4c's cascading-error stress test
 covered only the triangle shape, not these three. See D-040.
 
+**Stage 4l composed/noisy chain-fork-hub — the isolated-vs-composed gap
+closes with no new fitting.** Embedded chain/fork/hub(2-children) in a
+new, noisy `p=15` network (`96` null pairs, `6` noise columns,
+deliberately distinct from Stage 2d's own overlap-based `p=15` DGP) at
+`strength in [0.30, 0.50]`, `N in [750, 1000, 1500]` — **all `6` cells
+PROCEED**, reusing D-012's already-frozen `alpha(N)` formula unmodified,
+the exact same formula and values Stage 4k already validated in
+isolation. All indirect TPRs `.86`-`.94`, comfortably clear of `.80`;
+true-edge FPR exactly `0` throughout; final false-edge rate always
+below screening's own rate. **Unlike overlap (Stage 4h), which needed
+Stage 4g's dedicated per-shape recalibration to PROCEED in the composed
+setting (D-037), chain/fork/hub required no new fitting at all** — the
+isolated result (D-040) transferred directly. Combined with D-040, this
+substantially satisfies the R6a milestone's broader shape/signal-
+strength precondition for chain, fork, and hub(2-children): **`N in
+[750, 1000, 1500]`, `strength in [0.30, 0.50]`, composed and noisy, is
+now validated for these three shapes using the same `alpha(N)` formula
+long used for the conservative engine.** The one remaining precondition
+before a user-facing recommendation for these shape types is Stage 4c's
+cascading-error stress test, tested only on the triangle shape so far.
+Overlap's own dedicated `alpha(N)` treatment remains necessary and
+unaffected — this result confirms overlap was the DGP-specific
+exception, not evidence the whole engine needs shape-specific tuning.
+See D-041.
+
 Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 
 ## Maintenance

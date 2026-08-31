@@ -3017,3 +3017,102 @@ next step, if pursued, would be a composed/noisy version of this same
 sweep (mirroring Stage 4h's own treatment of overlap), to close the
 isolated-vs-composed gap for chain/fork/hub the way Stage 4h closed it
 for overlap.
+
+## D-041: Composed/noisy chain-fork-hub PROCEEDs cleanly on every cell — the isolated-vs-composed gap closes without recalibration (R6l)
+
+Date: 2026-08-31
+
+Stage: R6l / Stage 4 (new engine)
+
+Status: PROCEED. All 6 cells (`2` strengths x `3` sample sizes) PROCEED,
+using D-012's already-frozen `alpha(N)` formula, unmodified, on a new,
+noisy `p=15` chain/fork/hub network.
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage4l_charter.md`
+
+Question: Does D-012's existing `alpha(N)` formula, already validated
+in isolation for chain/fork/hub (D-040), continue to hold once embedded
+in a full `p=15` network with `96` competing null pairs and noise
+columns — the composed-pipeline step Stage 4h took for overlap — or
+does screening pressure expose a gap the isolated test could not see
+(mirroring D-018's own finding for the conservative engine on the
+overlap shape specifically)?
+
+Prior specification: `docs/stage4l_charter.md` tested `6` cells
+(`strength in [0.30, 0.50]` x `N in [750, 1000, 1500]`, Stage 4k's own
+exact grid), gated on chain/fork/hub indirect TPR `>= .80`, true-edge
+FPR `<= .10`, and final false-edge rate not exceeding screening's own
+rate by more than `.01`, `2,000` replicates per cell.
+
+Evidence: `results/generated/stage4l_composed_noise_chain_fork_hub/
+decision.json`, runtime `51.0s`.
+
+| strength | N | status | chain TPR | fork TPR | hub TPR | true-edge FPR | screening FER | final FER |
+|---|---|---|---|---|---|---|---|---|
+| 0.30 | 750 | PROCEED | `.913` | `.926` | `.914` | `0` | `.148` | `.129` |
+| 0.30 | 1000 | PROCEED | `.935` | `.917` | `.923` | `0` | `.132` | `.116` |
+| 0.30 | 1500 | PROCEED | `.914` | `.920` | `.905` | `0` | `.108` | `.097` |
+| 0.50 | 750 | PROCEED | `.855` | `.869` | `.857` | `0` | `.149` | `.120` |
+| 0.50 | 1000 | PROCEED | `.864` | `.870` | `.886` | `0` | `.130` | `.107` |
+| 0.50 | 1500 | PROCEED | `.895` | `.872` | `.880` | `0` | `.109` | `.091` |
+
+**All 6 cells PROCEED — a clean, unqualified result, same as Stage 4k's
+isolated sweep.** All indirect TPRs comfortably above `.80` (smallest
+margin `.055`, `strength=.50, N=750`); true-edge FPR exactly `0`
+throughout; final false-edge rate always *below* the screening-stage
+rate (never triggers the `.01` tolerance check, since conditioning only
+ever removes candidates, never adds them). No isolated-vs-composed
+comparison table is produced (per this charter's own reporting
+requirement, that table is generated only for failing cells, and none
+failed).
+
+**The same counterintuitive strength pattern D-040 noted reappears
+here**: TPR at `strength=0.30` (`.91`-`.94`) is *higher* than at
+`strength=0.50` (`.86`-`.90`) across every `N`, the same direction as
+Stage 4k's isolated result. This is consistent with D-040's own
+explanation (a stronger true correlation leaves a larger residual
+partial correlation after conditioning, more likely to still cross the
+significance threshold) rather than a new, composed-pipeline-specific
+effect — the pattern transfers unchanged from isolation to composition,
+which is itself a small piece of corroborating evidence that nothing
+qualitatively different is happening once noise and competition are
+added.
+
+Decision: **PROCEED.** This closes the isolated-vs-composed gap for
+chain/fork/hub the way Stage 4h closed it for overlap — but with a
+different outcome: Stage 4h needed Stage 4g's dedicated per-shape
+`alpha(N)` recalibration to succeed at `N=625`/`700` (D-037); this
+charter needed **no new fitting at all**, the exact same formula and
+the exact same three `alpha` values Stage 4k already used in isolation
+carried over unchanged into a `96`-null-pair, `6`-noise-column,
+screening-realistic setting.
+
+Rationale: The charter's own diagnostic apparatus (isolated-vs-composed
+candidacy/accuracy comparison) was built specifically to distinguish a
+screening-detection-power failure (candidacy dropping under
+competition, mirroring D-018) from a conditioning-mechanism failure —
+neither triggered, because nothing failed. This is a stronger, cleaner
+result than could have been assumed in advance: Stage 1's original
+motif families (chain, fork, hub) apparently do not share overlap's
+sensitivity to embedding in a larger, noisier network, at least across
+the strength/`N` range tested here.
+
+Consequences: **Chain, fork, and hub(2-children) are now validated for
+the sequential engine's composed, noisy conditioning at `N in [750,
+1000, 1500]`, `strength in [0.30, 0.50]`, using D-012's existing
+formula with no shape-specific recalibration** — the same formula
+already used throughout Stage 2/3 for the conservative engine. Combined
+with D-040, **the R6a milestone's broader shape/signal-strength
+precondition is now substantially satisfied for these three shape
+types**, leaving Stage 4c's cascading-error stress test (tested only on
+the triangle shape so far, per its own disclosed caveats) as the one
+remaining precondition before any user-facing recommendation for
+chain/fork/hub-type shapes specifically. The overlap shape's own
+dedicated `alpha(N)` treatment (Stage 4g/4i/4j, validated `[400, 735]`)
+remains necessary and unaffected — this result does not retroactively
+simplify or change that shape's requirements, it confirms overlap was
+the DGP-specific exception, not chain/fork/hub. Not tested here: signal
+strengths outside `[0.30, 0.50]`, hub with more than 2 children (Stage
+4b/4d's own hub result, using a different child count, is not touched
+by this charter), or any `p` other than `15`.
