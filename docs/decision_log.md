@@ -2623,3 +2623,97 @@ larger, noisy candidate network (mirroring Stage 2's own role after
 Stage 1), which remains the natural next step before any real-dataset
 recommendation. `docs/validated_operating_ranges.md` should record this
 result with both caveats intact, not as an unqualified clearance.
+
+## D-037: Composed p=15 pipeline dramatically beats D-018 at N=625/700 — and finds a real bug at N=750 (R6h)
+
+Date: 2026-08-31
+
+Stage: R6h / Stage 4 (new engine)
+
+Status: PROCEED at `N=625` and `N=700`. `N=750` REASSESSed for a
+disclosed, structural reason — not a substantive finding about that `N`.
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage4h_charter.md`
+
+Question: Embedded in D-018's exact `p=15` noisy network, using Stage
+4g's fitted `alpha(N)` formula unmodified, does the sequential engine
+PROCEED where the conservative engine REASSESSed (`N=750`, TPR `.569`)
+or barely PROCEEDed (`N=1500`, TPR `.817`)?
+
+Prior specification: `docs/stage4h_charter.md` tested `N=[625, 700,
+750]` — three of Stage 4g's own validated points, `750` chosen as the
+primary comparison against D-018 — reusing Stage 4g's fitted formula's
+single predicted `alpha` per `N`, no new selection.
+
+Evidence: `results/generated/stage4h_composed_noise/decision.json`,
+runtime 24s.
+
+| N | status | alpha | overlap TPR | candidacy rate | conditional accuracy | contamination rate | D-018 baseline |
+|---|---|---|---|---|---|---|---|
+| 625 | PROCEED | `.0281` | `.986` | `.888` | `.984` | `0` | — |
+| 700 | PROCEED | `.0076` | `.998` | `.835` | `.997` | `0` | — |
+| 750 | REASSESS | `-.0044` | — | — | — | — | `.569` (D-018) |
+
+**`N=625` and `N=700` PROCEED spectacularly** — composite overlap TPR
+`.986` and `.998`, both **higher than D-018's own `N=1500` PROCEED**
+(`.817`), using less than half the data, with zero contamination
+detected and chain/fork/true-edge behavior clean throughout. The
+required candidacy/conditional-accuracy decomposition confirms this is
+not a repeat of D-032's artifact: candidacy is high (`.84`-`.89`, most
+cross-branch pairs genuinely get evaluated) and conditional accuracy is
+near-perfect (`.984`-`.997`) — a real result on both halves of the
+metric, not an inflated one.
+
+**`N=750` failed for a structural reason, not a substantive one: Stage
+4g's fitted `alpha(N)` formula predicts a *negative* alpha
+(`-.0044`) exactly at `N=750`**, causing every replicate to error before
+producing any evidence. Checked directly: the fitted `inverse_sqrt`
+curve crosses zero between `N=725` (`.0015`, still positive) and
+`N=750` — and `N=750` was never itself tested as a held-out point in
+Stage 4g (it was one of the six *fitting* points, not one of the five
+held-out validation points), so this specific failure mode was never
+caught before now. **This is a real correction to Stage 4g's own scope
+claim**: `docs/stage4g_charter.md`'s "validated for interpolation within
+`[300, 750]`" did not actually verify the formula returns a valid
+probability at `750` itself, only at points strictly between fitting
+points.
+
+Decision: **The composed-pipeline result at `N=625`/`700` is accepted as
+strong, genuine evidence** that the sequential engine achieves at these
+`N` what the conservative engine could not achieve even at double the
+sample size. **No claim is made about `N=750`** — it is neither PROCEED
+nor a genuine REASSESS on the merits, it is an un-evaluated cell due to
+a formula defect. The direct D-018 comparison this charter was built
+around therefore cannot be made at the exact matching `N` — it is made
+at `625`/`700` instead, which is if anything a *more* favorable
+comparison (less data, still dramatically ahead of D-018's `1500`-`N`
+result).
+
+Rationale: This is the second time a fitted curve's own boundary has
+produced a result its own validation didn't check (compare: D-012's
+explicit `[700,3000]` "do not extrapolate" note came from a similar
+awareness) — but here the boundary point was silently *inside* the
+claimed range, not outside it, which is a subtler and more easily missed
+version of the same discipline. The lesson generalizes: a fitted
+formula's own **fitting points** are not automatically safe to
+re-evaluate later — only the explicitly held-out validation points carry
+that guarantee. Future `alpha(N)`-style charters should hold out (or
+separately re-verify) the boundary fitting points too, not just interior
+interpolation points.
+
+Consequences: The sequential engine's composed, `p=15`, noisy-network
+performance is now validated at `N=625` and `N=700` for the overlap
+shape, both dramatically outperforming the conservative engine's own
+composed result at more than double the sample size. `N=750` remains
+untested under a working `alpha`; a small follow-up (re-fitting Stage
+4g's formula with `750` itself held out and re-verified, or simply
+computing and checking the single value at `750` before trusting it)
+would resolve this specific gap cheaply, without needing new simulation
+beyond what Stage 4e already provides. `docs/validated_operating_ranges.md`
+should record the `625`/`700` results as the headline finding of this
+entire overlap-shape investigation (D-026 through D-037), with the
+`N=750` gap noted as an open, cheaply fixable loose end — not folded
+into a false "REASSESS at N=750" reading. Stage 4c's cascading-error
+caveats and the "not yet stress-tested at this network size" note still
+apply before any user-facing recommendation.

@@ -294,6 +294,31 @@ a smaller contamination effect; and only one DGP and one contamination
 pathway (independent noise, not noise correlated with a real node) was
 tested. See D-036.
 
+**Stage 4h composed pipeline, p=15, with noise — the headline result of
+this entire investigation (D-026 through D-037).** Embedded in D-018's
+exact `p=15` noisy network, using Stage 4g's fitted `alpha(N)` formula
+unmodified: **`N=625` and `N=700` both PROCEED with composite overlap
+TPR `.986` and `.998` — higher than the conservative engine's own
+`N=1500` PROCEED (`.817`), using less than half the sample size.**
+Candidacy (`.84`-`.89`) and conditional accuracy (`.984`-`.997`) both
+comfortably high — a genuine result, not D-032's non-detection
+artifact. Zero contamination detected. **`N=750` itself is not resolved
+by this evidence**: Stage 4g's fitted formula predicts a *negative*
+alpha exactly at `N=750` (a real bug in that formula's own boundary
+behavior, since `750` was one of Stage 4g's *fitting* points, never
+itself held out and validated) — every `N=750` replicate errored rather
+than testing anything real. Do not read `N=750` as REASSESSed on the
+merits; it is an open, cheaply-fixable gap (re-fit Stage 4g's formula
+with `750` held out and re-verified), not a negative finding. See
+D-037. **This result, combined with Stage 4c's cascading-error caveats
+(no contamination detected, but not stress-tested at this network
+size), is the strongest evidence yet that the sequential engine is a
+real, usable alternative for this weak-signal shape — but still not a
+user-facing recommendation** on its own; the R6a milestone's
+preconditions are now substantially met, and the natural next steps are
+resolving the `N=750` gap and testing a broader shape/signal-strength
+sweep before any such recommendation.
+
 Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 
 ## Maintenance
