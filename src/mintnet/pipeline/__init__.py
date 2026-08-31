@@ -6,10 +6,12 @@ from .compose import (
     connected_components,
     describe_component,
 )
+from .sequential import sequential_screen_and_prune
 
 __all__ = [
     "compose_screen_then_prune",
     "connected_components",
     "describe_component",
     "VALIDATED_CLIQUE_SIZES",
+    "sequential_screen_and_prune",
 ]
