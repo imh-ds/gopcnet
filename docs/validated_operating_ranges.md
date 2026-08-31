@@ -273,6 +273,27 @@ even though the fitting procedure required `>= .80` at the six known
 points. (2) This is still evidence from the isolated, no-noise overlap
 DGP, not a composed, screening-realistic network. See D-035.
 
+**Stage 4c cascading-error stress test — no contamination effect
+detected, with two disclosed caveats.** The R6a milestone's own
+precondition: does a wrongly-confirmed noise variable propagate into
+wrongly pruning an unrelated true edge? Tested on Stage 1's asymmetric
+`strong` triangle plus 0 vs. 5 pure-noise columns (paired, identical
+triangle draw per replicate), `N=[100,200,300]`, both engines on
+identical data. **Result: the sequential engine's weak-edge wrong-
+pruning rate is bit-for-bit identical with and without noise at every
+tested cell** — a noise column is implicated in fewer than `.6%` of
+wrong prunings (the joint requirement — spurious correlation with
+*both* endpoints of the target pair — is a much stronger filter than
+expected). The conservative engine's wrong-pruning rate *improves* with
+noise (contamination breaks clique validity, disabling DPI, which helps
+here since the untested edge is genuinely real). **Do not read this as
+"cascading error is not a risk for this engine" in general** — two
+specific limits: the baseline wrong-pruning rate here is already high
+(`59%`-`84%`, from weak-signal detection power alone), which could mask
+a smaller contamination effect; and only one DGP and one contamination
+pathway (independent noise, not noise correlated with a real node) was
+tested. See D-036.
+
 Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 
 ## Maintenance

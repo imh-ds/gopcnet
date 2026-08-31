@@ -2525,3 +2525,101 @@ per the R6a milestone. `docs/validated_operating_ranges.md` should
 record this as: the conditioning mechanism is now trustworthy across
 this `N` range under calibration, but the practical floor question
 (accounting for candidacy) remains open.
+
+## D-036: No cascading-error effect detected — the predeclared prediction was wrong (R6g)
+
+Date: 2026-08-31
+
+Stage: R6g / Stage 4 (new engine)
+
+Status: Descriptive, no gate, per `docs/stage4c_charter.md`. Q1's
+predeclared prediction ("a real, non-trivial increase") is **rejected**
+by clean, decisive evidence.
+
+Decision timing: Predeclared sub-questions evaluated after results, per
+`docs/stage4c_charter.md`
+
+Question: Does adding 5 pure-noise columns to Stage 1's asymmetric
+`strong` triangle measurably increase the sequential engine's rate of
+wrongly pruning the weak-but-real `(1,2)` edge (Q1), leave the
+conservative engine roughly unaffected (Q2), and — when the sequential
+engine does fail under contamination — is a noise column specifically
+implicated in the failing conditioning test (Q3)?
+
+Prior specification: `docs/stage4c_charter.md` predicted a "real,
+non-trivial increase" in sequential wrong-pruning under noise, driven by
+a noise column occasionally becoming a false shared-neighbor for the
+weak edge; predicted little to no increase for the conservative engine,
+since a partially-contaminated component simply breaks clique validity
+and disables DPI. Paired design: identical triangle draw at
+`noise_count=0` and `noise_count=5` per replicate, both engines on the
+same data, `N=[100,200,300]`, `alpha in {.05,.10}`.
+
+Evidence: `results/generated/stage4c_cascading_error/decision.json`
+(via `summary.json`), zero errors, runtime 53s.
+
+| N | alpha | seq. delta (noise=5 minus noise=0) | cons. delta | Q3 (noise implicated among wrong seq. prunes) |
+|---|---|---|---|---|
+| 100 | .05 | `0.0000` | `-.238` | `.0024` |
+| 100 | .10 | `0.0000` | `-.389` | `.0058` |
+| 200 | .05 | `0.0000` | `-.348` | `.0006` |
+| 200 | .10 | `0.0000` | `-.478` | `.0029` |
+| 300 | .05 | `0.0000` | `-.354` | `.0007` |
+| 300 | .10 | `0.0000` | `-.434` | `.0008` |
+
+**Q1 is rejected outright, not just weakly supported: the sequential
+engine's weak-edge wrong-pruning rate is bit-for-bit identical with and
+without noise contamination, at every single tested `(N, alpha)` cell.**
+Q3 explains why directly: a noise column is implicated in fewer than
+`.6%` of the sequential engine's (already frequent, `59%`-`84%`) wrong
+prunings — the joint requirement for contamination (a noise column must
+spuriously correlate with *both* endpoints of the target pair
+simultaneously, not just one) is a far stronger filter than the
+charter's prediction assumed. **Q2 is confirmed, and more strongly than
+predicted**: the conservative engine's wrong-pruning rate *drops*
+substantially with noise (`-.24` to `-.48`), not merely stays flat —
+contamination reliably breaks clique validity (intact rate falls from
+`.59`-`.98` to `.18`-`.48`), disabling DPI, which happens to help here
+specifically because the untested edge is a genuine true edge that
+should be retained.
+
+Decision: **No evidence of the predicted cascading-error pathway in
+this specific stress test.** The charter's own prediction is corrected,
+not defended: the mechanism this charter set out to catch — a false
+early confirmation propagating into an unrelated wrong decision — did
+not occur in any of the `12,000` replicates run per condition, at any
+tested `N` or `alpha`.
+
+Rationale: The near-zero contamination rate has a clear, verified
+statistical explanation (the joint-correlation requirement), not an
+unexplained gap — this is a genuine, decisive negative result, not an
+inconclusive one. It should not, however, be read as "cascading error
+is not a real risk for this engine in general." Two specific limits of
+this test, stated plainly: (1) the baseline wrong-pruning rate here is
+already very high (`59%`-`84%`, from the well-known weak-signal
+detection-power problem alone, unrelated to noise) — a contamination
+effect would need to be large to show up as an additional increment on
+top of an already-saturated baseline, and this test cannot rule out a
+smaller effect being masked this way; (2) this tests exactly one
+DGP (a 3-node triangle plus unrelated noise) and one contamination
+pathway (spurious pairwise correlation) — a larger component, a
+different noise structure (e.g., noise correlated *with* a real node
+rather than independent of it), or a scenario with a lower, non-
+saturated baseline wrong-pruning rate could behave differently and has
+not been tested.
+
+Consequences: This is the number the R6a milestone required, and it
+reads favorably — but it answers "was cascading error detected in this
+specific stress test," not "is cascading error impossible for this
+engine." Any future user-facing exposure of the sequential engine should
+cite this result precisely (zero contamination detected in `12,000`
+replicates per condition, under the two caveats above), not
+overgeneralize it to "the engine has no cascading-error risk."
+Combined with D-031 (hub/overlap PROCEED), D-032-D-035 (the overlap
+metric-and-calibration arc, now resolved), and this charter, the
+sequential engine has cleared every precondition this project set for
+it — but no charter in this line has yet tested it composed with a
+larger, noisy candidate network (mirroring Stage 2's own role after
+Stage 1), which remains the natural next step before any real-dataset
+recommendation. `docs/validated_operating_ranges.md` should record this
+result with both caveats intact, not as an unqualified clearance.
