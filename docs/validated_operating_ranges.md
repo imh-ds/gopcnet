@@ -193,6 +193,25 @@ and untested embedded in a larger noisy candidate pool. Do not recommend
 `N=750` for this shape under any engine on the strength of this result
 alone.
 
+**Stage 4d floor search — hub confirmed robust down to N=300; overlap's
+low-N floor is unknown, not favorable.** Hub's indirect-edge TPR stays
+flat (`.895`-`.911`) across `N=300`-`750`, verified via a diagnostic
+showing every indirect pair reliably reaches an actual conditioning test
+at every tested `N` — a genuine finding, though not comparable to the
+base mechanism's own `[600,700]` transition (that reference was
+calibrated on a harder, worst-case asymmetric-triangle grid, not this
+DGP's fixed, more favorable signal strength). **Overlap's apparent
+"PROCEED down to N=300" result is a metric artifact and must not be
+used**: at low `N`, fewer of the 4 weak cross-branch pairs even clear
+initial screening (`3.42`/`4` at `N=300` vs. `3.96`/`4` at `N=750`,
+verified directly), and a pair that is never flagged as a candidate is
+scored identically to one correctly pruned via conditioning — inflating
+apparent TPR at exactly the `N` where the engine is actually doing
+*less*, not more. **Overlap's floor below `N=750` remains genuinely
+unknown** and should not be assumed favorable; a corrected metric
+(tracking cross-branch candidacy rate separately from final TPR) is
+needed before that question can be answered. See D-032.
+
 Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 
 ## Maintenance

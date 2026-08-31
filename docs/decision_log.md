@@ -2131,3 +2131,107 @@ sequential engine's fused screening step degrades differently than the
 conservative engine's separate screening step once many more null pairs
 are present. `docs/validated_operating_ranges.md` should record this as
 a promising, unresolved signal, not a floor.
+
+## D-032: Overlap's apparent "no floor" is a metric artifact, not a genuine finding; hub's is real (R6c)
+
+Date: 2026-08-30
+
+Stage: R6c / Stage 4 (new engine)
+
+Status: PROCEED at every tested `N` for both shapes, per the charter's
+literal gate — **but this entry corrects the overlap half of that
+result before it is used for anything**, per this project's own
+self-correction discipline (D-019, D-023 precedent)
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage4d_charter.md`. The correction below was reached by
+inspecting diagnostic columns this charter itself required as evidence
+(`conditionally_tested_pairs`, `confirmed_pairs`), not by re-opening the
+frozen gate.
+
+Question: How low can the sequential engine go below `N=750`, and does
+its predeclared early-stop condition (transition matching the base
+mechanism's known `[600,700]` range) hold?
+
+Prior specification: `docs/stage4d_charter.md` tested `N=[300, 500, 600,
+650, 700]` plus the `N=750` bookend from Stage 4b, predicting hub tracks
+the base mechanism's known transition and flagging overlap's floor as
+the open question.
+
+Evidence: `results/generated/stage4d_floor_search/decision.json`, zero
+errors, runtime 226s. **Every cell PROCEEDs except overlap at `N=750`**,
+which REASSESSes by the same `.0175` near-miss margin already recorded
+in D-031 (confirming the bookend merge is correct — identical numbers).
+The **early-stop condition is formally NOT MET**, but for two very
+different reasons per shape:
+
+**Hub: a genuine, verified finding.** Indirect TPR is flat (`.895`-
+`.911`) across the entire `N=300`-`750` range, and the diagnostic
+`conditionally_tested_pairs` column is exactly `3.00` (all 3 indirect
+child-child pairs) at *every* `N`, including `300` — meaning every
+indirect pair reliably clears screening and reaches an actual
+conditioning test at every tested `N`. This is not the base mechanism's
+own `[600,700]` transition because that reference number was calibrated
+on Stage 1's *worst-case* asymmetric triangle grid (one true edge as
+weak as strength `.3`); hub's fixed strength-`.5` child-child induced
+correlation (`~.25`) is comfortably separated from noise at every `N`
+tested here. **The comparison target itself, not hub's result, was the
+wrong reference for this specific DGP** — a charter-design lesson, not
+a claim that hub transcends the base test's own statistical limits.
+
+**Overlap: the apparent improvement at low `N` is an artifact, verified
+directly, not a genuine result.** Indirect TPR *rises* as `N` falls
+(`.878` at `N=300` vs. `.818` at `N=750`) — backwards from every prior
+finding in this project. Diagnostic evidence explains why:
+`conditionally_tested_pairs` for overlap **falls** with `N` (`5.44` at
+`300` to `5.97` at `750`, out of 10 possible), and a direct, independent
+re-check (300 fresh replicates outside the charter's own pipeline,
+counting how many of the 4 weak cross-branch pairs even clear screening)
+confirms it: only `3.42`/`4` clear screening at `N=300`, vs. `3.96`/`4`
+at `N=750`. **A cross-branch pair that never becomes a candidate is
+scored identically to one correctly identified as spurious and
+pruned** — both are simply absent from the final graph. At low `N`,
+screening's own reduced power to detect the weak (`~.135`) cross-branch
+correlation causes *more* of these pairs to never be tested at all,
+which this charter's TPR metric cannot distinguish from the engine
+correctly reasoning about them. **The apparent low-`N` overlap PROCEED
+results are not evidence the sequential engine handles this shape well
+below `N=750` — they are evidence the metric cannot tell "correctly
+pruned" from "never evaluated" apart, and should not be read as a floor
+in either direction.**
+
+Decision: Hub's flat, verified robustness down to `N=300` is accepted as
+a real finding. **No conclusion is drawn about the overlap shape's floor
+below `N=750`** — this charter's chosen metric is not fit for that
+purpose at low `N`, and a corrected version (reporting screening-
+candidacy rate for the 4 cross-branch pairs as its own tracked
+quantity, separate from final pruned/retained status) would be needed
+before this specific question could be answered. The user's original
+motivating question — "if the results are consistent with what we did
+before, call it off quickly" — is answered for hub (yes, consistent,
+call it off) and left genuinely open for overlap, for a reason the
+predeclared plan did not anticipate.
+
+Rationale: This is the same "stable does not mean correct" caution the
+outline's Section 2.3 states for bootstrap stability, applied to a new
+case: **absent does not mean correctly pruned.** Catching this required
+looking past the single gate metric at the diagnostic columns this
+charter's own "Required evidence" section asked for — a direct
+vindication of collecting that evidence even though the frozen gate
+didn't strictly require it to render a PROCEED/REASSESS verdict.
+Reporting this charter's literal PROCEED-at-every-cell result for
+overlap without this correction would have been a false positive
+finding entering the record, exactly the failure mode this project's
+decision-log discipline exists to prevent.
+
+Consequences: `docs/validated_operating_ranges.md` should record hub's
+robust `N=300`-`750` range for the sequential engine as informational
+(still no validated status pending Stage 4c). **It must explicitly flag
+that overlap's floor below `N=750` remains unknown, with the specific
+reason (metric conflates non-detection with correct pruning) stated,
+not merely "untested."** A future charter wanting to answer "how low can
+overlap go" would need a corrected metric — e.g., reporting the
+screening-candidacy rate for the 4 cross-branch pairs alongside TPR, and
+gating on TPR only among replicates where all 4 were actually
+candidates — before trusting any `N` below `750` for this shape under
+either engine.
