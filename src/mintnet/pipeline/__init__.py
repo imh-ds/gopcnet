@@ -6,7 +6,7 @@ from .compose import (
     connected_components,
     describe_component,
 )
-from .sequential import sequential_screen_and_prune
+from .sequential import PairDecision, sequential_screen_and_prune, sequential_screen_and_prune_detailed
 
 __all__ = [
     "compose_screen_then_prune",
@@ -14,4 +14,6 @@ __all__ = [
     "describe_component",
     "VALIDATED_CLIQUE_SIZES",
     "sequential_screen_and_prune",
+    "sequential_screen_and_prune_detailed",
+    "PairDecision",
 ]

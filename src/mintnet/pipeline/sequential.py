@@ -12,16 +12,33 @@ conservative one: see
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+
 import numpy as np
 
 from mintnet.dpi.multi_conditional import compute_partial_correlation_evidence
 from mintnet.screening import compute_pairwise_screening_evidence, screen_uncorrected
 
 
-def sequential_screen_and_prune(data: np.ndarray, alpha: float) -> np.ndarray:
+@dataclass(frozen=True)
+class PairDecision:
+    """Diagnostic record of one candidate pair's sequential processing."""
+
+    i: int
+    j: int
+    rank_z: float
+    tested_neighbors: tuple[int, ...]
+    neighbor_p_values: tuple[float, ...] = field(default_factory=tuple)
+    confirmed: bool = False
+
+
+def sequential_screen_and_prune_detailed(data: np.ndarray, alpha: float) -> tuple[np.ndarray, list[PairDecision]]:
     """Rank-then-condition sequential pruning, using one alpha for both the
     initial marginal candidacy test and the conditional test, per
-    docs/stage4a_charter.md's frozen mechanism.
+    docs/stage4a_charter.md's frozen mechanism. Returns the final adjacency
+    matrix plus a per-candidate-pair diagnostic record (processing rank,
+    which already-confirmed shared neighbors were tested, their individual
+    conditional p-values, and the final decision).
 
     Pruning is permanent: once an edge is removed because some
     already-confirmed neighbor explains it away, it is never reconsidered
@@ -41,14 +58,27 @@ def sequential_screen_and_prune(data: np.ndarray, alpha: float) -> np.ndarray:
     candidates.sort(key=lambda pair: abs(evidence.z_statistic[pair[0], pair[1]]), reverse=True)
 
     confirmed = np.zeros((p, p), dtype=bool)
+    decisions: list[PairDecision] = []
     for i, j in candidates:
+        rank_z = float(evidence.z_statistic[i, j])
         shared = [k for k in range(p) if k != i and k != j and confirmed[i, k] and confirmed[j, k]]
         if not shared:
             confirmed[i, j] = confirmed[j, i] = True
+            decisions.append(PairDecision(i, j, rank_z, (), (), True))
             continue
-        explained_away = any(
-            compute_partial_correlation_evidence(data, i, j, [k]).p_value > alpha_value for k in shared
-        )
+        p_values = tuple(compute_partial_correlation_evidence(data, i, j, [k]).p_value for k in shared)
+        explained_away = any(p_value > alpha_value for p_value in p_values)
         if not explained_away:
             confirmed[i, j] = confirmed[j, i] = True
+        decisions.append(PairDecision(i, j, rank_z, tuple(shared), p_values, not explained_away))
+    return confirmed, decisions
+
+
+def sequential_screen_and_prune(data: np.ndarray, alpha: float) -> np.ndarray:
+    """Rank-then-condition sequential pruning; final adjacency only.
+
+    See `sequential_screen_and_prune_detailed` for the same mechanism with
+    a full per-pair diagnostic trail.
+    """
+    confirmed, _decisions = sequential_screen_and_prune_detailed(data, alpha)
     return confirmed
