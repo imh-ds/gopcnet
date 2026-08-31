@@ -2717,3 +2717,92 @@ entire overlap-shape investigation (D-026 through D-037), with the
 into a false "REASSESS at N=750" reading. Stage 4c's cascading-error
 caveats and the "not yet stress-tested at this network size" note still
 apply before any user-facing recommendation.
+
+## D-038: Dropping N=750 from the fitting set relocates the boundary gap rather than fixing it (R6i)
+
+Date: 2026-08-31
+
+Stage: R6i / Stage 4 (new engine)
+
+Status: REASSESS. `N=400/550/625/675` PROCEED under the refit formula;
+`N=725` and `N=750` both fail with an invalid (negative) predicted
+alpha.
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage4i_charter.md`
+
+Question: Does re-fitting the overlap-shape `alpha(N)` formula with
+`N=750` moved from the fitting set into the held-out validation set
+repair D-037's finding that the formula predicts a negative alpha
+exactly at `N=750`?
+
+Prior specification: `docs/stage4i_charter.md` re-fit on five points
+(`300, 500, 600, 650, 700`, dropping `750`), added a fitting-point
+validity self-check, and tested the refit formula's single predicted
+`alpha_hat` at six held-out `N` (`400, 550, 625, 675, 725, 750`), all
+freshly simulated.
+
+Evidence: `results/generated/stage4i_alpha_repair/decision.json`,
+runtime 14.4s.
+
+| N | status | alpha_hat | candidacy rate | conditional accuracy | true-edge FPR |
+|---|---|---|---|---|---|
+| 400 | PROCEED | `.1209` | `.880` | `.913` | `.0002` |
+| 550 | PROCEED | `.0504` | `.885` | `.971` | `0` |
+| 625 | PROCEED | `.0251` | `.878` | `.983` | `0` |
+| 675 | PROCEED | `.0107` | `.832` | `.994` | `0` |
+| 725 | REASSESS | `-.0023` | — | — | — |
+| 750 | REASSESS | `-.0083` | — | — | — |
+
+**The fitting-point self-check (this charter's own new safeguard)
+passed cleanly** — the refit formula returns a valid probability at all
+five of its own fitting `N`. The repair worked exactly as designed at
+the fitting boundary. **But the held-out boundary moved, not closed**:
+the refit `inverse_sqrt` curve is slightly steeper than Stage 4g's
+original (parameters `(-0.358, 9.577)` vs. `(-0.344, 9.307)`), so its
+zero-crossing lands *earlier* — between `N=700` and `N=725` instead of
+`N=725` and `N=750`. `N=725`, which PROCEEDed cleanly under Stage 4g's
+original formula (D-037's own table: `alpha=.0015`), now fails too.
+`N=750` remains negative, more negative than before (`-.0083` vs.
+`-.0044`).
+
+Decision: **REASSESS.** Removing one boundary fitting point does not
+repair the underlying issue — it relocates the zero-crossing rather
+than eliminating it. This confirms the charter's own predeclared
+REASSESS branch: "dropping one boundary fitting point was not
+sufficient to fix the underlying issue... a formula is not the right
+artifact for `N=750` specifically." No new `alpha(N)` formula supersedes
+Stage 4g's original. `N=400/550/625/675` are validated at this refit's
+values, but those four `N` were already known-good (Stage 4g's own
+formula gives nearly identical positive alphas there, per D-037's
+table) — this charter adds no practical coverage below `N=700`, and it
+costs Stage 4g's own valid `N=725` result in the same stroke.
+
+Rationale: A two-parameter `inverse_sqrt` curve fit on five or six
+points near a genuine zero-crossing is not well-constrained right at
+that crossing — small changes in which points are included shift where
+the curve crosses zero by a comparable amount to the gap itself
+(`~25`-`50` in `N` terms, against a `~25`-unit spacing between tested
+points). This is a *sample-density* problem near the crossing, not a
+fitting-target problem; the fix this charter tried (excluding one
+point) cannot address a problem of that shape, because it can only ever
+relocate which point is excluded, never add resolution near the
+crossing itself.
+
+Consequences: The sequential engine's overlap-shape `alpha(N)` rule
+remains Stage 4g's original formula, valid on `[400, 725]` (not `[400,
+750]` as previously scoped) — `N=725` and `N=750` are both now
+explicitly **not** covered by any validated formula and must not be
+used with a fitted `alpha`. Per this charter's own REASSESS
+consequences, the right artifact for `N=750` specifically is a
+**lookup value**, not a fitted extrapolation: Stage 4e's own
+already-validated point at `N=750` (`alpha=.005`, `accuracy>=.80`,
+`candidacy>=.80` by construction of `compute_fitting_points`'s own
+selection rule) remains directly usable as a lookup value if `N=750`
+evidence is ever needed again, without trusting any curve through that
+region. A future charter wanting genuine coverage near `N=700`-`750`
+would need **new simulated points densely spaced inside that range**
+(e.g. `710, 720, 730, 740`) to properly constrain the curve near its
+crossing, not a re-selection of which existing points to fit on. Stage
+4h's own accepted `N=625`/`700` results (D-037) are unaffected — both
+sit safely inside the now-narrower `[400, 725]` valid range.

@@ -316,8 +316,33 @@ size), is the strongest evidence yet that the sequential engine is a
 real, usable alternative for this weak-signal shape — but still not a
 user-facing recommendation** on its own; the R6a milestone's
 preconditions are now substantially met, and the natural next steps are
-resolving the `N=750` gap and testing a broader shape/signal-strength
-sweep before any such recommendation.
+testing a broader shape/signal-strength sweep before any such
+recommendation.
+
+**Stage 4i attempted repair — the `N=750` gap is not a simple fitting-
+set fix; it relocates rather than closes.** Re-fit the overlap `alpha(N)`
+formula with `N=750` moved from the fitting set to the held-out
+validation set, adding a new self-check that the refit formula is valid
+at its own fitting points (it was — the self-check passed cleanly at
+all five). **But the refit curve is measurably steeper than Stage 4g's
+original** (`inverse_sqrt` parameters `(-0.358, 9.577)` vs. `(-0.344,
+9.307)`), so its zero-crossing lands earlier, between `N=700` and
+`N=725` instead of between `N=725` and `N=750`. **`N=725`, previously a
+clean PROCEED under Stage 4g's original formula, now fails too** —
+alongside `N=750`, still negative and slightly more so than before
+(`-.0083` vs. `-.0044`). Net effect: **the sequential engine's validated
+overlap `alpha(N)` range is now `[400, 725]` under Stage 4g's original
+formula** (not `[400, 750]` as previously scoped) — `N=725` and `N=750`
+are both explicitly unvalidated for any fitted `alpha` and must not be
+used with one. For `N=750` specifically, the right artifact is a
+**lookup value**, not a fitted extrapolation: Stage 4e's own
+already-validated point (`alpha=.005`, meeting both the accuracy and
+candidacy floors) remains directly usable if `N=750` evidence is needed.
+Genuine coverage near `N=700`-`750` would require new simulated points
+densely spaced inside that specific range to constrain the curve near
+its crossing — not a re-selection of which existing points to fit on.
+Stage 4h's accepted `N=625`/`700` results (D-037) are unaffected, both
+sitting safely inside the narrower `[400, 725]` range. See D-038.
 
 Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 
