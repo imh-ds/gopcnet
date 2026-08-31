@@ -447,6 +447,34 @@ now have every named R6a milestone precondition addressed — not with a
 clean "no risk" verdict like the triangle, but with a specific,
 quantified, small risk, disclosed rather than assumed away. See D-042.
 
+**Stage 4n cascading-error stress test for overlap — clean null on
+noise (like the triangle, not chain/fork/hub), but a new, noise-
+independent structural finding.** Extended the same mechanism to
+overlap's own DGP, pooling wrong-pruning across its `6` true direct
+edges. **On the noise axis specifically, overlap matches Stage 4c's
+triangle, not the paragraph above's own prediction that overlap's
+weak-signal history would put it in Stage 4m's exposed regime**: the
+sequential engine's wrong-prune-rate delta is `~0.0000` at every tested
+cell — a correction to that prediction, made transparently. The reason:
+this charter's `6` direct edges are moderate-strength (`-0.25`), not
+uniformly weak like Stage 4m's deliberately constructed `0.15`
+condition — the "uniformly weak" label describes overlap's *cross-
+branch, indirect* correlation (`~.135`), not its direct edges, and it
+is edge strength specifically that governs this noise pathway. **A new
+question this charter added (Q4) found something the noise axis
+couldn't**: even with **zero** injected noise, `2%`-`6%` of wrongly-
+pruned direct edges implicate a node from the *opposite* triangle —
+overlap's own shared-node structure providing a plausible wrong
+"confirmed neighbor" independent of any noise, a pathway with no analog
+in either prior cascading-error charter (neither DGP has a second,
+structurally-connected cluster). **Overlap's headline result (D-037) is
+not threatened by noise-driven cascading error** (now measured and
+negligible), but this small, structural, noise-independent risk should
+be disclosed alongside it for any shared-node/multi-cluster shape.
+Combined with D-037-D-042, overlap now has every named R6a-adjacent
+cascading-error question answered as thoroughly as chain/fork/hub's.
+See D-043.
+
 Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 
 ## Maintenance

@@ -3233,3 +3233,109 @@ the milestone's question. This charter tests only one weak-strength
 condition, one noise-column count (`5`), and one contamination pathway
 (independent noise) — the magnitude at other strengths, larger noise
 counts, or noise correlated with a real node remains untested.
+
+## D-043: Overlap's noise-driven cascading effect is a clean null like the triangle's — but a new, noise-independent structural pathway is found instead (R6n)
+
+Date: 2026-08-31
+
+Stage: R6n / Stage 4 (new engine). **Descriptive, no gate**, per Stage
+4c/4m's own established rationale.
+
+Status: Data generated and reported per `docs/stage4n_charter.md`. Not
+a PROCEED/REASSESS decision (no gate); the finding is the deliverable.
+
+Decision timing: Predeclared sub-questions (Q1/Q2/Q3/Q4) evaluated
+after results, per `docs/stage4n_charter.md`.
+
+Question: Does overlap — the shape with this engine's single largest
+claimed win (D-037) — show a noise-driven cascading effect like Stage
+4m's chain/fork/hub (D-042), or a clean null like Stage 4c's triangle
+(D-036)? And does overlap's own structure (the opposite-triangle nodes,
+a pathway unique to this DGP) contribute a *different* kind of
+cascading risk, independent of noise?
+
+Prior specification: `docs/stage4n_charter.md` tested `12` cells (`N in
+[100, 200, 300]` x `alpha in {.05, .10}` x `noise_count in {0, 5}`),
+pooling wrong-pruning across overlap's `6` true direct edges, `2,000`
+replicates per cell, both engines on identical paired data, explicitly
+making no directional Q1 prediction in advance.
+
+Evidence: `results/generated/stage4n_cascading_error_overlap/
+summary.json`, runtime `68.5s`.
+
+**Q1 — clean null, matching Stage 4c's triangle, not Stage 4m's
+chain/fork/hub.** Sequential delta (`noise=5` minus `noise=0`) is
+`.0000`-`.0001` at every one of the `6` (N, alpha) cells — no
+measurable noise-attributable effect. This matches the charter's own
+stated hypothesis: overlap's direct edges (`-0.25`, moderate strength)
+sit far closer to the triangle's strong-anchor regime than to Stage
+4m's deliberately weak `strength=0.15` condition, so noise columns
+essentially never out-rank a genuine edge for early confirmation.
+
+**Q2 — same mirror pattern as both prior charters.** Conservative delta
+is negative in every cell (`-.0013` to `-.0128`), the same clique-
+breaking mechanism confirmed a third time, now DGP-independent across
+three structurally distinct fixtures (asymmetric triangle, uniform-weak
+motifs, moderate-uniform overlap).
+
+**Q3 — near-zero, consistent with Q1's clean null.** Noise-implication
+rate `.0000`-`.0048` across cells — there is very little wrong-pruning
+to implicate anything in, since the baseline wrong-prune rate itself
+falls sharply with `N` (`.21` at `N=100` down to `.0018` at `N=300,
+alpha=.10` — overlap's moderate-strength direct edges are considerably
+easier to detect correctly than Stage 4c/4m's deliberately weak test
+conditions, visible directly in the three-way comparison table).
+
+**Q4 — the new question this charter added finds something the noise
+axis alone could not: a real, small, noise-***independent*** structural
+pathway.** The opposite-triangle-node implication rate is
+**consistently nonzero at every `N`/`alpha` cell** (`.0204`-`.0625`) and,
+critically, **identical between `noise_count=0` and `noise_count=5`** at
+every matching cell — direct confirmation that this pathway does not
+require noise to exist. When the sequential engine wrongly prunes a
+true direct edge, a node from the *opposite* triangle (overlap's own
+shared-node structure, not an injected variable) is implicated in
+roughly `2%`-`6%` of those wrongly-pruned instances, in a noise-free
+network just as much as a noisy one.
+
+Decision: **No gate, per this charter's design.** Overlap's answer on
+the *noise* axis is reassuring and matches the triangle's own clean
+result, not chain/fork/hub's small-but-real effect — consistent with
+overlap sitting in the "protected," strong-enough-edges regime Stage
+4m's own explanation predicted. But Q4 surfaces a genuinely new finding
+neither Stage 4c nor Stage 4m's designs could have found, since neither
+DGP has a structural "opposite branch": a small, structural cascading
+pathway specific to overlap's own shared-node topology, present with or
+without noise.
+
+Rationale: Q4 exists because overlap's DGP is not just "another weak-
+signal shape" — it is the only Stage 4 fixture with a second triangle
+sharing a node, giving the engine a structurally plausible *wrong*
+explanation (the opposite triangle's own nodes) available as a
+candidate "shared confirmed neighbor" independent of any noise. That
+this rate is flat across `noise_count` is the direct evidence it is a
+structural, not stochastic, effect — adding noise columns does not
+meaningfully compete with or crowd out this pathway, it simply doesn't
+interact with it.
+
+Consequences: **Overlap's headline result (D-037: `N=625`/`700` beating
+the conservative engine's `N=1500`) is not threatened by noise-driven
+cascading error** — that specific risk is now measured and negligible,
+matching D-036's own triangle finding. **A small, structural, noise-
+independent risk is disclosed instead**: roughly `2%`-`6%` of wrongly-
+pruned direct edges (themselves already rare at the `N` overlap is
+actually used at) trace to the opposite triangle's own nodes, not to
+external noise. Any future user-facing exposure of the sequential
+engine for overlap-shaped (shared-node, multi-cluster) DGPs should
+disclose this specific, quantified structural pathway alongside the
+noise-based number, since it is a different mechanism requiring its own
+mention, not a restatement of D-036/D-042's noise-focused findings.
+Combined with D-037-D-042, the overlap shape now has every named R6a-
+adjacent cascading-error question answered as thoroughly as chain/fork/
+hub's. This charter tested only `noise_count in {0, 5}` and one
+contamination pathway per Stage 4c/4m's own precedent; whether the
+opposite-triangle rate changes at larger `N` (inside overlap's own
+validated `[400, 735]` `alpha(N)` range, not tested here since this
+charter deliberately used Stage 4c/4m's smaller, harder `N` grid)
+remains open for a future charter if the magnitude ever becomes
+practically relevant.
