@@ -1,0 +1,8 @@
+sample_sizes: [400, 550, 625, 675, 725, 750]
+replicates: 2000
+master_seed: 20260830
+development_replicates: [0, 999]
+validation_replicates: [1000, 1999]
+minimum_conditional_accuracy: 0.80
+maximum_true_edge_prune_fpr: 0.10
+required_margin: 0.02
