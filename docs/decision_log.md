@@ -2032,3 +2032,102 @@ as informational only — no operating range is validated by Stage 4a
 itself. The small-`N` asymmetry finding above is worth carrying into
 Stage 4b's design (it may generalize to larger components, or it may
 not — worth checking explicitly, not assumed).
+
+## D-031: Sequential engine dramatically closes the overlap shape's N=750 gap (R6b)
+
+Date: 2026-08-30
+
+Stage: R6b / Stage 4 (new engine)
+
+Status: PROCEED (hub, both `N`; overlap `N=1500`). Overlap `N=750`:
+**near-miss REASSESS** — clears the raw TPR gate, narrowly misses the
+stricter comfort-margin requirement.
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage4b_charter.md`
+
+Question: Does the sequential engine, run end-to-end (fused screening +
+conditioning, no pre-flagged input) on the isolated hub and overlap
+DGPs, PROCEED at `N=750` for the overlap shape — the exact `N` and DGP
+where D-018's composed conservative pipeline REASSESSed (TPR `.569`)
+despite D-017 showing the conditioning mechanism itself works fine when
+handed a clean component (TPR `.858`)?
+
+Prior specification: `docs/stage4b_charter.md` reused Stage 1k's hub and
+Stage 1L's overlap DGPs unmodified, predicted hub PROCEEDs comfortably
+at both `N` (plausibly beating D-015's own margins, per the targeted-
+conditioning argument), and predicted overlap "a real possibility of
+PROCEED at `N=750`" as an explicitly falsifiable, not foregone,
+prediction — explicitly stating this isolated-DGP test already engages
+the motivating question because the sequential engine has no
+pre-flagged-input step to bypass the all-pairs-simultaneously
+requirement the way Stage 1L's hand-fed test did.
+
+Evidence: `results/generated/stage4b_hub_overlap/decision.json`, zero
+errors, runtime 98s.
+
+| shape | N | status | selected alpha | indirect TPR | true-edge FPR | margin |
+|---|---|---|---|---|---|---|
+| hub | 750 | PROCEED | 0.10 | `.894` | `0` | `.094` |
+| hub | 1500 | PROCEED | 0.10 | `.909` | `0` | `.100` |
+| overlap | 750 | REASSESS (near-miss) | 0.20 | `.818` | `0` | `.018` |
+| overlap | 1500 | PROCEED | 0.10 | `.899` | `0` | `.099` |
+
+**Direct comparison** (`conservative_comparison.csv`), the informative
+part:
+
+| shape | N | sequential TPR | D-015/D-017 hand-fed TPR | D-018 composed TPR |
+|---|---|---|---|---|
+| hub | 750 | `.894` | `.854` | — |
+| hub | 1500 | `.909` | `.887` | — |
+| overlap | 750 | **`.818`** | `.858` | **`.569`** |
+| overlap | 1500 | `.899` | `.894` | `.817` |
+
+Decision: **Hub PROCEEDs at both `N`, slightly exceeding the
+conservative engine's own hand-fed numbers** (consistent with the
+targeted-conditioning hypothesis: conditioning only on the actual shared
+neighbor, not every other node in the component, costs less power).
+**Overlap at `N=750` is the central result**: sequential TPR (`.818`)
+sits almost exactly at D-017's hand-fed conservative ceiling (`.858`)
+and **recovers `86%` of the entire gap** between D-018's composed-
+pipeline REASSESS (`.569`) and that ceiling — using the exact same raw
+data-generating process and signal strength D-018 REASSESSed on. It
+clears this charter's raw `.80` TPR gate outright; it misses only the
+stricter, deliberately conservative `.02` comfort-margin requirement
+(margin `.0175`), by a trivial amount relative to sampling noise at 1000
+validation replicates. This is **not** the same kind of REASSESS as
+D-018's (TPR `.231` below gate, decisive) — it is a near-miss on a
+buffer requirement layered on top of an already-cleared primary
+threshold.
+
+Rationale: This is the first evidence in this project's history that
+directly attacks D-018's specific composed-pipeline failure and
+substantially fixes it, without collecting more data and without the
+`B=500`x bootstrap-filtering cost D-020/D-028 required — using only a
+different composition *order*, applied to raw data the sequential
+engine was never told was "clean." The remaining `.04` gap between
+sequential's `.818` and D-017's `.858` hand-fed ceiling is plausibly
+explained by the sequential engine still requiring each cross-branch
+pair to individually clear its own marginal candidacy threshold before
+any conditioning is attempted at all — a residual, much weaker version
+of the detection-power limitation D-017/D-018 originally identified, not
+eliminated but sharply reduced by no longer requiring all four
+simultaneously.
+
+Consequences: This is genuinely promising but **not yet a validated
+operating range for anything** — per the R6a milestone in
+`outline/information_network_technical_build_plan_v3_2026-08-30.md`,
+both this charter's own near-miss status at `N=750` and Stage 4c's
+cascading-error stress test remain open before any user-facing claim.
+Two concrete next steps this result motivates, neither undertaken here:
+(1) a small alpha-grid or replicate-count refinement specifically at
+overlap `N=750` to check whether the `.0175` margin near-miss is
+noise-boundary-sensitive or a real, stable shortfall; (2) extending this
+same isolated-DGP comparison to a full noisy `p=15` composed network
+(mirroring Stage 2d after Stage 1L) to confirm the effect survives
+embedding in a larger candidate pool, since this charter's own
+DGP has no noise columns and therefore does not yet test whether the
+sequential engine's fused screening step degrades differently than the
+conservative engine's separate screening step once many more null pairs
+are present. `docs/validated_operating_ranges.md` should record this as
+a promising, unresolved signal, not a floor.

@@ -174,7 +174,26 @@ pruned true triangle edges, by design — at most one of a triangle's
 three edges can ever be wrongly pruned under this engine, versus all
 three independently at risk under the conservative engine's symmetric
 test). This is informational only; no `N` recommendation follows from
-it. Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
+it.
+
+**Promising unresolved signal from Stage 4b (D-031):** on the isolated
+(noise-free) hub and shared-node-overlap DGPs, run end-to-end with no
+pre-flagged input, the sequential engine PROCEEDs on hub at both `N in
+[750, 1500]` (slightly beating the conservative engine's own hand-fed
+numbers) and on overlap at `N=1500`. **At overlap `N=750` — the exact
+`N` and shape where the conservative composed pipeline REASSESSes at
+TPR `.569` (D-018) — the sequential engine reaches TPR `.818`,
+recovering `~86%` of the gap** to the conservative mechanism's own
+hand-fed ceiling (`.858`, D-017), clearing the raw `.80` gate but
+narrowly missing this charter's own stricter `.02` comfort-margin
+requirement. **This is not a validated floor of `N=750` for this shape
+under the sequential engine** — it is evidence the mechanism is on the
+right track, on a noise-free DGP, still short of a comfortable margin,
+and untested embedded in a larger noisy candidate pool. Do not recommend
+`N=750` for this shape under any engine on the strength of this result
+alone.
+
+Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 
 ## Maintenance
 
