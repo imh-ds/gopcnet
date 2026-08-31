@@ -1926,3 +1926,109 @@ reason to expect it to move. Real behavioral datasets with `p=5`-`10`
 and a shape resembling this weak-signal overlap pattern should budget
 for `N>=1500`, the same as at `p=15`, not assume a lower `p` grants any
 relief.
+
+## D-030: Sequential/greedy engine reproduces Stage 1b's own limitation, not a new one (R6a)
+
+Date: 2026-08-30
+
+Stage: R6a / Stage 4 (new engine)
+
+Status: REASSESS — but equivalent to the conservative engine's own
+original result on this identical evidence, not worse
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage4a_charter.md`
+
+Question: Does the sequential/greedy conditioning engine (rank
+candidates by association strength, confirm the strongest immediately,
+test the rest by conditioning on already-confirmed neighbors, with
+permanent pruning) correctly recover the three smallest known motifs
+(chain, fork, triangle) at Stage 1b's own original `N` grid and
+selection rule — the smallest falsifiable slice, deliberately reusing
+Stage 1b's exact DGP, seeds, and gate before touching the actual
+motivating weak-shape question (deferred to Stage 4b)?
+
+Prior specification: `docs/stage4a_charter.md` reused
+`docs/stage1b_charter.md`'s exact DGP (`N in [100..1000]`, strengths
+`[.3,.5,.7]`, `balanced`/`moderate`/`strong` triangle families, 500
+replicates, same alpha grid) and gate (lexicographically-first adjacent
+eligible alpha pair on development, confirmed on validation). The
+charter explicitly asked for a *direct* comparison against Stage 1b's
+own recorded numbers at matching cells, not just an independent
+PROCEED/REASSESS call — flagging in advance that a bare REASSESS would
+not, by itself, indicate a defect in the new mechanism if the numbers
+matched Stage 1b's own.
+
+Evidence: `results/generated/stage4a_sequential/decision.json`, zero
+errors, runtime 93s. **Selected development pair `(0.05, 0.10)`;
+REASSESS on validation**, failing only "triangle genuine-edge pruning
+FPR" — at strength `.7` (the `strong`, most-asymmetric triangle family),
+FPR reaches `.19` (`N=500`, `alpha=.05`) against the `.10` gate. Chain
+and fork indirect-edge TPR passed at every validation cell.
+
+**The direct comparison is the informative part.** Across all 486
+matching `(motif, n, strength, alpha)` cells against Stage 1b's own
+on-disk evidence (`results/generated/stage1b_dpi/aggregate_metrics.csv`,
+its *original* result — not D-008, which is Stage 1g's later,
+differently-scoped refinement using a narrower `N in [750,1000,1500,2000]`
+grid and margin-robust selection; **the charter's own citation of "D-008
+evidence" for this comparison was imprecise and is corrected here**):
+
+- At the exact cells that drove this charter's REASSESS (`N in
+  [500,750,1000]`, strength `.7`, `alpha in {.05,.10}`), the sequential
+  engine's triangle FPR is within `.01`-`.02` of Stage 1b's own FPR at
+  every cell (e.g. `N=500, alpha=.05`: `.194` sequential vs. `.184`
+  Stage 1b) — **this REASSESS is inherited from Stage 1b's own original
+  charter having the identical problem at this identical `N` range**,
+  which is exactly why the conservative engine's own arc needed Stage
+  1c through 1g (extending to `N=2000`-`3000`, margin-robust selection)
+  before reaching D-008's PROCEED. It is not a new failure mode
+  introduced by the sequential design.
+- Overall, mean absolute delta across all 486 cells is small (indirect
+  TPR `.021`, true-edge FPR `.012`), confirming the two engines'
+  underlying per-edge conditional-independence test behaves the same
+  way when both engines end up testing the same edge.
+- **A genuinely new, unpredicted finding**: at small `N` (`100`-`300`),
+  the sequential engine's true-edge FPR runs consistently *below* Stage
+  1b's own (mean delta `-.020`, up to `-.257` at the most extreme
+  cells) — it wrongly prunes true triangle edges *less* often than the
+  conservative engine at these `N`. This follows directly from the
+  design: the two highest-ranked edges of a triangle are confirmed
+  immediately, with no conditional test at all, so at most one of a
+  triangle's three edges can ever be wrongly pruned under the
+  sequential engine, versus all three being independently at risk under
+  the conservative engine's symmetric per-edge test.
+
+Decision: **PROCEED to Stage 4b**, not because this charter itself
+PROCEEDed (it did not, per its own frozen gate), but because the
+Consequences section's actual condition for continuing — "no material
+regression against Stage 1b's own numbers" — is met. The mechanism is
+behaviorally equivalent to the validated conservative mechanism on the
+smallest falsifiable slice, and diverges in one specific, understood,
+favorable direction (small-`N` triangle robustness) rather than an
+unexplained one.
+
+Rationale: This charter deliberately reused Stage 1b's original,
+since-superseded grid rather than Stage 1g's refined one, specifically
+so that any REASSESS here would be diagnosable against a known baseline
+rather than ambiguous. That design choice paid off directly: without
+the cell-by-cell comparison, this REASSESS could have been
+misread as "the greedy mechanism doesn't work," when the actual finding
+is "the greedy mechanism works exactly as well as the already-validated
+one on this slice, and this specific `N` range's marginal alpha problem
+was already known and already solved once, by extending `N` and
+refining selection, not by fixing DPI itself." Re-deriving that same fix
+here was not this charter's job.
+
+Consequences: This charter does **not** authorize any user-facing
+exposure of the sequential engine, a default `engine` parameter, or a
+claim that it needs less data than the conservative engine for any
+shape — Stage 4b (hub/overlap components, the shape this whole
+initiative is motivated by) and Stage 4c (the cascading-error stress
+test) remain open, per the R6a milestone in
+`outline/information_network_technical_build_plan_v3_2026-08-30.md`.
+`docs/validated_operating_ranges.md` should record this charter's status
+as informational only — no operating range is validated by Stage 4a
+itself. The small-`N` asymmetry finding above is worth carrying into
+Stage 4b's design (it may generalize to larger components, or it may
+not — worth checking explicitly, not assumed).

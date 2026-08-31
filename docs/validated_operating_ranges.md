@@ -157,6 +157,25 @@ validated as calibrated, even at small `N`) flag which specific edges are
 most uncertain and therefore most in need of that justification, rather
 than using it to make the cut itself.
 
+## New engine in progress: sequential/greedy conditioning (not yet validated for any use)
+
+A second, alternative engine — rank candidates by association strength,
+confirm the strongest immediately, test the rest by conditioning on
+already-confirmed neighbors, with permanent pruning — is being developed
+alongside the conservative engine documented in every row above, not as
+a replacement. **It has no validated operating range yet and must not be
+assumed to inherit any row in this table.** Status as of Stage 4a
+(`docs/decision_log.md` D-030): on the smallest falsifiable slice
+(three-node chain/fork/triangle motifs, Stage 1b's original `N in
+[100,1000]` grid), it reproduces the conservative engine's own numbers
+almost exactly (mean absolute delta `.01`-`.02` across 486 matching
+cells) and shows one favorable divergence at small `N` (fewer wrongly-
+pruned true triangle edges, by design — at most one of a triangle's
+three edges can ever be wrongly pruned under this engine, versus all
+three independently at risk under the conservative engine's symmetric
+test). This is informational only; no `N` recommendation follows from
+it. Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
+
 ## Maintenance
 
 Add a row (or update an existing one) whenever a new charter validates
