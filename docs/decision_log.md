@@ -2806,3 +2806,107 @@ would need **new simulated points densely spaced inside that range**
 crossing, not a re-selection of which existing points to fit on. Stage
 4h's own accepted `N=625`/`700` results (D-037) are unaffected — both
 sit safely inside the now-narrower `[400, 725]` valid range.
+
+## D-039: Dense sampling narrows the N=700-750 gap substantially but does not close it (R6j)
+
+Date: 2026-08-31
+
+Stage: R6j / Stage 4 (new engine)
+
+Status: REASSESS overall, but a genuine, large partial win. `N=725` —
+the exact point Stage 4i's repair broke — now PROCEEDs cleanly, along
+with `705, 715, 735`. Only `N=745` (held-out) and `N=750` (a fitting
+point) still produce an invalid negative alpha.
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage4j_charter.md`
+
+Question: Does adding four new fitting points densely spaced inside the
+`N=700`-`750` gap (`710, 720, 730, 740`) resolve D-038's finding that
+the curve's zero-crossing is a sample-density problem, not a fitting-
+target problem?
+
+Prior specification: `docs/stage4j_charter.md` fit on ten points (six
+reused verbatim from Stage 4e, four new dense points, all freshly
+simulated at `2,000` replicates each) and held out nine points,
+including five dense-region midpoints (`705, 715, 725, 735, 745`) —
+critically re-testing `N=725`, which Stage 4i's refit broke.
+
+Evidence: `results/generated/stage4j_dense_refit/decision.json`,
+runtime `370s`.
+
+| N | region | status | alpha_hat | candidacy | conditional accuracy |
+|---|---|---|---|---|---|
+| 400 | coarse | PROCEED | `.1214` | `.881` | `.913` |
+| 550 | coarse | PROCEED | `.0542` | `.892` | `.970` |
+| 625 | coarse | PROCEED | `.0301` | `.892` | `.979` |
+| 675 | coarse | PROCEED | `.0163` | `.869` | `.990` |
+| 705 | dense | PROCEED | `.0087` | `.847` | `.994` |
+| 715 | dense | PROCEED | `.0063` | `.809` | `.997` |
+| **725** | dense | **PROCEED** | `.0039` | `.786` | `.998` |
+| 735 | dense | PROCEED | `.0016` | `.696` | `.998` |
+| 745 | dense | REASSESS | `-.0006` | — | — |
+| 750 (fitting pt.) | — | self-check FAIL | `-.0018` | — | — |
+
+**The dense-sampling hypothesis is confirmed, directionally and
+substantially.** D-038's diagnosis was that the zero-crossing under-
+determination is a density problem, testable by adding local support —
+this charter did exactly that and the crossing genuinely moved, from
+between `N=700`/`725` (Stage 4i, D-038) to between `N=735`/`745`, a
+`~4x` narrowing of the unresolved gap (`25` units wide vs. Stage 4i's
+effective `~25`-`50` unit uncertainty band, now pushed `20`-`45` units
+further out). **`N=725` specifically — the casualty of Stage 4i's
+repair — is fully restored and PROCEEDs with a comfortable margin**
+(candidacy `.786`, accuracy `.998`, both well clear of their floors).
+
+**It still does not fully close.** `N=745` (held out) and `N=750` (a
+fitting point, caught by the self-check) both produce invalid negative
+alphas. Candidacy rate is falling steadily across the dense region
+(`.881` at `400` down to `.696` at `735`) even as accuracy keeps rising
+— the fitted `alpha` shrinks as `N` grows (by design, to keep pace with
+Fisher-z's tightening significance threshold), but a shrinking `alpha`
+also screens out more cross-branch pairs before conditioning ever gets
+to test them. This is the same underlying tension `alpha(N)` exists to
+manage in the first place, now visibly approaching its steep end near
+`N=750` rather than a new artifact of this charter's fitting.
+
+Decision: **REASSESS**, but record the dense-region result as a
+substantive partial success, not a wash. Per the charter's own partial-
+success reporting requirement: this is exactly the "narrows without
+closing" outcome the charter's REASSESS branch anticipated, which
+"argues for even denser sampling in a future charter" rather than a
+structural-discontinuity finding. The evidence here supports that
+reading directly — the crossing moved in the expected direction by
+roughly the amount predicted, it did not stay put or move irregularly.
+
+Rationale: This project's four-parameter candidate forms (linear,
+log-linear, power law, inverse-sqrt) are all still globally fit across
+the entire `[300, 750]` range from just ten points, only four of which
+sit inside the `700`-`750` gap itself. A curve with this few local
+degrees of freedom near a genuine crossing will keep being sensitive to
+exactly which points are included until either (a) the crossing region
+has enough points that the *local* slope is well-estimated on its own,
+largely independent of the far end of the range (`N=300`), or (b) a
+different functional form is used that does not force one global shape
+across the whole domain. Four dense points moved the needle by `~4x`;
+this is consistent with diminishing but still-present returns from
+finer sampling.
+
+Consequences: **The sequential engine's overlap-shape `alpha(N)`
+formula validated range is now `[400, 735]`** — a real improvement over
+Stage 4i's `[400, 725]` (D-038) and Stage 4g's original `[400, 725]`
+(D-037 corrected the original overbroad `[400, 750]` claim). `N=725`
+is fully restored, unlike after Stage 4i. `N=740`-`750` remain
+unresolved and must not be used with any fitted `alpha` — Stage 4e's
+own lookup value for `N=750` (`alpha=.005`) remains the right fallback
+there, per D-038's original recommendation, still standing. **A future
+charter wanting to close the final `[740, 750]` gap** should add points
+even more densely inside that specific 10-unit-wide interval (e.g.
+`742, 744, 746, 748`) rather than repeating this charter's `10`-unit
+spacing — the diminishing-but-present-returns pattern observed here
+suggests this would work, at increasing simulation cost for
+diminishing practical value (the interval left is now only `10` units
+wide, `1.3%` of the full `[400, 750]` validated range). This is likely
+not worth pursuing further unless a specific downstream use needs
+`N=740`-`750` exactly. Stage 4h's accepted `N=625`/`700` results
+(D-037) remain unaffected throughout.

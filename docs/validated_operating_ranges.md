@@ -344,6 +344,33 @@ its crossing — not a re-selection of which existing points to fit on.
 Stage 4h's accepted `N=625`/`700` results (D-037) are unaffected, both
 sitting safely inside the narrower `[400, 725]` range. See D-038.
 
+**Stage 4j densely-spaced refit — the gap narrows substantially (`~4x`)
+but does not fully close.** Adding four new fitting points densely
+spaced inside `N=700`-`750` (`710, 720, 730, 740`, freshly simulated,
+`2,000` replicates each) and re-fitting on all ten points moved the
+zero-crossing from between `N=700`/`725` (Stage 4i, D-038) to between
+`N=735`/`745`. **`N=725` — Stage 4i's casualty — is fully restored**,
+PROCEEDing with a comfortable margin (candidacy `.786`, accuracy
+`.998`), alongside `705, 715, 735`. Only `N=745` (held out) and `N=750`
+(now itself a fitting point, caught by the fitting-point self-check)
+still produce an invalid negative alpha. **Net effect: the sequential
+engine's validated overlap `alpha(N)` range is now `[400, 735]`** — an
+improvement over both Stage 4i's and Stage 4g's `[400, 725]`. The
+unresolved gap has narrowed from `50` units (`700`-`750`, Stage 4g's
+original overbroad claim) to `10` units (`740`-`750`), `1.3%` of the
+full validated range. Candidacy rate falls steadily across the dense
+region (`.881` at `400` down to `.696` at `735`) even as accuracy keeps
+rising — the same `alpha`-vs-candidacy tension `alpha(N)` exists to
+manage, now visibly approaching its steep end, not a new artifact.
+**For `N=740`-`750` specifically**, Stage 4e's own lookup value for
+`N=750` (`alpha=.005`) remains the right fallback (per D-038); closing
+this final, narrow gap with a formula would need points spaced even
+more densely inside `[740, 750]` itself, at increasing simulation cost
+for now-marginal practical value — likely not worth pursuing unless a
+specific downstream use needs exactly this narrow range. Stage 4h's
+accepted `N=625`/`700` results (D-037) remain unaffected throughout.
+See D-039.
+
 Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 
 ## Maintenance
