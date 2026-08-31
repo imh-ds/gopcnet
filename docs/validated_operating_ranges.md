@@ -206,6 +206,8 @@ remove. **This is now an open, unexplained anomaly, not a floor in
 either direction.** Do not report any `N` recommendation for the
 overlap shape under the sequential engine — favorable or unfavorable —
 until this pattern is explained or ruled out as noise. See D-033.
+**Resolved by D-034 below — see that entry before acting on this
+paragraph.**
 
 **Stage 4d floor search — hub confirmed robust down to N=300; overlap's
 low-N floor is unknown, not favorable.** Hub's indirect-edge TPR stays
@@ -225,6 +227,34 @@ apparent TPR at exactly the `N` where the engine is actually doing
 unknown** and should not be assumed favorable; a corrected metric
 (tracking cross-branch candidacy rate separately from final TPR) is
 needed before that question can be answered. See D-032.
+**Resolved by D-034 below — see that entry before acting on this
+paragraph.**
+
+**Stage 4f diagnostic — the anomaly is explained, and it retroactively
+invalidates every fixed-alpha overlap-shape `N` comparison run so far
+(D-031/D-032/D-033).** The apparent low-`N` advantage was never a
+property of the sequential engine's reasoning — it is the same
+miscalibration D-012 was originally built to fix for the conservative
+engine: a fixed significance level requires a *larger* observed effect
+to count as "significant" at small `N` (the exact `|r|` needed at
+`alpha=.10` is `.095` at `N=300` vs. `.060` at `N=750`), so a fixed
+threshold is mechanically more lenient (easier to correctly fail to
+reject) at low `N`, regardless of whether the underlying edges are
+actually easier to classify there. A direct check (Stage 4f) found the
+opposite of the original "marginal detection is an unrelated fluke"
+hypothesis — low-`N` candidates' partial correlations are *larger* and
+*more correlated* with their marginal detection strength, not smaller
+or independent — confirming this is pure threshold miscalibration, not
+a real reasoning advantage at low `N`. **No `N` recommendation for the
+overlap shape under the sequential engine is authorized by any evidence
+collected so far** — Stage 4b/4d/4e all used a fixed, `N`-independent
+alpha. A follow-up fitting an `N`-adjusted alpha for the sequential
+engine's conditioning step (mirroring D-012's own methodology), then
+re-running the floor search under it, would be needed before this
+shape's true floor under this engine can be assessed. Hub's own Stage 4d
+PROCEED result is unlikely to be affected given its much wider
+true/indirect signal separation, but has not been explicitly
+re-confirmed under a calibrated alpha either. See D-034.
 
 Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 

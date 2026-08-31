@@ -2331,3 +2331,97 @@ unexplained mechanism-level anomaly is a poor foundation to build
 further charters on. `docs/validated_operating_ranges.md` should record
 this explicitly as an open anomaly, not as either a floor or a
 non-result.
+
+## D-034: The anomaly is explained — a fixed alpha is miscalibrated across N, not a mystery (R6e)
+
+Date: 2026-08-30
+
+Stage: R6e / Stage 4 (new engine)
+
+Status: Anomaly explained; D-033's original hypothesis is **rejected**,
+replaced by a mundane, well-understood mechanism
+
+Decision timing: Descriptive, per `docs/stage4f_charter.md`'s own
+predeclared sub-questions — no gate, evaluated as stated in advance
+
+Question: D-033's two sub-questions — does marginal detection strength
+predict conditional outcome among candidates (Q1), and is the low-`N`
+candidate pool genuinely easier or just noisily selected (Q2)?
+
+Evidence: `results/generated/stage4f_anomaly_diagnostic/summary.json`,
+zero errors, runtime 16s.
+
+| N | alpha | candidates | Q1 corr(|r_marginal|,|r_partial|) | Q2 mean |r_partial| | fraction correctly pruned |
+|---|---|---|---|---|---|
+| 300 | .10 | 6090 | `.635` | `.0390` | `.938` |
+| 500 | .10 | 7338 | `.344` | `.0327` | `.934` |
+| 750 | .10 | 7865 | `.155` | `.0281` | `.913` |
+| 300 | .20 | 6874 | `.473` | `.0400` | `.864` |
+| 500 | .20 | 7677 | `.218` | `.0339` | `.824` |
+| 750 | .20 | 7956 | `.096` | `.0286` | `.807` |
+
+**Both sub-questions came back opposite to D-033's original hypothesis,
+and together they explain the anomaly completely.** Q1: marginal and
+partial correlation are *not* independent — they are meaningfully
+correlated at low `N` (`.63` at `N=300`, alpha `.10`) and only fade
+toward independence as `N` grows (`.15` at `N=750`), the opposite of
+"weak and `N`-stable." Q2: mean `|r_partial|` among candidates is
+*larger*, not similar or smaller, at low `N` (`.039` vs. `.028`). **The
+"marginal detection is an unrelated fluke" hypothesis is rejected on
+both counts** — low-`N` candidates are not easier; if anything, their
+partial correlations run noisier and larger.
+
+Despite that, accuracy is still higher at low `N` — and the reason is a
+simple, previously-overlooked fact about the significance test itself.
+A direct calculation of the exact `|r_partial|` needed to reach
+significance at `alpha=.10` (the Fisher-z critical value) is `.0953` at
+`N=300` but only `.0601` at `N=750` — **the bar for "significant" itself
+rises as `N` falls**, because a fixed `alpha` requires a bigger observed
+effect at smaller `N` to clear the same threshold. At `N=300`, the
+observed mean `|r_partial|` (`.039`) sits comfortably below that
+elevated bar (`.41x` of it); at `N=750`, the observed mean (`.028`) sits
+much closer to its own, lower bar (`.47x` of it) — a smaller safety
+margin, hence more frequent (though still infrequent) wrong retentions.
+
+Decision: **This is not a mystery requiring further diagnosis — it is
+the same phenomenon D-012 already exists to correct for on the
+conservative engine, showing up here because the sequential engine does
+not yet have an equivalent fix.** D-012 fit an `alpha(N)` formula
+specifically because a fixed significance level is miscalibrated across
+`N` for exactly this reason (looser at small `N`, stricter at large `N`,
+in a way unrelated to the actual quantity being tested). Stage 4a-4f all
+used a single, `N`-independent `alpha` for the sequential engine's
+conditioning step, by original design (Stage 4a's charter chose this
+deliberately as the simplest first test). **The overlap shape's
+apparent low-`N` "improvement" was this same known miscalibration
+effect, not evidence the engine reasons better with less data.**
+
+Rationale: This project's own established caution — a fixed `alpha`
+does not mean a fixed burden of proof across `N` — was already learned
+once, for the conservative engine, at real cost (multiple charters,
+D-009 through D-012). It reappeared here because the sequential engine's
+charters have not yet re-derived an equivalent `N`-adjusted threshold,
+not because the sequential mechanism itself has any new or different
+flaw. Two diagnostic charters (Stage 4e, Stage 4f) were needed to reach
+this explanation cleanly, but the explanation itself, once found, is
+unsurprising and consistent with everything already known about this
+project's own statistical tests.
+
+Consequences: **No overlap-shape `N` recommendation is authorized by
+Stage 4b/4d/4e/4f's fixed-alpha evidence** — all of it was collected
+under a threshold now known to be miscalibrated across the tested `N`
+range, in the specific direction that flatters small `N`. Before this
+shape's floor can be honestly assessed under the sequential engine, a
+follow-up charter would need to fit an `N`-adjusted alpha for this
+engine's conditioning step (mirroring D-012's own methodology), then
+re-run the floor search under that corrected threshold — not assumed to
+land at the same numbers Stage 4d/4e reported, in either direction.
+Hub's own Stage 4d result is very unlikely to be affected in the same
+way (its true/indirect signal separation is wide enough that threshold
+miscalibration should not change the qualitative PROCEED outcome), but
+this has not been explicitly re-checked with a calibrated alpha either,
+and should be a light confirmatory check alongside the overlap
+follow-up, not assumed. `docs/validated_operating_ranges.md` should
+record this explanation and retract any implication that overlap's
+floor is favorable or unfavorable at any `N` below `750` until the
+recalibrated evidence exists.
