@@ -1828,3 +1828,101 @@ signal strengths, or `p` values not yet tested this way.
 the same `pi_min=.80`, rather than adding a wholly new row, since the
 selected threshold and mechanism are unchanged — only the tested `p`
 and specific `N` values are new.
+
+## D-029: Lower p does NOT lower the overlap shape's floor below N=1500 (R5a)
+
+Date: 2026-08-30
+
+Stage: R5a / Stage 2
+
+Status: REASSESS at `N=750`, PROCEED at `N=1500`, at **both** `p=5` and `p=10`
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage2j_charter.md`
+
+Question: Motivated by real behavioral/psychological datasets typically
+having `p=5`-`10`, does the general `N=750` floor hold for the
+shared-node-overlap shape at these lower `p`, since fewer null pairs
+should let screening use a looser `alpha` — reversing the mechanism
+that raised the overlap floor to `N=1750` at `p=30` (D-026/D-027)?
+
+Prior specification: `docs/stage2j_charter.md` predicted **PROCEED at
+`N=750`** for the overlap shape at both `p=10` (overlap + chain motif +
+2 noise) and `p=5` (overlap motif only, zero noise columns — false-edge
+rate undefined there, disclosed in advance). Screening alpha
+re-selected at `p=10` via D-013/D-023's own methodology (grid `{.05,
+.01, .005, .001, .0005, .0001}`, eligibility recall `>=.99`/FDR
+`<=.05`); `p=5` fixed at D-013's original `alpha=.001` (selection is
+meaningless with zero null pairs).
+
+Evidence: `results/generated/stage2j_floor_check/decision.json`, zero
+errors on all rows that were meant to run, runtime 26s.
+
+| `p` | `N` | status | overlap TPR | clean-clique rate |
+|---|---|---|---|---|
+| 10 | 750 | REASSESS (no eligible dev. alpha) | — | — |
+| 10 | 1500 | PROCEED | `.814` | `.866` |
+| 5 | 750 | REASSESS | `.606` | `.305` |
+| 5 | 1500 | PROCEED | `.836` | `.902` |
+
+At `p=10`, `N=750` never reached the composition gate at all: **no
+candidate screening `alpha` cleared this charter's own selection
+eligibility** (recall `>=.99` and FDR `<=.05` on development) — every
+alpha in the grid was either too strict (missing true pairs, failing
+recall) or too loose (failing FDR), a decisive result, not a near-miss.
+`p=5`'s `N=750` overlap TPR (`.606`) and clean-clique rate (`.305`) are
+close to D-018's own original `p=15` `N=750` numbers (`.569`-`.633`
+TPR, `~.26`-`.29` clean-clique rate) — **essentially unchanged from the
+`p=15` floor already known**, not improved by the ten-fold reduction in
+null-pair count.
+
+Decision: **This charter's directional prediction was wrong.** Lower
+`p` does not rescue `N=750` for the shared-node-overlap shape; the
+floor stays at `N=1500`, the same value D-017/D-018 established at
+`p=15`. `N=1500` PROCEEDs comfortably at both lower `p` (overlap TPR
+`.81`-`.84`, true-edge FPR `0` throughout).
+
+Rationale: The screening-pressure mechanism this charter reasoned from
+is real (D-023 showed it going *up*, this charter's own `p=10` selected
+`alpha=.0005` — slightly *tighter*, not looser, than `p=15`'s `.001`,
+because the specific true:null ratio and grid interact non-monotonically
+rather than tracking null-pair count alone) but it was never the
+dominant factor for this specific floor. **The overlap shape's `N=750`
+failure is governed by the per-pair detection power of its weak
+(`~.135`) cross-branch correlation at fixed `N` — a property of the
+correlation's Fisher-z power curve, which does not depend on how many
+*other* variables or null pairs exist in the dataset.** Screening
+pressure only matters when it is severe enough to move the selected
+`alpha` by an order of magnitude, as it did going from `p=15` to `p=30`
+(`.001` to `.0001`, D-023) — a much larger shift than anything seen
+between `p=5`/`10`/`15` here. This explains the full pattern now on
+record: `p=5`, `10`, `15` all share the same `N=1500` floor for this
+shape; only `p=30` pushed it higher, to `N=1750` (D-026/D-027).
+
+A secondary, narrower finding: `p=10`'s screening-alpha selection step
+itself narrowly missed its own validation recall bar (`.9864` vs. the
+required `.99`), even though the composition gate that used the
+selected alpha still PROCEEDed comfortably at `N=1500`. This reflects
+that charter's own selection thresholds (`recall>=.99`, `FDR<=.05`)
+being deliberately stricter than Stage 2/2e's established precedent
+(`recall>=.80`, `FDR<=.10`), not a real detection problem — a `.9864`
+recall is not a practically meaningful shortfall. Future charters
+reusing this selection methodology should default to Stage 2/2e's own
+thresholds unless there is a specific reason to tighten them, to avoid
+manufacturing confusing near-misses like this one.
+
+Consequences: `docs/validated_operating_ranges.md`'s shared-node-overlap
+row should be extended: the shape's `N=1500` floor (previously
+established only at `p=15`/`30`) now also holds at `p=5` and `p=10` —
+**this floor is effectively `p`-invariant across the tested range
+`[5, 30]` at `N=750` failing / `N=1500` passing, except that `p=30`
+additionally requires `N=1750`, not `1500`, for the reason above.** Do
+not assume any `p < 15` gets an easier ride than `p=15` for this
+specific shape — the opposite of this charter's own prediction. This
+does not change the general `N=750` DPI/composition floor for
+strong-signal shapes (disjoint-triad, hub), which remains untested below
+`p=15` for those shapes specifically, though there is no mechanism-level
+reason to expect it to move. Real behavioral datasets with `p=5`-`10`
+and a shape resembling this weak-signal overlap pattern should budget
+for `N>=1500`, the same as at `p=15`, not assume a lower `p` grants any
+relief.
