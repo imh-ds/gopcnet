@@ -3339,3 +3339,47 @@ validated `[400, 735]` `alpha(N)` range, not tested here since this
 charter deliberately used Stage 4c/4m's smaller, harder `N` grid)
 remains open for a future charter if the magnitude ever becomes
 practically relevant.
+
+## D-044: R6a milestone resolved — sequential engine recommended with disclosed caveats for four shapes, within tested ranges (R6a Resolution)
+
+Date: 2026-08-31
+
+Stage: R6a Resolution / Stage 4 (synthesis, no new evidence)
+
+Status: Synthesis complete. Deliverable: `docs/stage4o_recommendation.md`.
+
+Decision timing: Rubric fixed before the verdict was drafted, per
+`docs/stage4o_charter.md`. No new simulation; every claim traces to
+D-030 through D-043.
+
+Question: Does the sequential/greedy conditioning engine clear the
+outline's own R6a milestone (materially lower `N` than the conservative
+engine, without an unacceptable cascading-error rate)?
+
+Decision: **Cleared per-shape, with disclosed caveats, for overlap,
+chain, fork, and hub(2-children), each within its own specifically
+tested `N`/strength range** — not a blanket clearance, and not
+extendable to any untested shape, `N`, strength, or `p`. Full detail,
+including the per-shape rubric table, the `N`-by-method and effect-size-
+by-method viability matrices, and the explicit boundary-of-recommendation
+section, is in `docs/stage4o_recommendation.md` (not restated here).
+
+Rationale: The rubric was mechanical specifically so this entry would
+not become a place to round a mixed record up to a cleaner verdict than
+it earned — every shape carries at least one disclosed, quantified
+caveat (overlap: a small structural cascading pathway independent of
+noise, D-043; chain/fork/hub: a small noise-driven cascading effect,
+D-042), and the recommendation document says so explicitly rather than
+only in the fine print.
+
+Consequences: `docs/stage4o_recommendation.md` is now the authoritative
+answer to "should this engine be used, and for what" — future work
+should point to it rather than re-deriving the answer from the raw
+D-030-D-043 arc. It surfaces five prioritized next steps (most
+importantly: closing overlap's isolated-vs-composed testing gap, and
+testing this engine against Stage 3's bootstrap-stability rescue
+mechanism, which has never been tried with it at all) but does not
+authorize any of them — each remains its own future charter's decision.
+This closes the R6a milestone as project governance; it does not close
+the project, and does not touch the outline's separate, unstarted R6
+milestone (broad benchmarking against incumbents).
