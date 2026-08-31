@@ -371,6 +371,28 @@ specific downstream use needs exactly this narrow range. Stage 4h's
 accepted `N=625`/`700` results (D-037) remain unaffected throughout.
 See D-039.
 
+**Stage 4k shape/signal-strength sweep — overlap's miscalibration does
+not generalize; D-012's existing formula works unmodified for every
+other shape tested.** Swept `3` motifs (chain, fork, hub-2-children) x
+`4` signal strengths (`0.30`-`0.70`, bracketing overlap's own `~.135`
+correlation from both sides) x `3` sample sizes (`750, 1000, 1500`,
+inside D-012's own validated range) — `36` cells total, **all PROCEED**,
+reusing D-012's already-frozen `alpha(N)` formula with no new fitting
+at all. Candidacy `.86`-`1.0`, conditional accuracy `.82`-`.94`,
+comfortably clear of the `.80` floor everywhere, though six cells (all
+at `N=750`, the tightest point) have margins under `.05`, smallest
+`.022` (hub, `strength=0.70`). **Chain, fork, and hub(2-children) are
+now validated for the sequential engine's isolated conditioning at `N
+in [750, 1000, 1500]` across this strength range, using the same
+formula long used for the conservative engine — no shape-specific
+recalibration needed.** This substantially strengthens the reading that
+overlap's own D-032-D-039 saga was a property of its specific DGP
+(five-variable, dual-triangle topology), not a systemic weak-signal
+issue with the engine. **Still not sufficient alone for a user-facing
+recommendation**: this sweep is isolated-only (no screening, no noise,
+no composed pipeline), and Stage 4c's cascading-error stress test
+covered only the triangle shape, not these three. See D-040.
+
 Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 
 ## Maintenance

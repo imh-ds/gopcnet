@@ -2910,3 +2910,110 @@ wide, `1.3%` of the full `[400, 750]` validated range). This is likely
 not worth pursuing further unless a specific downstream use needs
 `N=740`-`750` exactly. Stage 4h's accepted `N=625`/`700` results
 (D-037) remain unaffected throughout.
+
+## D-040: Overlap's miscalibration does not generalize — D-012's existing formula PROCEEDs across every shape/strength cell tested (R6k)
+
+Date: 2026-08-31
+
+Stage: R6k / Stage 4 (new engine)
+
+Status: PROCEED. All 36 cells (3 motifs x 4 strengths x 3 sample sizes)
+PROCEED using D-012's already-frozen `alpha(N)` formula, unmodified, no
+new fitting.
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage4k_charter.md`
+
+Question: Does D-012's existing `alpha(N)` formula — built for the
+conservative engine, reused unmodified here — generalize to the
+sequential engine across a grid of shapes (chain, fork, hub-with-2-
+children) and signal strengths (`0.30`-`0.70`, bracketing overlap's own
+historically-difficult `~.135` correlation from both sides), or does
+overlap's D-034 miscalibration reflect a general weak-signal property
+of the engine?
+
+Prior specification: `docs/stage4k_charter.md` tested `36` cells (`3
+motifs x 4 strengths x 3 N in [750, 1000, 1500]`, all inside D-012's
+own validated `[700, 3000]` range), gated on `conditional_accuracy
+>= .80` (margin `.02`) and true-edge FPR `<= .10` (margin `.02`), `1,000`
+replicates per cell.
+
+Evidence: `results/generated/stage4k_shape_strength_sweep/decision.json`,
+runtime `18.4s`.
+
+**All 36 cells PROCEED — a clean, unqualified result.** Candidacy rate
+`.86`-`1.0` throughout (rising with `N` as expected, and lowest at
+`strength=0.30`, the weakest and hardest cell tested); conditional
+accuracy `.82`-`.94`, comfortably above the `.80` floor in every cell.
+No re-fitting, no per-shape or per-strength recalibration — the exact
+same formula, the exact same three `alpha` values (one per `N`,
+`.1476`/`.1313`/`.1084`), applied identically across all three motifs
+and all four strengths.
+
+**Margins are real but some are thin, worth naming explicitly, not
+just citing the aggregate PROCEED**: the six smallest margins all occur
+at `N=750` (the general floor point, where `alpha` is largest and the
+formula has the least room to spare): `hub, strength=0.70, N=750`
+(margin `.022`, barely above the `.02` requirement, accuracy `.822`);
+`chain, strength=0.50, N=750` (`.042`); `chain, strength=0.70, N=750`
+(`.044`); `hub, strength=0.50, N=750` (`.044`); `fork, strength=0.50,
+N=750` (`.048`). Every one of these clears the gate, but `N=750` is
+where this formula would first show trouble if it were going to, and
+it is worth watching if any future charter pushes this combination
+harder (e.g. a stress test at `N` closer to `700`, D-012's own lower
+boundary).
+
+**One mildly counterintuitive but plausible pattern**: conditional
+accuracy at `N=750` is not monotonically increasing with `strength` —
+e.g. hub's accuracy is `.856` at `strength=.40` but only `.822` at
+`strength=.70`. A larger true indirect correlation being *harder* to
+correctly prune, not easier, makes sense once conditioning is
+considered: a stronger marginal correlation leaves a larger residual
+partial correlation after conditioning on the shared cause, which is
+more likely to still cross the significance threshold at a fixed
+`alpha` — the same reason `alpha(N)` exists in the first place, now
+visible along the strength axis too, not just the `N` axis. This is
+descriptive, not a gate failure anywhere, and not further investigated
+by this charter.
+
+Decision: **PROCEED, and treat this as the answer to the R6a
+milestone's broader shape/signal-strength precondition for chain, fork,
+and hub-type shapes.** Overlap's D-032-D-039 miscalibration story does
+**not** generalize — it reflects something specific to the overlap
+shape's own DGP (its five-variable, dual-triangle topology and fixed
+`-0.25` precision structure), not a systemic weak-signal problem with
+the sequential engine. D-012's existing, already-frozen formula — built
+years before the sequential engine existed, using triads only — needed
+no changes at all to cover this entire new grid.
+
+Rationale: This charter deliberately tested strengths on both sides of
+overlap's own difficulty level (`0.30` implies indirect correlation
+`.09`, weaker than overlap's `~.135`; `0.40` implies `.16`, just above
+it) specifically so a null result here could not be dismissed as "just
+not weak enough." `strength=0.30` is if anything a harder case than
+overlap ever posed, and it still PROCEEDs cleanly (candidacy `.86`-
+`.98`, accuracy `.90`-`.94` — actually the *highest* accuracy band of
+any strength tested, since the induced indirect correlation is weak
+enough that few pairs risk incorrectly surviving conditioning once they
+do clear screening). Combined with the DGP's structural symmetry (every
+motif reduced to exactly two direct edges and one indirect pair), this
+is a genuinely apples-to-apples test, not one favorable to a particular
+outcome.
+
+Consequences: **Chain, fork, and hub(2-children) motifs are now
+validated for the sequential engine's isolated conditioning at `N in
+[750, 1000, 1500]` across `strength in [0.30, 0.70]`, using D-012's
+existing formula unmodified** — no new alpha(N) rule needed for these
+shapes. This substantially derisks a user-facing recommendation for
+these shape types specifically, though **it still does not authorize
+one on its own**: this charter is isolated-only (no screening, no
+noise, no composed pipeline), and Stage 4c's cascading-error caveats
+were tested only for the triangle shape, not these three. **The
+overlap shape remains the one exception requiring its own dedicated
+`alpha(N)` treatment** (Stage 4g/4i/4j, validated `[400, 735]`) — this
+result reinforces, rather than undermines, treating that as a shape-
+specific finding rather than evidence of a broader defect. A natural
+next step, if pursued, would be a composed/noisy version of this same
+sweep (mirroring Stage 4h's own treatment of overlap), to close the
+isolated-vs-composed gap for chain/fork/hub the way Stage 4h closed it
+for overlap.
