@@ -1748,3 +1748,83 @@ floor is specific to this DGP's exact signal strength (`~.135`) and
 D-023's exact screening threshold (`alpha=.0001`) — a different weak
 signal strength, or a different `p`-driven threshold, would need its
 own floor search, not an assumption that `1750` transfers.
+
+## D-028: Bootstrap stability filtering rescues the overlap DGP's p=30 floor cases (R4e)
+
+Date: 2026-08-30
+
+Stage: R4e / Stage 3
+
+Status: PROCEED at `N = 1500`, `N = 1600`, and `N = 1750`
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage3e_charter.md`
+
+Question: Does the same post-hoc bootstrap-stability filter that
+rescued Stage 3b's `p=15` overlap failure (D-020) also rescue D-026/
+D-027's `p=30` REASSESS cases (`N=1500`, `.762`; `N=1600`, `.786`, both
+below the `.80` gate) — misses `6`-`16x` smaller than Stage 3b's
+starting point — without regressing the already-passing `N=1750`?
+
+Prior specification: `docs/stage3e_charter.md` reused Stage 3b's exact
+grid (`pi_min in {.80, .90, .95, .98}`) and four-part gate unmodified,
+on the `p=30` overlap DGP at `N=[1500, 1600, 1750]`, 60 replicates each
+(30 development / 30 validation), `B=500`. Predicted — as an analogy
+from Stage 3b, not from prior `p=30` bootstrap evidence, since none
+existed — that filtering would rescue both `N=1500` and `N=1600`,
+plausibly at a `pi_min` at or below Stage 3b's own `.80`.
+
+Evidence: `results/generated/stage3e_overlap_p30_filter/decision.json`,
+zero errors, runtime 1851s (~31 min). **All three `N` PROCEED**, all
+selecting the smallest candidate, `pi_min=.80`:
+
+| `N` | baseline overlap TPR | filtered (validation) overlap TPR | true-edge FPR |
+|---|---|---|---|
+| `1500` | `.800` (dev) | `.850` | `0` |
+| `1600` | `.742` (dev) | `.900` | `0` |
+| `1750` | `.825` (dev) | `.900` | `0` |
+
+Chain/fork indirect TPR (`.90`-`.97`) and final false-edge rate (`<=
+.00016`, `0` at two of three `N`) never regressed relative to baseline
+at any `N`, matching the gate's safe-by-construction criteria exactly.
+This run's own baseline TPRs (fresh 60-replicate draws, different seeds
+from D-026/D-027's floor-search evidence) differ slightly from
+D-026/D-027's numbers (`.800`/`.742`/`.825` here vs. `.762`/`.786`/
+`.815` there) but tell the same story: `N=1500` and `1600` sit at or
+below the `.80` gate pre-filtering, `1750` sits just above it. See
+`docs/stage3e_report.md`, `overlap_tpr_vs_pi_min.png`,
+`before_after_filtering.png`.
+
+Decision: **The charter's directional prediction was confirmed exactly,
+including the specific `pi_min`.** Filtering at `pi_min=.80` — Stage
+3b's own selected threshold, not a more aggressive one — rescues both
+`N=1500` and `N=1600` at `p=30`, and does not regress `N=1750`.
+Contrary to a naive expectation that "harder to detect" would mean
+"harder to fix," the smaller `p=30` misses needed no more aggressive a
+filter than the much larger `p=15` miss did.
+
+Rationale: This is the second rescue demonstration in the project (after
+D-020) and the first to test whether a validated rescue *threshold*
+value, not just the rescue *mechanism*, transfers across a `p` change
+on the same DGP shape and signal strength. It does, without
+recalibration — consistent with the mechanism separating edges by
+resampling stability, a property of the DGP's signal-to-noise structure
+rather than of `p` itself. Combined with D-026/D-027's own on-target
+numeric predictions, this is now the third consecutive `p=30` overlap
+charter in this line whose predeclared, evidence-grounded prediction
+landed correctly, not merely directionally.
+
+Consequences: A real dataset with this DGP shape stuck at `p=30`,
+`N=1500`-`1600` need not collect `1750`+ samples to reach a valid
+result for the overlap motif specifically — it can instead apply
+`pi_min=.80` filtering at its existing `N`, at the cost of `B=500`x
+resampling compute, a real tradeoff each user must weigh (this charter
+does not resolve whether that tradeoff is worth it in general). This
+does not authorize skipping D-027's floor-finding approach when more
+data is feasible to collect, nor generalize to other weak-signal shapes,
+signal strengths, or `p` values not yet tested this way.
+`docs/validated_operating_ranges.md`'s bootstrap-stability-filtering row
+(Stage 3b, D-020) should be extended to note this `p=30` confirmation at
+the same `pi_min=.80`, rather than adding a wholly new row, since the
+selected threshold and mechanism are unchanged — only the tested `p`
+and specific `N` values are new.
