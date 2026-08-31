@@ -193,6 +193,20 @@ and untested embedded in a larger noisy candidate pool. Do not recommend
 `N=750` for this shape under any engine on the strength of this result
 alone.
 
+**Stage 4e correction attempt — the artifact is fixed, but a second,
+unexplained pattern replaced it.** Separating screening candidacy from
+conditioning correctness (D-033) confirms candidacy behaves normally
+(rises with `N`, `.874` at `N=300` to `.991` at `N=700`), but the
+corrected `conditional_accuracy` metric itself still declines modestly
+as `N` rises, at every tested alpha and uniformly across all 4
+cross-branch pairs (e.g. at alpha `.10`: `.934` at `N=300` down to
+`.917` at `N=750`) — the opposite of the normal, expected direction, and
+not explained by the non-detection confound this metric was built to
+remove. **This is now an open, unexplained anomaly, not a floor in
+either direction.** Do not report any `N` recommendation for the
+overlap shape under the sequential engine — favorable or unfavorable —
+until this pattern is explained or ruled out as noise. See D-033.
+
 **Stage 4d floor search — hub confirmed robust down to N=300; overlap's
 low-N floor is unknown, not favorable.** Hub's indirect-edge TPR stays
 flat (`.895`-`.911`) across `N=300`-`750`, verified via a diagnostic

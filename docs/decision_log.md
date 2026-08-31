@@ -2235,3 +2235,99 @@ screening-candidacy rate for the 4 cross-branch pairs alongside TPR, and
 gating on TPR only among replicates where all 4 were actually
 candidates — before trusting any `N` below `750` for this shape under
 either engine.
+
+## D-033: Candidacy-conditional metric reveals a second, unexplained pattern (R6d)
+
+Date: 2026-08-30
+
+Stage: R6d / Stage 4 (new engine)
+
+Status: PROCEED at every tested `N` (`300`-`750`) on the corrected gate
+— **but the predeclared expectation this charter was built to check did
+not hold, and this entry does not claim to know why yet**
+
+Decision timing: Predeclared gate evaluated after results, per
+`docs/stage4e_charter.md`, including its own predeclared prediction
+
+Question: Once screening candidacy is separated from conditioning
+correctness for the overlap shape's 4 cross-branch pairs, does
+`conditional_accuracy` show the normal, non-decreasing-in-`N` pattern
+(confirming D-032's diagnosis was complete), or does it still rise as
+`N` falls (meaning that diagnosis was incomplete)?
+
+Prior specification: `docs/stage4e_charter.md` predicted the corrected
+metric would remove the backwards pattern D-032 found and predeclared
+that a still-backwards result would mean "the artifact explanation
+itself was incomplete and needs further diagnosis before trusting
+either metric" — stated as a real possible outcome, not assumed away.
+
+Evidence: `results/generated/stage4e_candidacy_metric/decision.json`,
+zero errors, runtime 184s.
+
+| N | candidacy rate | conditional accuracy (selected alpha) |
+|---|---|---|
+| 300 | `.874` | `.861` (alpha `.20`) |
+| 500 | `.955` | `.844` (alpha `.20`) |
+| 600 | `.978` | `.830` (alpha `.20`) |
+| 650 | `.963` | `.922` (alpha `.10`) |
+| 700 | `.991` | `.828` (alpha `.20`) |
+| 750 | `.975` | `.917` (alpha `.10`) |
+
+**The predeclared expectation did not hold — candidacy rate behaves
+normally (rises with `N`, as expected), but conditional accuracy is
+mildly *higher*, not lower, at small `N`.** Because different `N` cells
+selected different alphas (`.10` vs. `.20`), the table above is not a
+clean apples-to-apples curve by itself. A direct, alpha-held-fixed
+re-check resolves that ambiguity and shows the pattern is real, not a
+selection-of-alpha artifact: at **every** tested alpha (`.05`, `.10`,
+`.20`, `.30`), conditional accuracy on validation declines modestly and
+consistently as `N` rises from `300` to `750` (e.g. at alpha `.10`:
+`.934` at `N=300` down to `.917` at `N=750`; at alpha `.20`: `.861` down
+to `.825`). A further per-pair breakdown confirms this is uniform across
+all 4 individual cross-branch pairs (each pair's own accuracy-given-
+candidate at alpha `.10` runs `~.93` at `N=300` vs. `~.90`-`.92` at
+`N=750`), not an artifact of one specific pair dominating the pooled
+average.
+
+Decision: **Accept the finding as real** (it survives alpha-controlled
+and per-pair checks) **and explicitly decline to explain it.** A
+plausible but unverified hypothesis: at low `N`, a cross-branch pair
+only becomes a candidate at all if its *marginal* sample correlation
+happens to be unusually large relative to its small true population
+value (`~.135`) — essentially a favorable sampling fluctuation. That
+same fluctuation has no particular reason to also inflate the
+*conditional* (partial-correlation) test after controlling for the
+shared node, since the two test different quantities — so candidates
+selected this way at low `N` may still get correctly pruned at a normal
+rate, while at high `N`, a much larger and more complete set of
+candidates (including more genuinely borderline cases now within
+reach of detection) dilutes the pool with pairs that are intrinsically
+harder to correctly classify. **This hypothesis is not verified here**
+and should not be treated as established.
+
+Rationale: This is the second time in two consecutive charters that a
+straightforward, well-motivated fix to a diagnosed measurement problem
+(D-032's non-detection confound) has produced a still-surprising result
+rather than the expected clean confirmation. Per this project's own
+falsification-first discipline, the correct response to a predeclared
+prediction failing twice in a row on the same question is to stop and
+report the finding honestly, not to keep patching the metric
+speculatively until it produces the "expected" answer — that would
+risk exactly the kind of post hoc rationalization this project's
+decision-log discipline exists to prevent.
+
+Consequences: **Overlap's floor question remains genuinely open, and
+this project should not report any `N` recommendation for this shape
+under the sequential engine, favorable or unfavorable, until this
+pattern is either explained or ruled out as noise with a dedicated,
+narrowly-scoped charter** (e.g., directly testing the selection-effect
+hypothesis above by comparing the marginal-correlation distribution of
+candidate vs. non-candidate cross-branch pairs at matched `N`). This is
+not merely "more data needed" — it is a real, reproducible, currently
+unexplained property of the conditioning mechanism on this specific
+weak-signal shape, and deserves scrutiny before Stage 4c or any
+composed, noisy-network extension of this work proceeds, since an
+unexplained mechanism-level anomaly is a poor foundation to build
+further charters on. `docs/validated_operating_ranges.md` should record
+this explicitly as an open anomaly, not as either a floor or a
+non-result.
