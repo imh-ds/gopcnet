@@ -3116,3 +3116,120 @@ the DGP-specific exception, not chain/fork/hub. Not tested here: signal
 strengths outside `[0.30, 0.50]`, hub with more than 2 children (Stage
 4b/4d's own hub result, using a different child count, is not touched
 by this charter), or any `p` other than `15`.
+
+## D-042: Chain/fork/hub show a real, small cascading effect Stage 4c's triangle did not — likely explained by the triangle's own asymmetric design (R6m)
+
+Date: 2026-08-31
+
+Stage: R6m / Stage 4 (new engine). **Descriptive, no gate**, per this
+charter's own established rationale — no established acceptable
+cascading-error rate exists anywhere in this project.
+
+Status: Data generated and reported per `docs/stage4m_charter.md`. Not
+a PROCEED/REASSESS decision (this charter has no gate); the finding
+itself is the deliverable.
+
+Decision timing: Predeclared sub-questions (Q1/Q2/Q3) evaluated after
+results, per `docs/stage4m_charter.md`.
+
+Question: Does Stage 4c's triangle-shape finding (D-036: no meaningful
+noise-attributable increase in wrong-pruning) generalize to chain,
+fork, and hub(2-children) at a deliberately weak, uniform signal
+strength (`0.15`)?
+
+Prior specification: `docs/stage4m_charter.md` tested `36` cells (`3`
+motifs x `3` N `in [100, 200, 300]` x `2` alpha `in {.05, .10}` x `2`
+noise_count `in {0, 5}`), pooling wrong-pruning across both direct
+edges per motif, `2,000` replicates per cell, both engines on identical
+paired data.
+
+Evidence: `results/generated/stage4m_cascading_error_chain_fork_hub/
+summary.json`, runtime `87.2s`.
+
+**Q1 — Does noise contamination measurably increase the sequential
+engine's wrong-pruning rate? Answer: yes, a small but real effect,
+unlike D-036's clean null.** Across all `18` (motif, N, alpha) cells,
+the sequential wrong-prune-rate delta (`noise=5` minus `noise=0`) is
+**positive in `17` of `18` cells and exactly zero in the remaining
+one — never negative** (sign-test `p < .001` against the null of no
+systematic direction). Magnitude is small in absolute terms: mean delta
+`.0017`, largest single-cell delta `.0045` (chain, `N=100, alpha=.10`).
+
+**Q2 — Does the conservative engine show the same pattern? Answer: no
+— the mirror-image pattern, exactly as D-036 predicted.** Every one of
+the same `18` cells shows a **negative** conservative delta (range
+`-.0012` to `-.0070`) — noise contamination *reduces* the conservative
+engine's wrong-pruning rate, because a stray noise correlation breaks
+clique completeness for that component, disabling DPI and letting the
+untested (genuinely real) edge pass through unpruned. The `conservative
+clique-intact rate` collapses sharply from `noise=0` to `noise=5` in
+every cell (e.g., chain `N=300, alpha=.10`: `.093` to `.021`),
+confirming the mechanism directly.
+
+**Q3 — When the sequential engine wrongly prunes under `noise=5`, is a
+noise column specifically implicated? Answer: yes, consistently, at a
+low but non-trivial rate.** Ranges `.0007`-`.0157` across all cells and
+motifs (no clean monotonic pattern by `N` or `alpha`) — this is the
+direct mechanistic confirmation that when the small excess wrong-
+pruning occurs, a noise variable is disproportionately often part of
+the reason, not coincidental.
+
+**Cross-motif comparison**: chain (`.0015`), fork (`.0018`), and hub
+(`.0017`) show near-identical mean deltas — **no motif is meaningfully
+more or less susceptible than the others**; the effect is a property of
+the weak-uniform-strength condition, not a specific topology.
+
+**Why this diverges from D-036, with a specific mechanistic
+explanation, not just a different number:** Stage 4c's triangle fixture
+is **structurally asymmetric** — the weak tested edge (`-.08` partial
+correlation) shares the DGP with two much stronger anchor edges (`-.45`,
+`-.25`). Those anchors reliably out-rank any noise column in the `|z|`-
+based confirmation order, so they become the weak edge's tested
+neighbors almost every time — noise essentially never gets the chance
+to be selected as a "confirmed shared neighbor" before a genuine anchor
+edge already is. **Chain/fork/hub's `strength=0.15` condition has no
+such anchor**: every edge, real and spurious alike, is comparably weak,
+so a noise column has a real, if small, chance of out-ranking a genuine
+edge in the confirmation order and becoming available as a conditioning
+variable. D-036's reassuring null was in part a property of the
+triangle's own asymmetric design providing structural protection, not
+evidence the cascading pathway is universally negligible.
+
+Decision: **No gate, per this charter's design — the finding is
+reported plainly.** This is the first Stage 4 result to actually detect
+the cascading-error pathway the sequential engine's design has been
+flagged as risking since planning. It is small in absolute magnitude
+(well under half a percentage point at any tested cell) and occurs
+against an already-high baseline wrong-pruning rate (`.17`-`.68`, since
+`strength=0.15` is deliberately hard) — but it is statistically robust
+(`17/18` cells same direction) and mechanistically explained (Q3), not
+an artifact of one noisy cell.
+
+Rationale: This charter's uniform-weak-strength design was chosen
+specifically because it removes the structural protection Stage 4c's
+asymmetric triangle had — the goal was to test the pathway somewhere it
+could actually show up, and it did. This is exactly the kind of result
+the R6a milestone's cascading-error precondition exists to surface: not
+a blanket "safe" or "unsafe" verdict, but a quantified, disclosed number
+tied to a specific, understood condition (uniformly weak signal,
+comparable to overlap's own historically weak correlation) rather than
+every use of the engine.
+
+Consequences: **Any future user-facing exposure of the sequential
+engine, for any shape, must disclose this small but real cascading-
+error rate specifically for uniformly-weak-signal conditions** — D-036's
+reassuring result should not be generalized past the triangle's own
+asymmetric design that likely produced it. For shapes/strengths with a
+clear strong-vs-weak asymmetry (mirroring the triangle), D-036's near-
+zero finding may still be a reasonable expectation; for shapes where
+all edges are comparably weak (mirroring overlap's own historical
+difficulty, and this charter's `strength=0.15` condition), a small,
+non-zero cascading effect should be assumed present until measured
+otherwise. Combined with D-040/D-041, chain/fork/hub now have every
+named R6a milestone precondition addressed — the answer is not a clean
+"no risk" the way the triangle's own D-036 result was, but a specific,
+quantified, small risk, which is itself a complete and honest answer to
+the milestone's question. This charter tests only one weak-strength
+condition, one noise-column count (`5`), and one contamination pathway
+(independent noise) — the magnitude at other strengths, larger noise
+counts, or noise correlated with a real node remains untested.

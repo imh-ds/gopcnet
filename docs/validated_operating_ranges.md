@@ -418,6 +418,35 @@ unaffected — this result confirms overlap was the DGP-specific
 exception, not evidence the whole engine needs shape-specific tuning.
 See D-041.
 
+**Stage 4m cascading-error stress test for chain/fork/hub — a real,
+small effect, unlike Stage 4c's clean null on the triangle.** Extended
+Stage 4c's exact mechanism (paired same-draw noise injection, both
+engines, quantify not gate) to chain, fork, and hub(2-children) at a
+deliberately weak, uniform `strength=0.15`. **Unlike D-036's clean null
+on the triangle, the sequential engine's wrong-prune-rate delta
+(`noise=5` minus `noise=0`) is positive in `17` of `18` tested cells and
+never negative** (sign-test `p<.001`) — small in absolute magnitude
+(mean `.0017`, max `.0045`) but statistically robust and mechanistically
+confirmed (a noise column is specifically implicated in `.07%`-`1.6%` of
+wrong prunings under contamination). The conservative engine shows the
+mirror pattern predicted (delta always negative, `-.0012` to `-.0070`,
+since noise breaks clique completeness and disables DPI, letting real
+edges pass through unpruned) — same direction as D-036's own Q2 result.
+**Likely explanation for the divergence**: Stage 4c's triangle has two
+strong anchor edges that reliably out-rank noise columns for "confirmed
+neighbor" status, structurally shielding its weak tested edge; chain/
+fork/hub's uniformly weak condition removes that shield, giving noise a
+real (if small) chance to be selected as a conditioning variable ahead
+of a genuine edge. **D-036's reassuring near-zero finding should not be
+generalized past the triangle's own asymmetric design** — for uniformly-
+weak-signal shapes (the overlap shape's own historical difficulty
+included), a small, non-zero cascading effect should be assumed present
+until measured otherwise. No motif (chain/fork/hub) is meaningfully more
+susceptible than the others. Combined with D-040/D-041, chain/fork/hub
+now have every named R6a milestone precondition addressed — not with a
+clean "no risk" verdict like the triangle, but with a specific,
+quantified, small risk, disclosed rather than assumed away. See D-042.
+
 Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 
 ## Maintenance
