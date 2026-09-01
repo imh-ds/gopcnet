@@ -3797,3 +3797,133 @@ in `docs/stage5a_charter.md`'s own recommendation should wait until
 this `alpha`-recalibration question is resolved, since strength and
 `p`-adjustment are both open variables and should not be conflated in
 one charter.
+
+## D-049: p-adjusted screening alpha fixes MINT's own precision decline, but EBICglasso's p-aware penalty still narrows the gap in most conditions — a two-effect result, not a clean restoration (R6)
+
+Date: 2026-09-01
+
+Stage: R6 / Stage 5c (follow-up to D-048's own diagnosis)
+
+Status: Descriptive verdict, no gate — same standing as D-047/D-048.
+
+Decision timing: Predeclared before results — `docs/stage5c_charter.md`
+fixed the three-way reading (restores / confirms-confound-not-mechanism
+/ neither) before the run was launched.
+
+Question: Does re-deriving MINT's screening `alpha` per `p` (a
+disclosed log-linear interpolation of Stage 2's own two calibrated
+anchor points, `.001` at `p=15`, `.0001` at `p=30`, replacing Stage
+5b's fixed `.001`) restore the "gap grows with noise" prediction D-048
+found violated?
+
+Prior specification: `docs/stage5c_charter.md`. Identical grid to
+Stage 5b (`chain_fork_hub`, `overlap`; `N in {500, 1500}`; noise
+multiplier `in {1, 2, 3}`; strength `.5`; `2,000` replicates per cell),
+one substitution: MINT's screening `alpha` is `alpha(p)` instead of
+fixed `.001`. DPI's own `alpha(N)` (D-012's formula) unchanged.
+
+Evidence: GitHub Actions run
+`https://github.com/imh-ds/mintnet/actions/runs/33551121806` (12
+shards — one per `(dgp, N, noise multiplier)` cell, the workflow's
+first three-dimension use — plus aggregation). `raw_metrics.csv`
+(48,000 rows), `report.json`, `stage5c_report.md`,
+`gap_by_noise_multiplier_vs_d048.png`.
+
+| DGP | N | mult. | MINT F1 (alpha(p)) | EBICglasso F1 | gap (alpha(p)) | gap (D-048, fixed alpha) |
+|---|---|---|---|---|---|---|
+| chain_fork_hub | 500 | 1 | `.9507` | `.8560` | `.0948` | `.0943` |
+| chain_fork_hub | 500 | 2 | `.9548` | `.8661` | `.0888` | `.0699` |
+| chain_fork_hub | 500 | 3 | `.9584` | `.8700` | `.0884` | `.0573` |
+| chain_fork_hub | 1500 | 1 | `.9639` | `.8448` | `.1191` | `.1231` |
+| chain_fork_hub | 1500 | 2 | `.9658` | `.8510` | `.1148` | `.1088` |
+| chain_fork_hub | 1500 | 3 | `.9705` | `.8523` | `.1183` | `.0937` |
+| overlap | 500 | 1 | `.9194` | `.8893` | `.0300` | `.0327` |
+| overlap | 500 | 2 | `.9309` | `.8933` | `.0375` | `.0236` |
+| overlap | 500 | 3 | `.9368` | `.8965` | `.0403` | `.0128` |
+| overlap | 1500 | 1 | `.9518` | `.8799` | `.0719` | `.0700` |
+| overlap | 1500 | 2 | `.9536` | `.8852` | `.0683` | `.0611` |
+| overlap | 1500 | 3 | `.9489` | `.8908` | `.0581` | `.0456` |
+
+**The predeclared reading is "CONFIRMS THE CONFOUND BUT NOT THE
+MECHANISM," and the per-method numbers show why in more nuanced detail
+than that binary label alone conveys — this is a genuine two-effect
+result, not a clean restoration or a clean rejection.**
+
+1. **The diagnosed confound is confirmed directly.** MINT's own
+   precision, which *declined* with noise multiplier under D-048's
+   fixed `alpha` (e.g. chain_fork_hub `N=500`: `.913` to `.870`), now
+   *improves* under `alpha(p)` (chain_fork_hub `N=500`: `.912` to
+   `.925`; every one of the eight MINT precision series in this
+   charter's own table rises with noise multiplier, not falls). The
+   `p`-adjustment did exactly what it was diagnosed to do.
+2. **But the gap does not cleanly restore to "grows with noise"
+   either — three of four `(dgp, N)` series are now far flatter (near-
+   noise-level) than D-048's own decline, and one reverses direction
+   entirely.** `chain_fork_hub` at both `N`, and `overlap N=500`, show
+   gaps that are roughly flat or *increasing* with noise multiplier
+   (`overlap N=500`: `.0300` to `.0403`, a genuine reversal from
+   D-048's own `.0327` to `.0128` decline). Only `overlap N=1500` still
+   declines beyond the predeclared `.01`-F1 tolerance (`.0719` to
+   `.0581`), which is what kept the automated reading from crossing
+   into "RESTORES."
+3. **EBICglasso's own precision keeps improving with noise multiplier
+   too, at a similar or slightly faster rate** (e.g. chain_fork_hub
+   `N=500`: `.758` to `.780`) — its `ln(p)` EBIC penalty is doing real,
+   legitimate work exactly as D-048 diagnosed, independent of whatever
+   MINT does. The two `p`-aware effects (MINT's now-corrected
+   precision, EBICglasso's own built-in penalty) are both operating on
+   the same axis simultaneously, which is why the net gap is closer to
+   flat than cleanly growing.
+
+Decision: Predeclared branch **"CONFIRMS THE CONFOUND BUT NOT THE
+MECHANISM"** fires as specified. Read plainly: D-048's diagnosis was
+correct as far as it went (MINT's fixed `alpha` was a real, fixable
+confound), but D-047's original "MINT's advantage grows with noise"
+framing is **not** restored by fixing it alone — EBICglasso is not a
+static comparator being outrun by a fixed penalty; its own selection
+criterion is itself noise-count-aware, and that awareness continues to
+narrow MINT's margin (or, in one condition, reverse the earlier
+narrowing into flatness rather than growth) even once MINT's own
+precision problem is corrected.
+
+Rationale: Reporting three of four series as "much flatter, one even
+reversed" rather than compressing this into a single pass/fail
+sentence is itself the point of the predeclared multi-branch structure
+— a binary "confirmed/not confirmed" framing would have hidden the
+genuine, disclosed mixed pattern the actual numbers show. This is
+exactly the kind of texture this project's own decision-log discipline
+exists to preserve rather than smooth over.
+
+Consequences: `docs/validated_operating_ranges.md`'s D-048 amendment
+should be updated to reflect this less pessimistic, but not fully
+restored, picture: MINT's advantage over EBICglasso on noisy composed
+networks does **not** collapse as `p` grows once screening `alpha` is
+properly `p`-adjusted (unlike D-048's own fixed-`alpha` reading), but
+neither does it reliably grow — the net relationship is closer to flat
+with shape-and-`N`-specific variation. Neither D-047 nor D-048 is
+retracted; both remain valid readings of their own, distinct
+configurations (fixed `alpha` vs. `p`-adjusted `alpha`, respectively).
+The signal-strength sweep flagged in `docs/stage5a_charter.md`'s own
+recommendation can now proceed using this charter's own `alpha(p)`
+mechanism as the default going forward for any further `p`-varying R6
+work, since it is now the better-tested configuration of the two.
+
+**Infrastructure note, since this charter also tested three-dimension
+sharding for the first time:** total wall-clock (`~2h03m`) was only
+marginally faster than Stage 5b's own two-dimension, six-shard run
+(`~2h07m`), far less than the roughly 2x improvement expected from
+eliminating the diagnosed serial-fallback (D-048's own consequences
+section, mirrored in `.github/workflows/sharded_benchmark.yml`'s own
+header comment). Both shard counts (`6` and `12`) sit comfortably under
+the concurrency ceiling observed empirically during Stage 5a (`~19`-
+`20` concurrent jobs), so both runs already had full available
+parallelism at the shard-count level — the fix was directionally
+correct (no shard now contains more than one task) but its measured
+benefit was small, likely because each additional shard's own fixed
+per-job overhead (runner provisioning, checkout, `pip install -e .`,
+observed roughly `1`-`2` minutes) grows in relative importance as
+shard count increases and each shard's own payload shrinks, partially
+offsetting the parallelism gained. Not remeasured by a controlled
+comparison (same run repeated at each shard granularity) — stated as
+an observed, plausible account from this one paired comparison, not a
+established scaling law.

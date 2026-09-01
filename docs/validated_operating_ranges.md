@@ -556,25 +556,33 @@ mirroring Stage 4p's own precedent. See D-047 for full evidence and the
 per-shape verdict table; `docs/stage5a_charter.md` for the frozen
 charter and fair-comparison rules.
 
-**Scope limitation, added by Stage 5b (D-048): do not assume D-047's
-gap holds at arbitrarily larger `p`.** A direct follow-up test —
-appending extra noise columns to the same two shapes (noise multiplier
+**Scope limitation, from Stage 5b/5c (D-048/D-049): MINT's advantage
+over EBICglasso as `p` grows depends on using a `p`-adjusted screening
+`alpha`, and even then is closer to flat than reliably growing.**
+Appending extra noise columns to the same two shapes (multiplier
 `1`/`2`/`3` of each shape's own native noise-column count, `N in {500,
-1500}`) — found the MINT-minus-EBICglasso F1 gap **shrinks**, not
-grows, as noise columns increase (roughly halving from multiplier `1`
-to `3` at every tested `dgp`/`N`; MINT stays ahead in every cell on
-this grid, but the margin is not stable as `p` grows). Likely cause:
-this test held MINT's screening `alpha` fixed at `.001` across all
-noise multipliers rather than re-deriving it for the larger `p` (`p`
-reaches `27` at multiplier `3` for chain_fork_hub), unlike Stage 2's
-own established practice of a `p`-dependent `alpha` (`.001` at `p=15`,
-`.0001` at `p=30`). EBICglasso's own selection criterion has a built-in
-`ln(p)` penalty term that compensates for growing `p` automatically;
-MINT's fixed per-pair `alpha` in this test did not get the analogous
-adjustment. **This is a plausible diagnosis, not yet a separately
-tested one** — a follow-up charter re-running this same sweep with a
-`p`-adjusted `alpha(N, p)` is needed before any claim about how MINT's
-niche scales with network size is made. See D-048.
+1500}`) with MINT's screening `alpha` held **fixed** at `.001`
+regardless of `p` found the F1 gap **shrinks** substantially as noise
+columns increase (D-048) — traced to MINT's own precision declining
+with `p` under a fixed `alpha`, while EBICglasso's own extended-BIC
+criterion has a built-in `ln(p)` penalty that makes it automatically
+stricter as `p` grows. **Re-running the identical sweep with a
+`p`-adjusted `alpha(p)`** (a disclosed log-linear interpolation between
+Stage 2's own two calibrated anchor points, `.001` at `p=15`, `.0001`
+at `p=30`) fixed MINT's own precision decline — it now *improves* with
+`p`, at every tested `dgp`/`N` — but did **not** cleanly restore a
+growing gap either (D-049): three of four `dgp`/`N` series are now
+roughly flat or slightly increasing, one (`overlap`, `N=1500`) still
+declines beyond tolerance. **Read this as: MINT's own `alpha`-fixed
+precision problem is real and fixable, but EBICglasso's own `p`-aware
+penalty is also doing genuine, ongoing work, so the net gap-vs-`p`
+relationship should be treated as roughly flat with shape/`N`-specific
+variation, not as reliably growing in either direction**, until further
+`p` values or shapes are tested. Neither D-047 nor D-048 is retracted —
+both are valid readings of their own distinct MINT configuration (fixed
+vs. `p`-adjusted `alpha`). `alpha(p)` is the better-tested
+configuration going forward for any further `p`-varying R6 work. See
+D-048 and D-049.
 
 ## Maintenance
 
