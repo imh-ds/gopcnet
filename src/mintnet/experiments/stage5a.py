@@ -64,14 +64,22 @@ DGPS: tuple[str, ...] = (
 _STAGE_TAG = 501  # disjoint from every prior charter's own seed derivation
 
 
-def _triangle_sampler(name: str) -> Callable[[int, float, np.random.Generator], np.ndarray]:
-    def sample(n: int, _strength: float, rng: np.random.Generator) -> np.ndarray:
-        return sample_precision_triangle(name, n, rng)
-
-    return sample
-
-
 _TRIANGLE_TRUE_EDGES: frozenset[tuple[int, int]] = frozenset({(0, 1), (0, 2), (1, 2)})
+
+
+# Plain module-level functions, not closures -- must be picklable by name
+# for `ProcessPoolExecutor` (a closure returned by a factory function is not).
+def _sample_triangle_balanced(n: int, _strength: float, rng: np.random.Generator) -> np.ndarray:
+    return sample_precision_triangle("balanced", n, rng)
+
+
+def _sample_triangle_moderate(n: int, _strength: float, rng: np.random.Generator) -> np.ndarray:
+    return sample_precision_triangle("moderate", n, rng)
+
+
+def _sample_triangle_strong(n: int, _strength: float, rng: np.random.Generator) -> np.ndarray:
+    return sample_precision_triangle("strong", n, rng)
+
 
 _DGP_REGISTRY: dict[str, dict[str, object]] = {
     "chain_fork_hub": {
@@ -85,17 +93,17 @@ _DGP_REGISTRY: dict[str, dict[str, object]] = {
         "true_edges": stage2d.TRUE_DIRECT_EDGES,
     },
     "triangle_balanced": {
-        "sample": _triangle_sampler("balanced"),
+        "sample": _sample_triangle_balanced,
         "p": 3,
         "true_edges": _TRIANGLE_TRUE_EDGES,
     },
     "triangle_moderate": {
-        "sample": _triangle_sampler("moderate"),
+        "sample": _sample_triangle_moderate,
         "p": 3,
         "true_edges": _TRIANGLE_TRUE_EDGES,
     },
     "triangle_strong": {
-        "sample": _triangle_sampler("strong"),
+        "sample": _sample_triangle_strong,
         "p": 3,
         "true_edges": _TRIANGLE_TRUE_EDGES,
     },
@@ -242,79 +250,137 @@ def _mint_adjacency(data: np.ndarray, screening_alpha: float, dpi_alpha: float) 
     return final
 
 
-def run_stage5a(config: Stage5aConfig, output_dir: Path) -> pd.DataFrame:
+def _run_cell(task: tuple[int, str, int, int, float, Stage5aConfig]) -> list[dict[str, object]]:
+    """Every (dgp, N) cell's full replicate loop, self-contained and
+    picklable so it can run in a worker process -- each cell draws its
+    own data and fits both methods independently (no shared state), so
+    this is embarrassingly parallel across cells."""
+    dgp_index, dgp_name, sample_index, n, dpi_alpha, config = task
+    dgp = _DGP_REGISTRY[dgp_name]
+    sample: Callable = dgp["sample"]  # type: ignore[assignment]
+    p = int(dgp["p"])
+    truth = _true_adjacency(dgp["true_edges"], p)  # type: ignore[arg-type]
+
+    rows: list[dict[str, object]] = []
+    for replicate in range(config.replicates):
+        seed = _condition_seed(config.master_seed, dgp_index, sample_index, replicate)
+        try:
+            data = sample(n, config.strength, np.random.default_rng(seed))
+            status, error = "ok", ""
+        except Exception as exc:  # raw evidence must retain sampling failures
+            data = None
+            status, error = "error", f"{type(exc).__name__}: {exc}"
+
+        for method in METHODS:
+            started = time.perf_counter()
+            row_status, row_error = status, error
+            metrics: dict[str, object] = {
+                "precision": np.nan,
+                "recall": np.nan,
+                "f1": np.nan,
+                "shd": np.nan,
+                "n_estimated_edges": np.nan,
+            }
+            selected_lambda: float | None = None
+            if data is not None:
+                try:
+                    if method == "mint":
+                        estimated = _mint_adjacency(data, config.screening_alpha, dpi_alpha)
+                    else:
+                        result = fit_ebicglasso(
+                            data,
+                            gamma=config.ebicglasso_gamma,
+                            n_lambda=config.ebicglasso_n_lambda,
+                            lambda_min_ratio=config.ebicglasso_lambda_min_ratio,
+                        )
+                        estimated = result.adjacency
+                        selected_lambda = result.selected_lambda
+                    metrics = _graph_metrics(estimated, truth)
+                except Exception as exc:  # retain fitting/scoring failures by method
+                    row_status = "error"
+                    row_error = f"{type(exc).__name__}: {exc}"
+
+            rows.append(
+                {
+                    "dgp": dgp_name,
+                    "method": method,
+                    "n": n,
+                    "alpha": dpi_alpha if method == "mint" else np.nan,
+                    "ebicglasso_lambda": selected_lambda if selected_lambda is not None else np.nan,
+                    "replicate": replicate,
+                    "seed": seed,
+                    **metrics,
+                    "elapsed_seconds": time.perf_counter() - started,
+                    "status": row_status,
+                    "error": row_error,
+                }
+            )
+    return rows
+
+
+def run_stage5a(
+    config: Stage5aConfig,
+    output_dir: Path,
+    max_workers: int | None = None,
+    dgps: tuple[str, ...] | None = None,
+    sample_sizes: tuple[int, ...] | None = None,
+    write_report: bool = True,
+) -> pd.DataFrame:
     """Run MINT's conservative engine and EBICglasso on identical
     simulated data every replicate, across all five DGP shapes and the
-    full N grid, paired same-draw per (dgp, N, replicate)."""
+    full N grid, paired same-draw per (dgp, N, replicate).
+
+    Parallelized across (dgp, N) cells via a process pool -- each cell
+    is fully independent, so this is embarrassingly parallel; task
+    order is preserved (`ProcessPoolExecutor.map` returns results in
+    submission order, not completion order), so output is identical to
+    the serial `max_workers=1` path except for `elapsed_seconds` and
+    process-level floating-point nondeterminism, if any.
+
+    `dgps` / `sample_sizes` restrict which cells actually run -- for a
+    single-cell CI shard, for instance. `dgp_index`/`sample_index` are
+    always derived from the *full* `DGPS`/`config.sample_sizes` (not the
+    filtered subset), so a shard's seeds are bit-identical to what an
+    unsharded run would draw for that same cell. `write_report=False`
+    skips the descriptive-verdict report, which requires every cell to
+    be present to be meaningful -- a shard should not produce one."""
+    import os
+    from concurrent.futures import ProcessPoolExecutor
+
     run_started = time.perf_counter()
 
     selected = select_form(fit_candidate_forms())
     alpha_by_n = {n: selected.predict(float(n)) for n in config.sample_sizes}
 
+    target_dgps = set(dgps) if dgps is not None else set(DGPS)
+    target_sizes = set(sample_sizes) if sample_sizes is not None else set(config.sample_sizes)
+
+    tasks = [
+        (dgp_index, dgp_name, sample_index, n, alpha_by_n[n], config)
+        for dgp_index, dgp_name in enumerate(DGPS)
+        if dgp_name in target_dgps
+        for sample_index, n in enumerate(config.sample_sizes)
+        if n in target_sizes
+    ]
+    if not tasks:
+        raise ValueError("dgps/sample_sizes filter selected no cells")
+
+    if max_workers is None:
+        max_workers = min(len(tasks), max(1, (os.cpu_count() or 1) - 1))
+
     rows: list[dict[str, object]] = []
-    for dgp_index, dgp_name in enumerate(DGPS):
-        dgp = _DGP_REGISTRY[dgp_name]
-        sample: Callable = dgp["sample"]  # type: ignore[assignment]
-        p = int(dgp["p"])
-        truth = _true_adjacency(dgp["true_edges"], p)  # type: ignore[arg-type]
+    if max_workers > 1 and len(tasks) > 1:
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            for cell_rows in executor.map(_run_cell, tasks):
+                rows.extend(cell_rows)
+    else:
+        for task in tasks:
+            rows.extend(_run_cell(task))
 
-        for sample_index, n in enumerate(config.sample_sizes):
-            dpi_alpha = alpha_by_n[n]
-            for replicate in range(config.replicates):
-                seed = _condition_seed(config.master_seed, dgp_index, sample_index, replicate)
-                try:
-                    data = sample(n, config.strength, np.random.default_rng(seed))
-                    status, error = "ok", ""
-                except Exception as exc:  # raw evidence must retain sampling failures
-                    data = None
-                    status, error = "error", f"{type(exc).__name__}: {exc}"
-
-                for method in METHODS:
-                    started = time.perf_counter()
-                    row_status, row_error = status, error
-                    metrics: dict[str, object] = {
-                        "precision": np.nan,
-                        "recall": np.nan,
-                        "f1": np.nan,
-                        "shd": np.nan,
-                        "n_estimated_edges": np.nan,
-                    }
-                    selected_lambda: float | None = None
-                    if data is not None:
-                        try:
-                            if method == "mint":
-                                estimated = _mint_adjacency(data, config.screening_alpha, dpi_alpha)
-                            else:
-                                result = fit_ebicglasso(
-                                    data,
-                                    gamma=config.ebicglasso_gamma,
-                                    n_lambda=config.ebicglasso_n_lambda,
-                                    lambda_min_ratio=config.ebicglasso_lambda_min_ratio,
-                                )
-                                estimated = result.adjacency
-                                selected_lambda = result.selected_lambda
-                            metrics = _graph_metrics(estimated, truth)
-                        except Exception as exc:  # retain fitting/scoring failures by method
-                            row_status = "error"
-                            row_error = f"{type(exc).__name__}: {exc}"
-
-                    rows.append(
-                        {
-                            "dgp": dgp_name,
-                            "method": method,
-                            "n": n,
-                            "alpha": dpi_alpha if method == "mint" else np.nan,
-                            "ebicglasso_lambda": selected_lambda if selected_lambda is not None else np.nan,
-                            "replicate": replicate,
-                            "seed": seed,
-                            **metrics,
-                            "elapsed_seconds": time.perf_counter() - started,
-                            "status": row_status,
-                            "error": row_error,
-                        }
-                    )
     raw = pd.DataFrame(rows)
     _write_evidence(config, output_dir, raw, alpha_by_n, time.perf_counter() - run_started)
+    if not write_report:
+        return raw
     from mintnet.experiments.stage5a_reporting import write_stage5a_report
 
     write_stage5a_report(raw, config, output_dir)
@@ -325,8 +391,27 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--workers", type=int, default=None)
+    parser.add_argument(
+        "--dgps", type=str, default=None, help="comma-separated subset of DGP shapes to run (default: all)"
+    )
+    parser.add_argument(
+        "--sample-sizes", type=str, default=None, help="comma-separated subset of N values to run (default: all)"
+    )
+    parser.add_argument(
+        "--no-report", action="store_true", help="skip the descriptive-verdict report (use for CI shards)"
+    )
     arguments = parser.parse_args()
-    run_stage5a(load_stage5a_config(arguments.config), arguments.output)
+    dgps = tuple(arguments.dgps.split(",")) if arguments.dgps else None
+    sample_sizes = tuple(int(value) for value in arguments.sample_sizes.split(",")) if arguments.sample_sizes else None
+    run_stage5a(
+        load_stage5a_config(arguments.config),
+        arguments.output,
+        arguments.workers,
+        dgps=dgps,
+        sample_sizes=sample_sizes,
+        write_report=not arguments.no_report,
+    )
 
 
 if __name__ == "__main__":

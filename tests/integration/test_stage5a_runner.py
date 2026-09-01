@@ -76,6 +76,62 @@ def test_stage5a_seeds_are_disjoint_from_stage4p(tmp_path: Path) -> None:
                 )
 
 
+def test_stage5a_sharded_run_matches_unsharded_run(tmp_path: Path) -> None:
+    """A shard restricted to one (dgp, N) subset must reproduce exactly
+    the rows an unsharded run produces for that same subset -- the
+    seed derivation is index-based on the full DGPS/sample_sizes grid,
+    not the shard's own filtered view (docs/stage5a_charter.md's own
+    seed requirement, load-bearing for the CI sharding workflow)."""
+    config = load_stage5a_config(Path("configs/stage5a_comparator_benchmark_smoke.yaml"))
+
+    unsharded = run_stage5a(config, tmp_path / "unsharded")
+    shard = run_stage5a(
+        config, tmp_path / "shard", dgps=("chain_fork_hub",), sample_sizes=(750,), write_report=False
+    )
+
+    expected = unsharded.loc[unsharded["dgp"] == "chain_fork_hub"].reset_index(drop=True)
+    actual = shard.reset_index(drop=True)
+    pd.testing.assert_frame_equal(expected.drop(columns="elapsed_seconds"), actual.drop(columns="elapsed_seconds"))
+    assert not (tmp_path / "shard" / "stage5a_report.md").exists()
+
+
+def test_stage5a_aggregate_shards_reproduces_unsharded_report(tmp_path: Path) -> None:
+    import sys
+
+    sys.path.insert(0, "scripts")
+    from aggregate_stage5a import aggregate
+
+    config_path = Path("configs/stage5a_comparator_benchmark_smoke.yaml")
+    config = load_stage5a_config(config_path)
+
+    unsharded_dir = tmp_path / "unsharded"
+    unsharded = run_stage5a(config, unsharded_dir)
+
+    shards_dir = tmp_path / "shards"
+    for dgp in DGPS:
+        run_stage5a(
+            config, shards_dir / dgp, dgps=(dgp,), sample_sizes=config.sample_sizes, write_report=False
+        )
+
+    aggregated_dir = tmp_path / "aggregated"
+    aggregated = aggregate(config_path, shards_dir, aggregated_dir)
+
+    unsharded_sorted = unsharded.sort_values(["dgp", "n", "method", "replicate"]).reset_index(drop=True)
+    aggregated_sorted = aggregated.sort_values(["dgp", "n", "method", "replicate"]).reset_index(drop=True)
+    # The aggregated frame round-trips through CSV, so an empty "error"
+    # string becomes NaN on read back -- both mean "no error"; normalize
+    # before comparing rather than treat it as a real discrepancy.
+    unsharded_sorted["error"] = unsharded_sorted["error"].replace("", pd.NA).fillna("")
+    aggregated_sorted["error"] = aggregated_sorted["error"].fillna("")
+    pd.testing.assert_frame_equal(
+        unsharded_sorted.drop(columns="elapsed_seconds"),
+        aggregated_sorted.drop(columns="elapsed_seconds"),
+        check_dtype=False,
+    )
+    for filename in ("raw_metrics.csv", "report.json", "stage5a_report.md", "f1_by_n_by_shape.png"):
+        assert (aggregated_dir / filename).is_file()
+
+
 def test_stage5a_provenance_records_charter_hash(tmp_path: Path, monkeypatch) -> None:
     repository_root = Path(__file__).resolve().parents[2]
     config = load_stage5a_config(
