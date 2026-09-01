@@ -1,0 +1,9 @@
+sample_sizes: [750]
+strength: 0.5
+replicates: 4
+master_seed: 20260829
+development_replicates: [0, 1]
+validation_replicates: [2, 3]
+minimum_indirect_prune_tpr: 0.80
+maximum_true_edge_prune_fpr: 0.10
+required_margin: 0.02

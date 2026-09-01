@@ -1,0 +1,6 @@
+strength: 0.15
+sample_sizes: [100]
+alphas: [0.10]
+noise_counts: [0, 5]
+replicates: 20
+master_seed: 20260830

@@ -1,0 +1,4 @@
+sample_sizes: [300]
+alphas: [0.10]
+replicates: 20
+master_seed: 20260830

@@ -1,0 +1,12 @@
+sample_sizes: [750, 1500]
+strength: 0.5
+triangle_family: moderate
+noise_count: 6
+screening_alpha: 0.001
+replicates: 2000
+master_seed: 20260829
+development_replicates: [0, 999]
+validation_replicates: [1000, 1999]
+minimum_indirect_prune_tpr: 0.80
+maximum_true_edge_prune_fpr: 0.10
+false_edge_rate_tolerance: 0.01
