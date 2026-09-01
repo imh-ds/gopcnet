@@ -556,6 +556,26 @@ mirroring Stage 4p's own precedent. See D-047 for full evidence and the
 per-shape verdict table; `docs/stage5a_charter.md` for the frozen
 charter and fair-comparison rules.
 
+**Scope limitation, added by Stage 5b (D-048): do not assume D-047's
+gap holds at arbitrarily larger `p`.** A direct follow-up test —
+appending extra noise columns to the same two shapes (noise multiplier
+`1`/`2`/`3` of each shape's own native noise-column count, `N in {500,
+1500}`) — found the MINT-minus-EBICglasso F1 gap **shrinks**, not
+grows, as noise columns increase (roughly halving from multiplier `1`
+to `3` at every tested `dgp`/`N`; MINT stays ahead in every cell on
+this grid, but the margin is not stable as `p` grows). Likely cause:
+this test held MINT's screening `alpha` fixed at `.001` across all
+noise multipliers rather than re-deriving it for the larger `p` (`p`
+reaches `27` at multiplier `3` for chain_fork_hub), unlike Stage 2's
+own established practice of a `p`-dependent `alpha` (`.001` at `p=15`,
+`.0001` at `p=30`). EBICglasso's own selection criterion has a built-in
+`ln(p)` penalty term that compensates for growing `p` automatically;
+MINT's fixed per-pair `alpha` in this test did not get the analogous
+adjustment. **This is a plausible diagnosis, not yet a separately
+tested one** — a follow-up charter re-running this same sweep with a
+`p`-adjusted `alpha(N, p)` is needed before any claim about how MINT's
+niche scales with network size is made. See D-048.
+
 ## Maintenance
 
 Add a row (or update an existing one) whenever a new charter validates

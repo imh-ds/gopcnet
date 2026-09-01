@@ -3686,3 +3686,114 @@ contingent on Stage 8), nor to the sequential/greedy engine (reserved
 for a future charter once its own per-shape caveats resolve into one
 general recommendation). `docs/validated_operating_ranges.md` should
 record this finding in a new top-level section.
+
+## D-048: MINT's advantage over EBICglasso shrinks, not grows, with more noise columns — likely explained by a screening-alpha confound, not a wrong mechanism (R6)
+
+Date: 2026-09-01
+
+Stage: R6 / Stage 5b (first follow-up to D-047)
+
+Status: Descriptive verdict, no gate — same standing as D-047.
+
+Decision timing: Predeclared before results — `docs/stage5b_charter.md`
+fixed the "confirms" vs. "complicates" reading (monotone-non-decreasing
+F1 gap, `.01`-F1 sampling tolerance) before the run was launched.
+
+Question: Does the MINT-minus-EBICglasso F1 gap D-047 found grow as the
+number of pure-noise (nuisance) columns grows, as the stated mechanism
+("MINT's per-edge screening filters noise EBICglasso's global penalty
+does not") predicts?
+
+Prior specification: `docs/stage5b_charter.md`. Same two noisy `p=15`
+shapes as D-047 (chain_fork_hub, overlap), noise multiplier `in {1, 2,
+3}` (native noise-column count x multiplier: `chain_fork_hub` `6/12/18`
+extra columns, `overlap` `4/8/12`), `N in {500, 1500}`, strength `.5`
+unchanged, `2,000` replicates per cell.
+
+Evidence: GitHub Actions run
+`https://github.com/imh-ds/mintnet/actions/runs/33534728141` (6 shards,
+one per `(dgp, noise multiplier)`, plus aggregation — using the newly
+generalized `.github/workflows/sharded_benchmark.yml`, its first reuse
+beyond Stage 5a). `raw_metrics.csv` (48,000 rows), `report.json`,
+`stage5b_report.md`, `gap_by_noise_multiplier.png`.
+
+| DGP shape | N | noise multiplier | MINT F1 | EBICglasso F1 | gap |
+|---|---|---|---|---|---|
+| chain_fork_hub | 500 | 1 | `.9513` | `.8569` | `.0943` |
+| chain_fork_hub | 500 | 2 | `.9406` | `.8707` | `.0699` |
+| chain_fork_hub | 500 | 3 | `.9255` | `.8682` | `.0573` |
+| chain_fork_hub | 1500 | 1 | `.9666` | `.8435` | `.1231` |
+| chain_fork_hub | 1500 | 2 | `.9543` | `.8455` | `.1088` |
+| chain_fork_hub | 1500 | 3 | `.9430` | `.8493` | `.0937` |
+| overlap | 500 | 1 | `.9192` | `.8865` | `.0327` |
+| overlap | 500 | 2 | `.9162` | `.8926` | `.0236` |
+| overlap | 500 | 3 | `.9139` | `.9010` | `.0128` |
+| overlap | 1500 | 1 | `.9503` | `.8803` | `.0700` |
+| overlap | 1500 | 2 | `.9456` | `.8845` | `.0611` |
+| overlap | 1500 | 3 | `.9389` | `.8933` | `.0456` |
+
+**The predeclared reading is COMPLICATES, cleanly.** The gap shrinks
+monotonically as noise multiplier rises from `1` to `3`, at both `N`,
+for both shapes — the opposite of the charter's own predicted
+direction. `report.json`'s own `monotone_non_decreasing` flag: `False`.
+MINT still wins every single cell (the gap never crosses zero on this
+grid), but the margin roughly halves from multiplier `1` to `3`.
+
+**Diagnosis, from the per-method numbers, not just the gap.** MINT's
+own F1 *declines* as noise multiplier rises (e.g. chain_fork_hub
+`N=500`: `.9513` to `.9255`), driven entirely by falling precision —
+recall stays perfect (`1.0000`) at every cell. EBICglasso's own F1
+*rises* over the same range (chain_fork_hub `N=500`: `.8569` to
+`.8682`; overlap `N=500`: `.8865` to `.9010`). This has a specific,
+non-mysterious likely explanation: EBICglasso's own selection criterion
+(`docs/stage5a_charter.md`'s own formula,
+`EBIC = -2L + E*ln(N) + 4*gamma*E*ln(p)`) has an explicit `ln(p)`
+penalty term — as `p` grows with added noise columns, EBIC becomes
+*more* conservative automatically, correctly compensating for the
+larger number of possible false edges. **MINT's own screening step in
+this charter used a single fixed `alpha=.001` at every noise
+multiplier, not re-derived for the larger `p`** (`p` reaches `27` for
+chain_fork_hub at multiplier `3`, up from `15` at multiplier `1`) —
+this is exactly the kind of `p`-dependent recalibration Stage 2's own
+arc already established is necessary (`.001` at `p=15`, `.0001` at
+`p=30`, outline Section 16's own v3 revision note) but which this
+charter's implementation did not carry over. A fixed per-pair `alpha`
+run against a growing number of noise-noise pairs lets more false
+positives through in absolute terms even though each pair's own
+false-positive rate is unchanged — precisely the precision decline
+observed.
+
+Decision: **COMPLICATES**, exactly as the charter's own predeclared
+branch anticipated for this outcome — flagged for its own diagnosis
+before further R6 charters build on the original "grows with noise"
+framing. The diagnosis above is a **plausible mechanistic account, not
+yet a separately tested one** — this charter did not vary MINT's
+`alpha` alongside `p`, so the claim that a `p`-adjusted `alpha` would
+restore or change the pattern is a hypothesis for a follow-up charter,
+not a demonstrated finding.
+
+Rationale: This is the discipline this project's whole R6 arc exists
+to enforce — a favorable-looking result (D-047) got a specific,
+falsifiable follow-up prediction, and that prediction was wrong in a
+way that surfaces a real, previously undisclosed limitation of *this
+charter's own MINT configuration* (fixed `alpha` across a `p` sweep),
+not a limitation of MINT's own established practice (which already
+knows to re-derive `alpha` per `p`). Reporting the shrinking gap
+honestly, and diagnosing rather than dismissing it, is exactly the
+"never reinterpret a result to fit the prior narrative" principle
+`docs/stage5b_charter.md` itself commits to.
+
+Consequences: `docs/validated_operating_ranges.md`'s Stage 5a/R6
+section should be amended to note this scope limitation explicitly —
+D-047's own two-shape result used a fixed noise-column count per shape,
+and its "MINT wins" finding should not be assumed to hold at
+arbitrarily larger `p` without `alpha` also being re-derived for that
+`p`. A natural next charter (not yet written) would re-run this same
+noise-multiplier sweep using a `p`-adjusted `alpha(N, p)` at each
+multiplier (mirroring Stage 2's own per-`p` recalibration) to test the
+diagnosis directly, before any claim about how MINT's niche scales with
+network size is made. The signal-strength sweep flagged as a follow-up
+in `docs/stage5a_charter.md`'s own recommendation should wait until
+this `alpha`-recalibration question is resolved, since strength and
+`p`-adjustment are both open variables and should not be conflated in
+one charter.
