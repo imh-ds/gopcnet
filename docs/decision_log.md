@@ -3571,3 +3571,118 @@ ignored or overstated. `docs/stage4o_recommendation.md`'s own per-shape
 verdicts remain unaffected — this charter, like Stage 4p before it, is
 supplementary evidence, not a change to any prior PROCEED/REASSESS
 finding.
+
+## D-047: MINT's conservative engine outperforms EBICglasso on noisy composed networks, matches it on the clean triangle (R6)
+
+Date: 2026-09-01
+
+Stage: R6 / Stage 5a (first comparator-benchmarking charter)
+
+Status: Descriptive verdict, no PROCEED/REASSESS gate — per
+`docs/stage5a_charter.md`'s own decision structure, this charter tests
+an external comparator, not MINT's own correctness, so the project's
+PROCEED/REASSESS/STOP vocabulary does not apply here.
+
+Decision timing: Predeclared before results — the acceptable-recovery
+threshold (mean validation F1 `>= .90`, held at every larger tested
+`N`) was fixed in `mintnet.experiments.stage5a_reporting`'s own module
+docstring before the full-scale run was launched.
+
+Question: On strictly Gaussian data — EBICglasso's own native
+assumption class and MINT's own fully validated territory — does
+MINT's conservative engine (per-edge screening + conditional-
+independence pruning) occupy a materially different sample-efficiency
+or accuracy position than EBICglasso (graphical lasso + extended-BIC
+penalty selection, `gamma=.5`), on DGP shapes already characterized
+across Stages 1-4?
+
+Prior specification: `docs/stage5a_charter.md`. Five shapes (composed,
+noisy `p=15` chain/fork/hub; composed, noisy `p=15` shared-node
+overlap; three-node balanced/moderate/strong triangle, no noise), `N
+in [400, 500, 600, 750, 1000, 1500, 1750]`, `2,000` replicates per
+cell, MINT using D-012's general `alpha(N)` formula uniformly (an
+implementation-time scope simplification, documented in `stage5a.py`'s
+own module docstring — overlap's specialized formula from Stage
+4g/4i/4j is a fitted curve object, not a closed-form constant, and its
+fitting inputs are not present in this worktree).
+
+Evidence: GitHub Actions run
+`https://github.com/imh-ds/mintnet/actions/runs/33480707225` (35
+matrix shards, one per `(dgp, N)` cell, plus one aggregation job — run
+on CI rather than locally after a single-machine multi-process attempt
+stalled on BLAS-thread oversubscription well past its estimated
+runtime). Aggregated evidence: `raw_metrics.csv` (280,000 rows),
+`report.json`, `stage5a_report.md`, `f1_by_n_by_shape.png`.
+
+| DGP shape | MINT floor N | EBICglasso floor N | Verdict |
+|---|---|---|---|
+| chain_fork_hub | 400 | none (never reaches `F1>=.90` on this grid) | MINT more sample-efficient |
+| overlap | 400 | none (never reaches `F1>=.90` on this grid) | MINT more sample-efficient |
+| triangle_balanced | 400 | 400 | no material difference |
+| triangle_moderate | 400 | 400 | no material difference |
+| triangle_strong | 400 | 400 | no material difference |
+
+**On the two composed, noisy `p=15` networks, MINT is not just
+somewhat ahead — EBICglasso never clears the acceptable-recovery bar
+anywhere on the tested grid.** On `chain_fork_hub`, MINT's F1 runs
+`.954`-`.966` across `N`, essentially flat and already high at `N=400`
+(recall is perfect, `1.000`, at every `N` for both methods — the gap is
+entirely in precision: MINT `.917`-`.939` vs. EBICglasso `.731`-`.762`,
+i.e. EBICglasso retains roughly `2`-`3x` as many false edges).
+EBICglasso's own SHD (`2.1`-`2.4`) does not meaningfully improve as `N`
+grows across this whole grid, while MINT's SHD falls from `.63` to
+`.47` — EBICglasso's global L1 penalty is not resolving the noise
+columns (`6` pure-noise variables at `p=15`) the way MINT's per-edge
+screening step does. The `overlap` shape shows the identical pattern
+at smaller magnitude (MINT F1 `.910`-`.959`; EBICglasso flat around
+`.879`-`.889`). On the three-node, noise-free triangle fixtures, the
+two methods are indistinguishable — both floor at `N=400` and track
+each other closely at every strength level, exactly the outcome
+expected on a DGP with no nuisance variables for a screening step to
+help with.
+
+**A second, unplanned finding: runtime.** MINT's per-replicate fit is
+`2`-`3` orders of magnitude faster than EBICglasso's own `100`-point
+regularization path (chain_fork_hub: MINT `~0.01s`, EBICglasso
+`1.6`-`2.8s`; the triangle fixtures, at `p=3`, still show EBICglasso
+`50`-`500x` slower despite the trivial dimensionality). This was not a
+predeclared metric with its own pass/fail line, but the charter's own
+"moderate compute" niche language (outline Section 22.2) is directly
+borne out by it.
+
+Decision: **Descriptive, not a gate.** Per the charter's own explicit
+non-goal, no claim of MINT's general superiority is made — this result
+is scoped to strictly Gaussian data on five specific DGP shapes at
+`p in {3, 15}`, using EBICglasso's own literature-default `gamma=.5`
+and MINT's own already-frozen `alpha(N)` formula (D-012's general
+form, not overlap's own specialized one — see the scope note above).
+Both methods enter this comparison with settings fixed before this
+charter's data was drawn, per its own fair-comparison rules.
+
+Rationale: The result is more favorable to MINT than the charter's own
+framing anticipated ("does not need to dominate all comparators," per
+outline Section 22.2) — but the mechanism is specific and
+non-mysterious, not a general claim: EBICglasso's single global
+sparsity penalty must simultaneously suppress every noise-driven edge
+across the whole `p x p` matrix, while MINT's per-edge screening step
+(Fisher-z evidence, `p`-specific `alpha`) tests each candidate pair on
+its own evidence before DPI conditioning ever runs. On the noise-free
+triangle, where there is nothing for that per-edge step to filter out,
+the two methods converge, which is the expected null result and a
+useful check that this is not simply "MINT wins everything."
+
+Consequences: R6's own top-level question ("does the method occupy a
+meaningful niche compared with incumbents?") now has a first, real
+answer for the Gaussian, shared-assumption case: yes, specifically on
+networks with nuisance/noise variables, where MINT's targeted screening
+step out-performs EBICglasso's global penalty at every tested `N`, at
+substantially lower compute cost, while remaining comparable on the
+smallest, cleanest case. This does not touch any Stage 1-4
+PROCEED/REASSESS verdict — those concern MINT's own internal validity,
+unaffected by an external comparator's performance. Per the charter's
+own explicit non-goals, this result does **not** extend to nonlinear,
+non-Gaussian, or mixed-type data (reserved for a future charter
+contingent on Stage 8), nor to the sequential/greedy engine (reserved
+for a future charter once its own per-shape caveats resolve into one
+general recommendation). `docs/validated_operating_ranges.md` should
+record this finding in a new top-level section.

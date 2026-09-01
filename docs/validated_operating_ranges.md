@@ -517,6 +517,45 @@ genuine, not primarily an artifact. See D-046.
 
 Full context: `outline/information_network_technical_build_plan_v3_2026-08-30.md`.
 
+## Comparator benchmarking (Stage 5a, R6): MINT vs. EBICglasso
+
+**First R6 charter — descriptive, not a validation gate.** MINT's
+conservative engine occupies its own niche on the two composed, noisy
+`p=15` shapes already characterized above (chain/fork/hub;
+shared-node overlap): its per-edge screening step (Fisher-z evidence
+before DPI conditioning) prunes noise-driven false edges that
+EBICglasso's single global L1 penalty (`gamma=.5`, `qgraph`'s own
+default) does not. On `chain_fork_hub`, MINT clears `F1>=.90` already
+at `N=400` and keeps improving (`.954` to `.966` by `N=1750`);
+EBICglasso never clears `.90` anywhere on the `[400, 1750]` grid,
+plateauing around `F1~.84`-`.86` (precision `.73`-`.76` vs. MINT's
+`.92`-`.94` — both have perfect recall, so the gap is entirely
+EBICglasso retaining false edges). `overlap` shows the same pattern at
+smaller magnitude (MINT `.910`-`.959`; EBICglasso flat `~.879`-`.889`).
+On the noise-free, three-node triangle fixtures (balanced/moderate/
+strong), **the two methods are indistinguishable** — both floor at
+`N=400`, no material gap at any tested strength, the expected result
+on a DGP with no nuisance variables for MINT's screening step to help
+with. EBICglasso's own fit is also `2`-`3` orders of magnitude slower
+per replicate than MINT's (unplanned finding, not a predeclared
+metric, but directly supports the "moderate compute" niche language in
+`outline/information_network_technical_build_plan_v3_2026-08-30.md`
+Section 22.2).
+
+**Scope — do not overclaim.** This result is strictly Gaussian, both
+methods on their own native assumption class; a genuinely differentiating
+(assumption-violation) comparison is reserved for a future charter
+contingent on Stage 8's nonlinear known-graph DGPs, not yet chartered.
+Only the conservative engine was tested — the sequential/greedy engine
+was excluded pending one general per-shape recommendation (Stage 4o's
+own caveats are per-shape, not yet unified). MINT's `alpha(N)` here is
+D-012's *general* formula applied uniformly across all five shapes
+(including overlap, for which a specialized formula exists but was not
+reproducible in the Stage 5a worktree — see D-047's own scope note),
+mirroring Stage 4p's own precedent. See D-047 for full evidence and the
+per-shape verdict table; `docs/stage5a_charter.md` for the frozen
+charter and fair-comparison rules.
+
 ## Maintenance
 
 Add a row (or update an existing one) whenever a new charter validates
