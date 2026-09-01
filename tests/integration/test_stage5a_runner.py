@@ -96,10 +96,14 @@ def test_stage5a_sharded_run_matches_unsharded_run(tmp_path: Path) -> None:
 
 
 def test_stage5a_aggregate_shards_reproduces_unsharded_report(tmp_path: Path) -> None:
+    """Exercises the generic aggregator (scripts/aggregate_shards.py)
+    against stage5a's own shard-aggregation contract -- the same script
+    .github/workflows/sharded_benchmark.yml calls for any future
+    shardable experiment, not just this one."""
     import sys
 
     sys.path.insert(0, "scripts")
-    from aggregate_stage5a import aggregate
+    from aggregate_shards import aggregate
 
     config_path = Path("configs/stage5a_comparator_benchmark_smoke.yaml")
     config = load_stage5a_config(config_path)
@@ -114,7 +118,7 @@ def test_stage5a_aggregate_shards_reproduces_unsharded_report(tmp_path: Path) ->
         )
 
     aggregated_dir = tmp_path / "aggregated"
-    aggregated = aggregate(config_path, shards_dir, aggregated_dir)
+    aggregated = aggregate("mintnet.experiments.stage5a", config_path, shards_dir, aggregated_dir)
 
     unsharded_sorted = unsharded.sort_values(["dgp", "n", "method", "replicate"]).reset_index(drop=True)
     aggregated_sorted = aggregated.sort_values(["dgp", "n", "method", "replicate"]).reset_index(drop=True)

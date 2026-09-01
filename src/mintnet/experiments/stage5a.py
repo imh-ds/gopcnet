@@ -156,6 +156,33 @@ def _condition_seed(master_seed: int, dgp_index: int, sample_index: int, replica
     return int(sequence.generate_state(1)[0])
 
 
+# --- Generic shard-aggregation contract -------------------------------
+#
+# .github/workflows/sharded_benchmark.yml and scripts/aggregate_shards.py
+# are generic across any experiment module, not specific to this one.
+# A module opts in by exposing exactly these four names (this module's
+# own values below are the reference implementation):
+#   - `load_config(path) -> Config`
+#   - `expected_row_count(config) -> int`
+#   - `expected_combinations(config) -> set[tuple]`
+#   - `COMBINATION_COLUMNS: tuple[str, ...]` (raw_metrics.csv columns
+#     whose values form each tuple in expected_combinations)
+# plus a `<module>_reporting` companion module exposing
+# `write_report(raw, config, output_dir)`. See stage5a_reporting.py's
+# own `write_report = write_stage5a_report` alias.
+
+load_config = load_stage5a_config
+COMBINATION_COLUMNS: tuple[str, ...] = ("dgp", "n", "method")
+
+
+def expected_row_count(config: Stage5aConfig) -> int:
+    return len(DGPS) * len(config.sample_sizes) * config.replicates * len(METHODS)
+
+
+def expected_combinations(config: Stage5aConfig) -> set[tuple[str, int, str]]:
+    return {(dgp, n, method) for dgp in DGPS for n in config.sample_sizes for method in METHODS}
+
+
 def _repository_root(config: Stage5aConfig) -> Path:
     if config.source_path is not None:
         return config.source_path.parent.parent

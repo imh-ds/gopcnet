@@ -213,3 +213,9 @@ def write_stage5a_report(raw: pd.DataFrame, config: Stage5aConfig, output_dir: P
     )
     (output_dir / "stage5a_report.md").write_text("\n".join(sections), encoding="utf-8")
     return report
+
+
+# Generic name expected by scripts/aggregate_shards.py's own shard-
+# aggregation contract (see stage5a.py's own "Generic shard-aggregation
+# contract" comment).
+write_report = write_stage5a_report
