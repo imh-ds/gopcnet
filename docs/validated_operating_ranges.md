@@ -645,6 +645,26 @@ meaningfully faster than PC (`2`-`6x`, smaller than the `2`-`3`
 orders-of-magnitude margin over EBICglasso). See D-051 and its own
 same-day correction.
 
+**Diagnostic follow-up (D-052): a concrete, measured, partial
+explanation for D-051's precision gap.** `compose_screen_then_prune`'s
+own documented scope — DPI conditioning only examines validated 3/4/5-
+node clique candidate components; every other component (including an
+isolated two-node component) passes through into the final graph
+completely untested — accounts for a **real, structural share of
+MINT's own false positives**: `~28`-`40%` on `chain_fork_hub`
+(PARTIAL, stable across `N`, no clean trend), and the **majority**
+(`.77`-`.82`) on `overlap` at `N in {400, 500, 600, 750}`, dropping
+below the material threshold at `N in {1500, 1750}` (`.49`, `.46`).
+`overlap`'s own larger passthrough share lines up with its own larger
+MINT-vs-PC F1 gap in D-051 — a coherent, if not independently proven
+causal, pattern. This is a partial, not complete, explanation (DPI's
+own examined-and-wrongly-retained decisions still contribute on both
+shapes), and identifies a concrete candidate for a **future
+implementation charter** — extending DPI's conditioning to non-clique
+or smaller components — which would need its own fresh false-edge-rate
+and recall validation before any claim it improves precision safely.
+Not attempted or authorized by this diagnostic charter. See D-052.
+
 **Scope limitation, data type: continuous only — mixed/discrete data
 support is unvalidated, reserved for future work.** Every DGP validated
 anywhere in this project (Stage 0 through Stage 5d) is continuous

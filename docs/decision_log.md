@@ -4182,3 +4182,100 @@ and it remains meaningfully faster than PC (roughly `2`-`6x`, smaller
 than the `2`-`3` orders of magnitude margin over EBICglasso). The
 per-cell evidence table earlier in this entry is unaffected by this
 correction — only the summary interpretation is revised.
+
+## D-052: A material share of MINT's residual false positives never reach DPI at all — a concrete, partial explanation for D-051's precision gap (R6)
+
+Date: 2026-09-01
+
+Stage: R6 / Stage 5f (diagnostic follow-up to D-051's own corrected finding)
+
+Status: Descriptive attribution, no PROCEED/REASSESS gate, no algorithm
+change — per `docs/stage5f_charter.md`'s own scope, this charter
+explains an existing finding via pure post-hoc measurement; it does
+not modify or retune MINT's pipeline.
+
+Decision timing: Predeclared before results — the MATERIAL (`>=.5`
+passthrough share) / PARTIAL (`>.1` and `<.5`) / MINIMAL (`<=.1`)
+thresholds, and the `>=4`-of-`7` majority rule, were fixed in
+`docs/stage5f_charter.md` and `stage5f_reporting.py`'s own module
+docstring before the run was launched.
+
+Question: Does `compose_screen_then_prune`'s own documented scope
+limit — DPI conditioning is only applied within validated 3/4/5-node
+clique candidate components, so any screened-in false edge that lands
+in a non-clique or isolated-pair component is passed through into the
+final graph completely untested — account for a material share of
+MINT's own residual false positives on the two composed noisy networks
+where D-051 found PC's precision beats MINT's?
+
+Prior specification: `docs/stage5f_charter.md`. Same DGPs
+(`chain_fork_hub`, `overlap`), same full `N` grid, same condition seeds
+and `alpha(N)`/screening `alpha` as D-047/D-051 — identical draws, zero
+modification to MINT's own pipeline. Every final edge is categorized
+`dpi_conditioned` or `passthrough_unconditioned` using
+`compose_screen_then_prune`'s own unmodified `shapes` output, then
+cross-referenced against ground truth.
+
+Evidence: Local run (MINT's own per-replicate cost is cheap, no CI
+sharding needed — `results/generated/stage5f_diagnostic/`),
+`2,000` replicates per `(dgp, N)` cell, all `14` cells `0` errors.
+`raw_metrics.csv` (28,000 rows), `report.json`, `stage5f_report.md`.
+
+| DGP shape | material | partial | minimal | Reading |
+|---|---|---|---|---|
+| chain_fork_hub | 0/7 | 7/7 | 0/7 | PARTIAL at every tested N |
+| overlap | 5/7 | 2/7 | 0/7 | MATERIAL at 5/7 tested N |
+
+**`chain_fork_hub`: passthrough-unconditioned edges are a real but
+non-dominant `~28`-`40%` of MINT's own false positives**, roughly
+stable across `N` (`.285` at `N=400` to a peak `.396` at `N=1500`, back
+to `.344` at `N=1750` — no clean monotone trend). **`overlap`:
+passthrough-unconditioned edges are the *majority* explanation at most
+tested `N`, and the largest share exactly where D-047/D-051 found the
+biggest MINT-vs-incumbent gap on this shape** — `.769`-`.823` at `N in
+{400, 500, 600, 750}`, still substantial but below the material
+threshold at `N in {1500, 1750}` (`.487`, `.457`). The share's own
+decline at high `N` is consistent with a natural mechanism, not a
+contradiction: as `N` grows, screening's own per-pair power increases
+(fewer noise-driven candidate edges survive screening at all — D-013's
+own finding), which plausibly means fewer noise variables remain
+available to accidentally chain a false edge into a validated clique
+component, shifting the *mix* of surviving false edges toward
+passthrough being relatively less dominant even as the shape of the
+underlying mechanism is unchanged. This was not directly tested here
+and is stated as a plausible reading, not established.
+
+Decision: **The hypothesis is supported, materially on `overlap` and
+partially on `chain_fork_hub`.** DPI's own clique-shape scope is a
+real, concrete, and now-measured contributor to MINT's residual false
+positives on both composed noisy networks — not the sole explanation
+(PARTIAL, not MATERIAL, on `chain_fork_hub`; even on `overlap`'s own
+MATERIAL cells, roughly a fifth to a quarter of false positives are
+`dpi_conditioned`-and-wrongly-retained, so DPI's own examined decisions
+still contribute too), but a real structural gap, not a marginal one.
+
+Rationale: This directly and concretely explains part of why PC — which
+never gives up on an edge regardless of its local component shape —
+achieves higher precision than MINT on these same networks (D-051).
+The larger passthrough share on `overlap` relative to `chain_fork_hub`
+is also consistent with `overlap`'s own larger MINT-vs-PC F1 gap in
+D-051 (MINT F1 `.910`-`.959` on overlap vs. PC's `.985`-`.988`, a wider
+gap than `chain_fork_hub`'s own MINT `.954`-`.966` vs. PC's
+`.970`-`.973`) — the shape with the bigger passthrough problem also has
+the bigger precision gap, a coherent (if not independently proven
+causal) pattern across the two DGPs tested.
+
+Consequences: Identifies a concrete, actionable candidate for a
+**future implementation charter**: extending DPI's own conditioning to
+examine non-clique or smaller (e.g. 2-node) components, rather than
+passing them through untested. Per this charter's own explicit
+non-goals, that is a real algorithm change requiring its own fresh
+validation (new false-edge-rate and true-edge-recall gates, not
+assumed safe just because it plausibly improves precision here) — not
+authorized or attempted by this diagnostic charter. Does not alter
+D-047 through D-051; this charter explains an existing finding, it does
+not re-test it. The OR-rule/multiple-testing hypothesis from D-051's
+own rationale remains untested and is not ruled out as an additional,
+co-occurring contributor — this charter measured one specific
+mechanism, not all plausible ones. `docs/validated_operating_ranges.md`
+should record this finding in its own Comparator benchmarking section.
