@@ -4154,3 +4154,31 @@ above is a candidate for a future diagnostic charter (e.g. testing
 whether a stricter PC variant, such as requiring rejection at every
 tested subset rather than the first, changes the recall picture), not
 asserted here as established.
+
+**Correction, added the same day this entry was first recorded, after
+direct questioning surfaced that the "Consequences" paragraph above
+understated the result:** "MINT sits between PC and EBICglasso, no
+single incumbent dominates" is misleading as stated. On both composed
+noisy networks, **PC's F1 is higher than MINT's at every tested `N`,
+not merely comparable** — `chain_fork_hub`: PC matches MINT's perfect
+recall (`1.0`) and has *better* precision at every `N` (`.945`-`.950`
+vs. MINT's `.917`-`.939`), so PC strictly dominates MINT there, not
+just "trades differently." `overlap`: PC's recall is marginally below
+MINT's at low `N` (`.997` vs. MINT's perfect `1.0`) but its precision
+is high enough (`.97`+ vs. MINT's `.84`-`.93`) that PC's F1 still wins
+comfortably at every `N`. This is not an artifact of an unfair setup
+favoring PC — if anything the reverse: MINT's own `alpha(N)` was
+originally calibrated via truth-informed simulation on these exact DGP
+shapes in earlier charters, while PC's `alpha=.01` is a generic
+literature value with no relationship to these specific networks, so
+MINT had the tuning advantage here and still lost on F1. **The correct
+reading: MINT's own comparative niche on the composed noisy networks —
+this project's own primary DGP interest — is beating EBICglasso, not
+dominating incumbents in general; PC beats MINT there on the metric
+that matters most.** What remains genuinely in MINT's favor: it still
+beats PC specifically on recall for weak true edges (the
+triangle_moderate/strong finding above, unaffected by this correction),
+and it remains meaningfully faster than PC (roughly `2`-`6x`, smaller
+than the `2`-`3` orders of magnitude margin over EBICglasso). The
+per-cell evidence table earlier in this entry is unaffected by this
+correction — only the summary interpretation is revised.

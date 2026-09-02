@@ -605,35 +605,45 @@ future diagnostic charter, not established). See D-050. This completes
 the two-axis characterization (noise-count: D-048/D-049; strength:
 D-050) `docs/stage5a_charter.md`'s own recommendation called for.
 
-**Second incumbent, PC-algorithm skeleton comparison (D-051): a
-structurally different comparator with the opposite precision/recall
-trade-off.** Reusing D-047's own exact draws (identical condition
+**Second incumbent, PC-algorithm skeleton comparison (D-051): on the
+composed noisy networks, PC's F1 beats MINT's own — not just
+EBICglasso's.** Reusing D-047's own exact draws (identical condition
 seeds), the PC algorithm's skeleton phase (subset-conditioning
 independence tests, `alpha=.01` fixed, no orientation phase implemented
 at all — see `docs/stage5e_charter.md` for why that scope avoids the
 entangled-with-direction-finding concern that applies to score-based
-DAG learners) **beats both MINT's and EBICglasso's own D-047 precision
-on the two composed noisy networks**, at every tested `N`
-(`chain_fork_hub` PC precision `.945`-`.950` vs. MINT `.917`-`.939`;
-`overlap` PC `.972`-`.977` vs. MINT `.840`-`.927`), while matching
-MINT's near-perfect recall there. **On the two weak-signal triangle
-shapes (`moderate`, `strong` — each has one deliberately weak true
-edge, partial correlation `-.12`/`-.08`), PC's recall degrades
-substantially more than either incumbent's on the identical DGP**
-(`triangle_strong, N=400`: PC recall `.720` vs. MINT `.868` vs.
-EBICglasso `.953`), though D-047 already showed both incumbents with
-imperfect recall there too — this is a difference of degree, not a new
-phenomenon in kind. Plausible mechanism (not established): PC removes
-an edge on the *first* conditioning subset that fails to reject
+DAG learners) **beats MINT's own D-047 F1 on both composed noisy
+networks, at every tested `N`.** `chain_fork_hub`: PC matches MINT's
+perfect recall (`1.0`) and has strictly better precision at every `N`
+(`.945`-`.950` vs. MINT's `.917`-`.939`) — PC dominates MINT outright
+there, not a trade-off. `overlap`: PC's recall is marginally below
+MINT's perfect `1.0` at low `N` (`.997`) but its precision is high
+enough (`.97`+ vs. MINT's `.84`-`.93`) that PC's F1 still wins at every
+`N`. This is not an artifact of favoring PC: MINT's own `alpha(N)` was
+originally calibrated via truth-informed simulation on these exact DGP
+shapes in earlier charters, while PC's `alpha=.01` is a generic
+literature value unrelated to these specific networks — MINT had the
+tuning advantage here and still lost on F1. **On the two weak-signal
+triangle shapes (`moderate`, `strong` — each has one deliberately weak
+true edge, partial correlation `-.12`/`-.08`), the position reverses:
+PC's recall degrades substantially more than either incumbent's on the
+identical DGP** (`triangle_strong, N=400`: PC recall `.720` vs. MINT
+`.868` vs. EBICglasso `.953`), though D-047 already showed both
+incumbents with imperfect recall there too — a difference of degree,
+not a new phenomenon in kind. Plausible mechanism (not established): PC
+removes an edge on the *first* conditioning subset that fails to reject
 independence, an OR-rule across many tests that plausibly helps
 precision (more chances to correctly detect a noise pair's
 independence) at the cost of recall on weak true edges (more chances
 for one underpowered test to wrongly declare independence). **Net
-reading: no single incumbent dominates on the composed noisy networks
-— MINT sits between PC (higher precision, same recall) and EBICglasso
-(lower precision, same recall), and beats PC specifically on the
-weak-signal triangle shapes where PC's recall degrades and MINT's does
-not as much.** See D-051.
+reading, corrected from this finding's initial framing: MINT's own
+comparative niche on the composed noisy networks — this project's
+primary DGP interest — is beating EBICglasso, not dominating incumbents
+in general; PC beats MINT there on F1.** What remains in MINT's favor:
+it still beats PC specifically on weak-edge recall, and remains
+meaningfully faster than PC (`2`-`6x`, smaller than the `2`-`3`
+orders-of-magnitude margin over EBICglasso). See D-051 and its own
+same-day correction.
 
 **Scope limitation, data type: continuous only — mixed/discrete data
 support is unvalidated, reserved for future work.** Every DGP validated
