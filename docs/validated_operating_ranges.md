@@ -605,6 +605,25 @@ future diagnostic charter, not established). See D-050. This completes
 the two-axis characterization (noise-count: D-048/D-049; strength:
 D-050) `docs/stage5a_charter.md`'s own recommendation called for.
 
+**Scope limitation, data type: continuous only — mixed/discrete data
+support is unvalidated, reserved for future work.** Every DGP validated
+anywhere in this project (Stage 0 through Stage 5d) is continuous
+Gaussian, and the estimator behind MINT's bivariate association step
+(KSG-1 mutual information, `k=20`) is specifically a continuous-data
+estimator — its nearest-neighbor-distance computation is unreliable on
+binary, ordinal (e.g. Likert-scale), or count data without swapping in
+a different estimator built for discrete or mixed variables (such
+estimators exist in the literature but are not implemented or tested
+here). Mutual information as a general quantity is not restricted to
+continuous data, but that is a claim about the theory, not about this
+codebase: MINT-as-built has never been run against a discrete or mixed
+DGP, so no operating range exists for that setting. Treat this as an
+explicit, named limitation in any paper claim about MINT's data-type
+coverage — do not claim binary/ordinal/count support without a
+dedicated future charter (new estimator, new DGPs with known discrete
+structure, the same falsification discipline as every other
+mechanism) validating it first.
+
 ## Maintenance
 
 Add a row (or update an existing one) whenever a new charter validates
