@@ -3927,3 +3927,104 @@ offsetting the parallelism gained. Not remeasured by a controlled
 comparison (same run repeated at each shard granularity) — stated as
 an observed, plausible account from this one paired comparison, not a
 established scaling law.
+
+## D-050: MINT's advantage over EBICglasso grows sharply with signal strength — EBICglasso's own precision collapses at strong effects, MINT's stays flat (R6)
+
+Date: 2026-09-01
+
+Stage: R6 / Stage 5d (the deferred second axis, following D-047/D-049)
+
+Status: Descriptive, no gate — same standing as every prior R6 charter.
+
+Decision timing: Predeclared before results — `docs/stage5d_charter.md`
+stated explicitly that this axis had no sharp a priori prediction, and
+committed to classifying whatever trend the evidence showed (rather
+than a confirm/refute branch) and to reporting a recall check
+independently of that trend.
+
+Question: Does the MINT-minus-EBICglasso F1 gap (D-047, using `alpha(p)`
+per D-049) grow, shrink, or stay flat as signal strength varies, and
+does recall — perfect for both methods in every cell tested so far —
+stay perfect here too?
+
+Prior specification: `docs/stage5d_charter.md`. Same two shapes
+(chain_fork_hub, overlap), `N in {500, 1500}`, noise held at each
+shape's own native column count (`p=15` for both), strength `in {.3,
+.5, .7}`, `alpha(p)` (`= .001` exactly at this `p`, identical to
+D-047's own original value), `2,000` replicates per cell.
+
+Evidence: GitHub Actions run
+`https://github.com/imh-ds/mintnet/actions/runs/33567686017` (12
+shards, one per `(dgp, N, strength)` cell, plus aggregation).
+`raw_metrics.csv` (48,000 rows), `report.json`, `stage5d_report.md`,
+`gap_by_strength.png`.
+
+| DGP | N | strength | MINT F1 | MINT recall | EBICglasso F1 | EBICglasso recall | gap |
+|---|---|---|---|---|---|---|---|
+| chain_fork_hub | 500 | .3 | `.9764` | `1.0000` | `.9327` | `1.0000` | `.0437` |
+| chain_fork_hub | 500 | .5 | `.9518` | `1.0000` | `.8561` | `1.0000` | `.0957` |
+| chain_fork_hub | 500 | .7 | `.9489` | `1.0000` | `.6835` | `1.0000` | `.2654` |
+| chain_fork_hub | 1500 | .3 | `.9790` | `1.0000` | `.9420` | `1.0000` | `.0370` |
+| chain_fork_hub | 1500 | .5 | `.9616` | `1.0000` | `.8358` | `1.0000` | `.1258` |
+| chain_fork_hub | 1500 | .7 | `.9627` | `1.0000` | `.6715` | `1.0000` | `.2913` |
+| overlap | 500 | .3 | `.9295` | `.9999` | `.9248` | `1.0000` | `.0048` |
+| overlap | 500 | .5 | `.9196` | `1.0000` | `.8883` | `1.0000` | `.0313` |
+| overlap | 500 | .7 | `.9196` | `1.0000` | `.8073` | `1.0000` | `.1123` |
+| overlap | 1500 | .3 | `.9573` | `1.0000` | `.9240` | `1.0000` | `.0333` |
+| overlap | 1500 | .5 | `.9476` | `1.0000` | `.8757` | `1.0000` | `.0719` |
+| overlap | 1500 | .7 | `.9522` | `1.0000` | `.7898` | `1.0000` | `.1624` |
+
+**The predeclared classification is unambiguous: `increasing`, at
+every one of the four `(dgp, N)` series, no exceptions and no
+non-monotonicity.** This is the cleanest, least caveated result in the
+whole R6 arc to date. The recall check also confirms cleanly: recall
+is `1.0000` in every cell but one (`overlap, N=500, strength=.3`:
+`.9999`, one dropped edge out of thousands of replicates — not a
+meaningful departure), so, as in every prior R6 charter, **the entire
+gap remains a precision (false-edge) story, not a detection story** —
+see the conversation's own plain-language framing: this is not about
+either method missing real effects, it is about EBICglasso keeping
+more edges that are not real.
+
+**Mechanism, read directly from precision, not just F1.** MINT's own
+precision is remarkably flat across strength (chain_fork_hub `N=500`:
+`.957` to `.909`, actually declining slightly; overlap `N=500`: `.873`
+to `.856`, also roughly flat) — MINT's screening step is not
+particularly sensitive to how strong the true edges are. **EBICglasso's
+own precision collapses as strength increases** — chain_fork_hub
+`N=500`: `.882` at strength `.3` down to `.526` at strength `.7`;
+`N=1500` similarly, `.897` to `.512`. At strength `.7`, EBICglasso is
+retaining roughly twice as many false edges as at strength `.3` (SHD
+rises from under `1` to nearly `6` at `chain_fork_hub`). This was not
+diagnosed to a specific mechanism inside this charter (out of scope,
+per the charter's own "no strong directional prediction" section) —
+a plausible direction for a future diagnosis: stronger true partial
+correlations may inflate the *empirical* covariance's off-diagonal
+noise-noise and noise-signal entries through finite-sample estimation
+coupling, making EBICglasso's own regularization path relatively less
+able to distinguish genuine near-zero entries from estimation noise
+riding on the stronger true signal. Stated as a hypothesis, not a
+tested finding.
+
+Decision: Reported as found, per the charter's own commitment to state
+whatever trend appears rather than fit a preconceived one. No
+confirm/refute language applies (this axis had no sharp prediction to
+test against).
+
+Rationale: This is the first R6 result where the two methods'
+qualitative behavior diverges sharply rather than the gap merely
+widening or narrowing modestly — worth flagging plainly for the
+eventual paper's discussion, since "MINT's edge is largest precisely
+where the underlying effects are strongest" is a stronger and more
+surprising claim than a monotonic trend of similar cells would suggest
+on its own, and should not be softened into an aggregate "MINT trends
+better with strength" sentence that hides how large the divergence gets
+at `.7`.
+
+Consequences: Completes the two-axis characterization
+`docs/stage5a_charter.md`'s own recommendation called for (noise-count:
+D-048/D-049; strength: this charter). `docs/validated_operating_ranges.md`
+should record this finding in its own Comparator benchmarking section.
+The plausible mechanism above (estimation-noise coupling under strong
+true correlations) is a natural candidate for a future diagnostic
+charter, not asserted here as established.

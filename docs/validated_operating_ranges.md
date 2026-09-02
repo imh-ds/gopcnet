@@ -584,6 +584,27 @@ vs. `p`-adjusted `alpha`). `alpha(p)` is the better-tested
 configuration going forward for any further `p`-varying R6 work. See
 D-048 and D-049.
 
+**Second axis, signal strength (D-050): MINT's advantage grows sharply
+as effects get stronger — the cleanest result in the R6 arc.** Sweeping
+strength `in {.3, .5, .7}` (noise held at native, `alpha(p)`
+throughout) found the F1 gap **increasing at every one of the four
+`(dgp, N)` series tested, no exceptions.** Mechanism: MINT's own
+precision is roughly flat across strength, while **EBICglasso's own
+precision collapses** as strength rises (e.g. `chain_fork_hub`,
+`N=500`: precision `.882` at strength `.3` down to `.526` at `.7`) —
+EBICglasso keeps roughly twice as many false edges at strong signal as
+at weak signal. Recall stayed at `1.0` for both methods in essentially
+every cell (one negligible exception, `.9999`), so — as in every prior
+R6 charter — **the entire gap remains a precision, not a detection,
+story: both methods find every real connection; EBICglasso just
+returns a substantially noisier graph, especially when the true
+effects are strong.** No mechanism for EBICglasso's own precision
+collapse was tested here (flagged as a plausible hypothesis —
+estimation-noise coupling under strong true correlations — for a
+future diagnostic charter, not established). See D-050. This completes
+the two-axis characterization (noise-count: D-048/D-049; strength:
+D-050) `docs/stage5a_charter.md`'s own recommendation called for.
+
 ## Maintenance
 
 Add a row (or update an existing one) whenever a new charter validates
