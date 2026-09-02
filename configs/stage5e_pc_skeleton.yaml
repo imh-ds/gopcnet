@@ -1,0 +1,7 @@
+sample_sizes: [400, 500, 600, 750, 1000, 1500, 1750]
+strength: 0.5
+pc_alpha: 0.01
+replicates: 2000
+master_seed: 20260830
+development_replicates: [0, 999]
+validation_replicates: [1000, 1999]

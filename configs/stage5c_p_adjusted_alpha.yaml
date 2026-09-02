@@ -1,0 +1,10 @@
+sample_sizes: [500, 1500]
+strength: 0.5
+ebicglasso_gamma: 0.5
+ebicglasso_n_lambda: 100
+ebicglasso_lambda_min_ratio: 0.01
+noise_multipliers: [1, 2, 3]
+replicates: 2000
+master_seed: 20260830
+development_replicates: [0, 999]
+validation_replicates: [1000, 1999]

@@ -3571,3 +3571,711 @@ ignored or overstated. `docs/stage4o_recommendation.md`'s own per-shape
 verdicts remain unaffected — this charter, like Stage 4p before it, is
 supplementary evidence, not a change to any prior PROCEED/REASSESS
 finding.
+
+## D-047: MINT's conservative engine outperforms EBICglasso on noisy composed networks, matches it on the clean triangle (R6)
+
+Date: 2026-09-01
+
+Stage: R6 / Stage 5a (first comparator-benchmarking charter)
+
+Status: Descriptive verdict, no PROCEED/REASSESS gate — per
+`docs/stage5a_charter.md`'s own decision structure, this charter tests
+an external comparator, not MINT's own correctness, so the project's
+PROCEED/REASSESS/STOP vocabulary does not apply here.
+
+Decision timing: Predeclared before results — the acceptable-recovery
+threshold (mean validation F1 `>= .90`, held at every larger tested
+`N`) was fixed in `mintnet.experiments.stage5a_reporting`'s own module
+docstring before the full-scale run was launched.
+
+Question: On strictly Gaussian data — EBICglasso's own native
+assumption class and MINT's own fully validated territory — does
+MINT's conservative engine (per-edge screening + conditional-
+independence pruning) occupy a materially different sample-efficiency
+or accuracy position than EBICglasso (graphical lasso + extended-BIC
+penalty selection, `gamma=.5`), on DGP shapes already characterized
+across Stages 1-4?
+
+Prior specification: `docs/stage5a_charter.md`. Five shapes (composed,
+noisy `p=15` chain/fork/hub; composed, noisy `p=15` shared-node
+overlap; three-node balanced/moderate/strong triangle, no noise), `N
+in [400, 500, 600, 750, 1000, 1500, 1750]`, `2,000` replicates per
+cell, MINT using D-012's general `alpha(N)` formula uniformly (an
+implementation-time scope simplification, documented in `stage5a.py`'s
+own module docstring — overlap's specialized formula from Stage
+4g/4i/4j is a fitted curve object, not a closed-form constant, and its
+fitting inputs are not present in this worktree).
+
+Evidence: GitHub Actions run
+`https://github.com/imh-ds/mintnet/actions/runs/33480707225` (35
+matrix shards, one per `(dgp, N)` cell, plus one aggregation job — run
+on CI rather than locally after a single-machine multi-process attempt
+stalled on BLAS-thread oversubscription well past its estimated
+runtime). Aggregated evidence: `raw_metrics.csv` (280,000 rows),
+`report.json`, `stage5a_report.md`, `f1_by_n_by_shape.png`.
+
+| DGP shape | MINT floor N | EBICglasso floor N | Verdict |
+|---|---|---|---|
+| chain_fork_hub | 400 | none (never reaches `F1>=.90` on this grid) | MINT more sample-efficient |
+| overlap | 400 | none (never reaches `F1>=.90` on this grid) | MINT more sample-efficient |
+| triangle_balanced | 400 | 400 | no material difference |
+| triangle_moderate | 400 | 400 | no material difference |
+| triangle_strong | 400 | 400 | no material difference |
+
+**On the two composed, noisy `p=15` networks, MINT is not just
+somewhat ahead — EBICglasso never clears the acceptable-recovery bar
+anywhere on the tested grid.** On `chain_fork_hub`, MINT's F1 runs
+`.954`-`.966` across `N`, essentially flat and already high at `N=400`
+(recall is perfect, `1.000`, at every `N` for both methods — the gap is
+entirely in precision: MINT `.917`-`.939` vs. EBICglasso `.731`-`.762`,
+i.e. EBICglasso retains roughly `2`-`3x` as many false edges).
+EBICglasso's own SHD (`2.1`-`2.4`) does not meaningfully improve as `N`
+grows across this whole grid, while MINT's SHD falls from `.63` to
+`.47` — EBICglasso's global L1 penalty is not resolving the noise
+columns (`6` pure-noise variables at `p=15`) the way MINT's per-edge
+screening step does. The `overlap` shape shows the identical pattern
+at smaller magnitude (MINT F1 `.910`-`.959`; EBICglasso flat around
+`.879`-`.889`). On the three-node, noise-free triangle fixtures, the
+two methods are indistinguishable — both floor at `N=400` and track
+each other closely at every strength level, exactly the outcome
+expected on a DGP with no nuisance variables for a screening step to
+help with.
+
+**A second, unplanned finding: runtime.** MINT's per-replicate fit is
+`2`-`3` orders of magnitude faster than EBICglasso's own `100`-point
+regularization path (chain_fork_hub: MINT `~0.01s`, EBICglasso
+`1.6`-`2.8s`; the triangle fixtures, at `p=3`, still show EBICglasso
+`50`-`500x` slower despite the trivial dimensionality). This was not a
+predeclared metric with its own pass/fail line, but the charter's own
+"moderate compute" niche language (outline Section 22.2) is directly
+borne out by it.
+
+Decision: **Descriptive, not a gate.** Per the charter's own explicit
+non-goal, no claim of MINT's general superiority is made — this result
+is scoped to strictly Gaussian data on five specific DGP shapes at
+`p in {3, 15}`, using EBICglasso's own literature-default `gamma=.5`
+and MINT's own already-frozen `alpha(N)` formula (D-012's general
+form, not overlap's own specialized one — see the scope note above).
+Both methods enter this comparison with settings fixed before this
+charter's data was drawn, per its own fair-comparison rules.
+
+Rationale: The result is more favorable to MINT than the charter's own
+framing anticipated ("does not need to dominate all comparators," per
+outline Section 22.2) — but the mechanism is specific and
+non-mysterious, not a general claim: EBICglasso's single global
+sparsity penalty must simultaneously suppress every noise-driven edge
+across the whole `p x p` matrix, while MINT's per-edge screening step
+(Fisher-z evidence, `p`-specific `alpha`) tests each candidate pair on
+its own evidence before DPI conditioning ever runs. On the noise-free
+triangle, where there is nothing for that per-edge step to filter out,
+the two methods converge, which is the expected null result and a
+useful check that this is not simply "MINT wins everything."
+
+Consequences: R6's own top-level question ("does the method occupy a
+meaningful niche compared with incumbents?") now has a first, real
+answer for the Gaussian, shared-assumption case: yes, specifically on
+networks with nuisance/noise variables, where MINT's targeted screening
+step out-performs EBICglasso's global penalty at every tested `N`, at
+substantially lower compute cost, while remaining comparable on the
+smallest, cleanest case. This does not touch any Stage 1-4
+PROCEED/REASSESS verdict — those concern MINT's own internal validity,
+unaffected by an external comparator's performance. Per the charter's
+own explicit non-goals, this result does **not** extend to nonlinear,
+non-Gaussian, or mixed-type data (reserved for a future charter
+contingent on Stage 8), nor to the sequential/greedy engine (reserved
+for a future charter once its own per-shape caveats resolve into one
+general recommendation). `docs/validated_operating_ranges.md` should
+record this finding in a new top-level section.
+
+## D-048: MINT's advantage over EBICglasso shrinks, not grows, with more noise columns — likely explained by a screening-alpha confound, not a wrong mechanism (R6)
+
+Date: 2026-09-01
+
+Stage: R6 / Stage 5b (first follow-up to D-047)
+
+Status: Descriptive verdict, no gate — same standing as D-047.
+
+Decision timing: Predeclared before results — `docs/stage5b_charter.md`
+fixed the "confirms" vs. "complicates" reading (monotone-non-decreasing
+F1 gap, `.01`-F1 sampling tolerance) before the run was launched.
+
+Question: Does the MINT-minus-EBICglasso F1 gap D-047 found grow as the
+number of pure-noise (nuisance) columns grows, as the stated mechanism
+("MINT's per-edge screening filters noise EBICglasso's global penalty
+does not") predicts?
+
+Prior specification: `docs/stage5b_charter.md`. Same two noisy `p=15`
+shapes as D-047 (chain_fork_hub, overlap), noise multiplier `in {1, 2,
+3}` (native noise-column count x multiplier: `chain_fork_hub` `6/12/18`
+extra columns, `overlap` `4/8/12`), `N in {500, 1500}`, strength `.5`
+unchanged, `2,000` replicates per cell.
+
+Evidence: GitHub Actions run
+`https://github.com/imh-ds/mintnet/actions/runs/33534728141` (6 shards,
+one per `(dgp, noise multiplier)`, plus aggregation — using the newly
+generalized `.github/workflows/sharded_benchmark.yml`, its first reuse
+beyond Stage 5a). `raw_metrics.csv` (48,000 rows), `report.json`,
+`stage5b_report.md`, `gap_by_noise_multiplier.png`.
+
+| DGP shape | N | noise multiplier | MINT F1 | EBICglasso F1 | gap |
+|---|---|---|---|---|---|
+| chain_fork_hub | 500 | 1 | `.9513` | `.8569` | `.0943` |
+| chain_fork_hub | 500 | 2 | `.9406` | `.8707` | `.0699` |
+| chain_fork_hub | 500 | 3 | `.9255` | `.8682` | `.0573` |
+| chain_fork_hub | 1500 | 1 | `.9666` | `.8435` | `.1231` |
+| chain_fork_hub | 1500 | 2 | `.9543` | `.8455` | `.1088` |
+| chain_fork_hub | 1500 | 3 | `.9430` | `.8493` | `.0937` |
+| overlap | 500 | 1 | `.9192` | `.8865` | `.0327` |
+| overlap | 500 | 2 | `.9162` | `.8926` | `.0236` |
+| overlap | 500 | 3 | `.9139` | `.9010` | `.0128` |
+| overlap | 1500 | 1 | `.9503` | `.8803` | `.0700` |
+| overlap | 1500 | 2 | `.9456` | `.8845` | `.0611` |
+| overlap | 1500 | 3 | `.9389` | `.8933` | `.0456` |
+
+**The predeclared reading is COMPLICATES, cleanly.** The gap shrinks
+monotonically as noise multiplier rises from `1` to `3`, at both `N`,
+for both shapes — the opposite of the charter's own predicted
+direction. `report.json`'s own `monotone_non_decreasing` flag: `False`.
+MINT still wins every single cell (the gap never crosses zero on this
+grid), but the margin roughly halves from multiplier `1` to `3`.
+
+**Diagnosis, from the per-method numbers, not just the gap.** MINT's
+own F1 *declines* as noise multiplier rises (e.g. chain_fork_hub
+`N=500`: `.9513` to `.9255`), driven entirely by falling precision —
+recall stays perfect (`1.0000`) at every cell. EBICglasso's own F1
+*rises* over the same range (chain_fork_hub `N=500`: `.8569` to
+`.8682`; overlap `N=500`: `.8865` to `.9010`). This has a specific,
+non-mysterious likely explanation: EBICglasso's own selection criterion
+(`docs/stage5a_charter.md`'s own formula,
+`EBIC = -2L + E*ln(N) + 4*gamma*E*ln(p)`) has an explicit `ln(p)`
+penalty term — as `p` grows with added noise columns, EBIC becomes
+*more* conservative automatically, correctly compensating for the
+larger number of possible false edges. **MINT's own screening step in
+this charter used a single fixed `alpha=.001` at every noise
+multiplier, not re-derived for the larger `p`** (`p` reaches `27` for
+chain_fork_hub at multiplier `3`, up from `15` at multiplier `1`) —
+this is exactly the kind of `p`-dependent recalibration Stage 2's own
+arc already established is necessary (`.001` at `p=15`, `.0001` at
+`p=30`, outline Section 16's own v3 revision note) but which this
+charter's implementation did not carry over. A fixed per-pair `alpha`
+run against a growing number of noise-noise pairs lets more false
+positives through in absolute terms even though each pair's own
+false-positive rate is unchanged — precisely the precision decline
+observed.
+
+Decision: **COMPLICATES**, exactly as the charter's own predeclared
+branch anticipated for this outcome — flagged for its own diagnosis
+before further R6 charters build on the original "grows with noise"
+framing. The diagnosis above is a **plausible mechanistic account, not
+yet a separately tested one** — this charter did not vary MINT's
+`alpha` alongside `p`, so the claim that a `p`-adjusted `alpha` would
+restore or change the pattern is a hypothesis for a follow-up charter,
+not a demonstrated finding.
+
+Rationale: This is the discipline this project's whole R6 arc exists
+to enforce — a favorable-looking result (D-047) got a specific,
+falsifiable follow-up prediction, and that prediction was wrong in a
+way that surfaces a real, previously undisclosed limitation of *this
+charter's own MINT configuration* (fixed `alpha` across a `p` sweep),
+not a limitation of MINT's own established practice (which already
+knows to re-derive `alpha` per `p`). Reporting the shrinking gap
+honestly, and diagnosing rather than dismissing it, is exactly the
+"never reinterpret a result to fit the prior narrative" principle
+`docs/stage5b_charter.md` itself commits to.
+
+Consequences: `docs/validated_operating_ranges.md`'s Stage 5a/R6
+section should be amended to note this scope limitation explicitly —
+D-047's own two-shape result used a fixed noise-column count per shape,
+and its "MINT wins" finding should not be assumed to hold at
+arbitrarily larger `p` without `alpha` also being re-derived for that
+`p`. A natural next charter (not yet written) would re-run this same
+noise-multiplier sweep using a `p`-adjusted `alpha(N, p)` at each
+multiplier (mirroring Stage 2's own per-`p` recalibration) to test the
+diagnosis directly, before any claim about how MINT's niche scales with
+network size is made. The signal-strength sweep flagged as a follow-up
+in `docs/stage5a_charter.md`'s own recommendation should wait until
+this `alpha`-recalibration question is resolved, since strength and
+`p`-adjustment are both open variables and should not be conflated in
+one charter.
+
+## D-049: p-adjusted screening alpha fixes MINT's own precision decline, but EBICglasso's p-aware penalty still narrows the gap in most conditions — a two-effect result, not a clean restoration (R6)
+
+Date: 2026-09-01
+
+Stage: R6 / Stage 5c (follow-up to D-048's own diagnosis)
+
+Status: Descriptive verdict, no gate — same standing as D-047/D-048.
+
+Decision timing: Predeclared before results — `docs/stage5c_charter.md`
+fixed the three-way reading (restores / confirms-confound-not-mechanism
+/ neither) before the run was launched.
+
+Question: Does re-deriving MINT's screening `alpha` per `p` (a
+disclosed log-linear interpolation of Stage 2's own two calibrated
+anchor points, `.001` at `p=15`, `.0001` at `p=30`, replacing Stage
+5b's fixed `.001`) restore the "gap grows with noise" prediction D-048
+found violated?
+
+Prior specification: `docs/stage5c_charter.md`. Identical grid to
+Stage 5b (`chain_fork_hub`, `overlap`; `N in {500, 1500}`; noise
+multiplier `in {1, 2, 3}`; strength `.5`; `2,000` replicates per cell),
+one substitution: MINT's screening `alpha` is `alpha(p)` instead of
+fixed `.001`. DPI's own `alpha(N)` (D-012's formula) unchanged.
+
+Evidence: GitHub Actions run
+`https://github.com/imh-ds/mintnet/actions/runs/33551121806` (12
+shards — one per `(dgp, N, noise multiplier)` cell, the workflow's
+first three-dimension use — plus aggregation). `raw_metrics.csv`
+(48,000 rows), `report.json`, `stage5c_report.md`,
+`gap_by_noise_multiplier_vs_d048.png`.
+
+| DGP | N | mult. | MINT F1 (alpha(p)) | EBICglasso F1 | gap (alpha(p)) | gap (D-048, fixed alpha) |
+|---|---|---|---|---|---|---|
+| chain_fork_hub | 500 | 1 | `.9507` | `.8560` | `.0948` | `.0943` |
+| chain_fork_hub | 500 | 2 | `.9548` | `.8661` | `.0888` | `.0699` |
+| chain_fork_hub | 500 | 3 | `.9584` | `.8700` | `.0884` | `.0573` |
+| chain_fork_hub | 1500 | 1 | `.9639` | `.8448` | `.1191` | `.1231` |
+| chain_fork_hub | 1500 | 2 | `.9658` | `.8510` | `.1148` | `.1088` |
+| chain_fork_hub | 1500 | 3 | `.9705` | `.8523` | `.1183` | `.0937` |
+| overlap | 500 | 1 | `.9194` | `.8893` | `.0300` | `.0327` |
+| overlap | 500 | 2 | `.9309` | `.8933` | `.0375` | `.0236` |
+| overlap | 500 | 3 | `.9368` | `.8965` | `.0403` | `.0128` |
+| overlap | 1500 | 1 | `.9518` | `.8799` | `.0719` | `.0700` |
+| overlap | 1500 | 2 | `.9536` | `.8852` | `.0683` | `.0611` |
+| overlap | 1500 | 3 | `.9489` | `.8908` | `.0581` | `.0456` |
+
+**The predeclared reading is "CONFIRMS THE CONFOUND BUT NOT THE
+MECHANISM," and the per-method numbers show why in more nuanced detail
+than that binary label alone conveys — this is a genuine two-effect
+result, not a clean restoration or a clean rejection.**
+
+1. **The diagnosed confound is confirmed directly.** MINT's own
+   precision, which *declined* with noise multiplier under D-048's
+   fixed `alpha` (e.g. chain_fork_hub `N=500`: `.913` to `.870`), now
+   *improves* under `alpha(p)` (chain_fork_hub `N=500`: `.912` to
+   `.925`; every one of the eight MINT precision series in this
+   charter's own table rises with noise multiplier, not falls). The
+   `p`-adjustment did exactly what it was diagnosed to do.
+2. **But the gap does not cleanly restore to "grows with noise"
+   either — three of four `(dgp, N)` series are now far flatter (near-
+   noise-level) than D-048's own decline, and one reverses direction
+   entirely.** `chain_fork_hub` at both `N`, and `overlap N=500`, show
+   gaps that are roughly flat or *increasing* with noise multiplier
+   (`overlap N=500`: `.0300` to `.0403`, a genuine reversal from
+   D-048's own `.0327` to `.0128` decline). Only `overlap N=1500` still
+   declines beyond the predeclared `.01`-F1 tolerance (`.0719` to
+   `.0581`), which is what kept the automated reading from crossing
+   into "RESTORES."
+3. **EBICglasso's own precision keeps improving with noise multiplier
+   too, at a similar or slightly faster rate** (e.g. chain_fork_hub
+   `N=500`: `.758` to `.780`) — its `ln(p)` EBIC penalty is doing real,
+   legitimate work exactly as D-048 diagnosed, independent of whatever
+   MINT does. The two `p`-aware effects (MINT's now-corrected
+   precision, EBICglasso's own built-in penalty) are both operating on
+   the same axis simultaneously, which is why the net gap is closer to
+   flat than cleanly growing.
+
+Decision: Predeclared branch **"CONFIRMS THE CONFOUND BUT NOT THE
+MECHANISM"** fires as specified. Read plainly: D-048's diagnosis was
+correct as far as it went (MINT's fixed `alpha` was a real, fixable
+confound), but D-047's original "MINT's advantage grows with noise"
+framing is **not** restored by fixing it alone — EBICglasso is not a
+static comparator being outrun by a fixed penalty; its own selection
+criterion is itself noise-count-aware, and that awareness continues to
+narrow MINT's margin (or, in one condition, reverse the earlier
+narrowing into flatness rather than growth) even once MINT's own
+precision problem is corrected.
+
+Rationale: Reporting three of four series as "much flatter, one even
+reversed" rather than compressing this into a single pass/fail
+sentence is itself the point of the predeclared multi-branch structure
+— a binary "confirmed/not confirmed" framing would have hidden the
+genuine, disclosed mixed pattern the actual numbers show. This is
+exactly the kind of texture this project's own decision-log discipline
+exists to preserve rather than smooth over.
+
+Consequences: `docs/validated_operating_ranges.md`'s D-048 amendment
+should be updated to reflect this less pessimistic, but not fully
+restored, picture: MINT's advantage over EBICglasso on noisy composed
+networks does **not** collapse as `p` grows once screening `alpha` is
+properly `p`-adjusted (unlike D-048's own fixed-`alpha` reading), but
+neither does it reliably grow — the net relationship is closer to flat
+with shape-and-`N`-specific variation. Neither D-047 nor D-048 is
+retracted; both remain valid readings of their own, distinct
+configurations (fixed `alpha` vs. `p`-adjusted `alpha`, respectively).
+The signal-strength sweep flagged in `docs/stage5a_charter.md`'s own
+recommendation can now proceed using this charter's own `alpha(p)`
+mechanism as the default going forward for any further `p`-varying R6
+work, since it is now the better-tested configuration of the two.
+
+**Infrastructure note, since this charter also tested three-dimension
+sharding for the first time:** total wall-clock (`~2h03m`) was only
+marginally faster than Stage 5b's own two-dimension, six-shard run
+(`~2h07m`), far less than the roughly 2x improvement expected from
+eliminating the diagnosed serial-fallback (D-048's own consequences
+section, mirrored in `.github/workflows/sharded_benchmark.yml`'s own
+header comment). Both shard counts (`6` and `12`) sit comfortably under
+the concurrency ceiling observed empirically during Stage 5a (`~19`-
+`20` concurrent jobs), so both runs already had full available
+parallelism at the shard-count level — the fix was directionally
+correct (no shard now contains more than one task) but its measured
+benefit was small, likely because each additional shard's own fixed
+per-job overhead (runner provisioning, checkout, `pip install -e .`,
+observed roughly `1`-`2` minutes) grows in relative importance as
+shard count increases and each shard's own payload shrinks, partially
+offsetting the parallelism gained. Not remeasured by a controlled
+comparison (same run repeated at each shard granularity) — stated as
+an observed, plausible account from this one paired comparison, not a
+established scaling law.
+
+## D-050: MINT's advantage over EBICglasso grows sharply with signal strength — EBICglasso's own precision collapses at strong effects, MINT's stays flat (R6)
+
+Date: 2026-09-01
+
+Stage: R6 / Stage 5d (the deferred second axis, following D-047/D-049)
+
+Status: Descriptive, no gate — same standing as every prior R6 charter.
+
+Decision timing: Predeclared before results — `docs/stage5d_charter.md`
+stated explicitly that this axis had no sharp a priori prediction, and
+committed to classifying whatever trend the evidence showed (rather
+than a confirm/refute branch) and to reporting a recall check
+independently of that trend.
+
+Question: Does the MINT-minus-EBICglasso F1 gap (D-047, using `alpha(p)`
+per D-049) grow, shrink, or stay flat as signal strength varies, and
+does recall — perfect for both methods in every cell tested so far —
+stay perfect here too?
+
+Prior specification: `docs/stage5d_charter.md`. Same two shapes
+(chain_fork_hub, overlap), `N in {500, 1500}`, noise held at each
+shape's own native column count (`p=15` for both), strength `in {.3,
+.5, .7}`, `alpha(p)` (`= .001` exactly at this `p`, identical to
+D-047's own original value), `2,000` replicates per cell.
+
+Evidence: GitHub Actions run
+`https://github.com/imh-ds/mintnet/actions/runs/33567686017` (12
+shards, one per `(dgp, N, strength)` cell, plus aggregation).
+`raw_metrics.csv` (48,000 rows), `report.json`, `stage5d_report.md`,
+`gap_by_strength.png`.
+
+| DGP | N | strength | MINT F1 | MINT recall | EBICglasso F1 | EBICglasso recall | gap |
+|---|---|---|---|---|---|---|---|
+| chain_fork_hub | 500 | .3 | `.9764` | `1.0000` | `.9327` | `1.0000` | `.0437` |
+| chain_fork_hub | 500 | .5 | `.9518` | `1.0000` | `.8561` | `1.0000` | `.0957` |
+| chain_fork_hub | 500 | .7 | `.9489` | `1.0000` | `.6835` | `1.0000` | `.2654` |
+| chain_fork_hub | 1500 | .3 | `.9790` | `1.0000` | `.9420` | `1.0000` | `.0370` |
+| chain_fork_hub | 1500 | .5 | `.9616` | `1.0000` | `.8358` | `1.0000` | `.1258` |
+| chain_fork_hub | 1500 | .7 | `.9627` | `1.0000` | `.6715` | `1.0000` | `.2913` |
+| overlap | 500 | .3 | `.9295` | `.9999` | `.9248` | `1.0000` | `.0048` |
+| overlap | 500 | .5 | `.9196` | `1.0000` | `.8883` | `1.0000` | `.0313` |
+| overlap | 500 | .7 | `.9196` | `1.0000` | `.8073` | `1.0000` | `.1123` |
+| overlap | 1500 | .3 | `.9573` | `1.0000` | `.9240` | `1.0000` | `.0333` |
+| overlap | 1500 | .5 | `.9476` | `1.0000` | `.8757` | `1.0000` | `.0719` |
+| overlap | 1500 | .7 | `.9522` | `1.0000` | `.7898` | `1.0000` | `.1624` |
+
+**The predeclared classification is unambiguous: `increasing`, at
+every one of the four `(dgp, N)` series, no exceptions and no
+non-monotonicity.** This is the cleanest, least caveated result in the
+whole R6 arc to date. The recall check also confirms cleanly: recall
+is `1.0000` in every cell but one (`overlap, N=500, strength=.3`:
+`.9999`, one dropped edge out of thousands of replicates — not a
+meaningful departure), so, as in every prior R6 charter, **the entire
+gap remains a precision (false-edge) story, not a detection story** —
+see the conversation's own plain-language framing: this is not about
+either method missing real effects, it is about EBICglasso keeping
+more edges that are not real.
+
+**Mechanism, read directly from precision, not just F1.** MINT's own
+precision is remarkably flat across strength (chain_fork_hub `N=500`:
+`.957` to `.909`, actually declining slightly; overlap `N=500`: `.873`
+to `.856`, also roughly flat) — MINT's screening step is not
+particularly sensitive to how strong the true edges are. **EBICglasso's
+own precision collapses as strength increases** — chain_fork_hub
+`N=500`: `.882` at strength `.3` down to `.526` at strength `.7`;
+`N=1500` similarly, `.897` to `.512`. At strength `.7`, EBICglasso is
+retaining roughly twice as many false edges as at strength `.3` (SHD
+rises from under `1` to nearly `6` at `chain_fork_hub`). This was not
+diagnosed to a specific mechanism inside this charter (out of scope,
+per the charter's own "no strong directional prediction" section) —
+a plausible direction for a future diagnosis: stronger true partial
+correlations may inflate the *empirical* covariance's off-diagonal
+noise-noise and noise-signal entries through finite-sample estimation
+coupling, making EBICglasso's own regularization path relatively less
+able to distinguish genuine near-zero entries from estimation noise
+riding on the stronger true signal. Stated as a hypothesis, not a
+tested finding.
+
+Decision: Reported as found, per the charter's own commitment to state
+whatever trend appears rather than fit a preconceived one. No
+confirm/refute language applies (this axis had no sharp prediction to
+test against).
+
+Rationale: This is the first R6 result where the two methods'
+qualitative behavior diverges sharply rather than the gap merely
+widening or narrowing modestly — worth flagging plainly for the
+eventual paper's discussion, since "MINT's edge is largest precisely
+where the underlying effects are strongest" is a stronger and more
+surprising claim than a monotonic trend of similar cells would suggest
+on its own, and should not be softened into an aggregate "MINT trends
+better with strength" sentence that hides how large the divergence gets
+at `.7`.
+
+Consequences: Completes the two-axis characterization
+`docs/stage5a_charter.md`'s own recommendation called for (noise-count:
+D-048/D-049; strength: this charter). `docs/validated_operating_ranges.md`
+should record this finding in its own Comparator benchmarking section.
+The plausible mechanism above (estimation-noise coupling under strong
+true correlations) is a natural candidate for a future diagnostic
+charter, not asserted here as established.
+
+## D-051: PC's skeleton beats both MINT and EBICglasso on precision, but misses real edges MINT and EBICglasso both catch — a second incumbent with a genuinely different failure mode (R6)
+
+Date: 2026-09-01
+
+Stage: R6 / Stage 5e (second comparator charter, second incumbent)
+
+Status: Descriptive verdict, no PROCEED/REASSESS gate — same standing
+as every prior R6 charter; this charter tests an external comparator,
+not MINT's own correctness.
+
+Decision timing: Predeclared before results — the `0.01` F1 tolerance
+and the `>=4`-of-`7` majority rule for "comparable to or better" were
+fixed in `mintnet.experiments.stage5e_reporting`'s own module docstring
+before the run was launched.
+
+Question: Does the PC algorithm's skeleton phase (subset-conditioning
+independence tests, no orientation phase implemented at all — see
+`docs/stage5e_charter.md` for why that scope resolves the
+"entangled with direction-finding" concern raised in review before this
+charter was frozen) occupy a materially different position than MINT's
+conservative engine and EBICglasso, on the identical draws D-047's own
+numbers were computed on?
+
+Prior specification: `docs/stage5e_charter.md`. Same five shapes and
+`N` grid as Stage 5a, `alpha_pc=0.01` fixed (not tuned), condition
+seeds reused verbatim from `stage5a._condition_seed` so every cell
+draws the same data as D-047 — a paired comparison, not merely a
+comparable one. MINT and EBICglasso were not re-run; their numbers
+below are D-047's own, hardcoded in `stage5e_reporting.py` from
+`results/generated/stage5a_comparator_benchmark/stage5a_report.md`.
+
+Evidence: GitHub Actions run
+`https://github.com/imh-ds/mintnet/actions/runs/33589193320` (35
+matrix shards, one per `(dgp, N)` cell, plus one aggregation job — all
+36 jobs succeeded). Aggregated evidence: `raw_metrics.csv` (70,000
+rows), `report.json`, `stage5e_report.md`, `pc_vs_d047_f1.png`.
+
+| DGP shape | matches MINT (of 7) | matches EBICglasso (of 7) | Verdict |
+|---|---|---|---|
+| chain_fork_hub | 7/7 | 7/7 | PC comparable to or better than MINT |
+| overlap | 7/7 | 7/7 | PC comparable to or better than MINT |
+| triangle_balanced | 7/7 | 7/7 | PC comparable to or better than MINT |
+| triangle_moderate | 2/7 | 2/7 | PC trails both materially |
+| triangle_strong | 0/7 | 0/7 | PC trails both materially |
+
+**On the two composed, noisy `p=15` networks, PC's skeleton is not just
+comparable to MINT — it has *better* precision than MINT's own, at
+every tested `N`, while matching MINT's perfect recall.**
+`chain_fork_hub`: PC precision `.945`-`.950` vs. MINT's own D-047
+precision `.917`-`.939`; `overlap`: PC precision `.972`-`.977` vs.
+MINT's `.840`-`.927` (wider gap than chain_fork_hub). PC's recall stays
+at `1.0` on `chain_fork_hub` and `.997`-`1.000` on `overlap`, matching
+this arc's own recall-is-perfect pattern. Both comparisons beat
+EBICglasso by a wide margin (EBICglasso F1 `.839`-`.889` across both
+shapes, unchanged from D-047). On `triangle_balanced` (the DGP with no
+nuisance variables and three equal-strength true edges) all three
+methods are effectively indistinguishable, F1 `~1.0` throughout — the
+expected null result, consistent with D-047's own finding there.
+
+**On `triangle_moderate` and `triangle_strong`, PC's recall degrades
+substantially more than either incumbent's on the identical DGP —
+this is a difference of degree, not a wholly new phenomenon.** These
+two shapes each have one deliberately weak true edge (partial
+correlation `-.12` at `moderate`, `-.08` at `strong` —
+`src/mintnet/simulation/motifs.py`'s own precision matrices), and
+**D-047 already showed both MINT and EBICglasso with imperfect recall
+on these same two shapes at low `N`** (MINT `.868`, EBICglasso `.953`
+at `triangle_strong, N=400`). The auto-generated report text's own
+recall-check sentence ("unlike every prior R6 charter... new
+information") overstates this — recall imperfection here is not new to
+the arc. **What is new is the magnitude: PC's recall on the identical
+weak edge is substantially worse than either incumbent's at the same
+`N`** — `triangle_strong, N=400`: PC recall `.720` vs. MINT `.868` vs.
+EBICglasso `.953`; the gap narrows but does not close by `N=1750`
+(PC `.923` vs. MINT `.986` vs. EBICglasso `.999`). `triangle_moderate`
+shows the identical pattern at smaller magnitude.
+
+Decision: **Descriptive, not a gate.** PC is a genuinely different
+incumbent from EBICglasso — its own decision rule (subset-conditioning
+independence tests, edge removed on the *first* subset that fails to
+reject) trades toward higher precision and lower recall on weak edges,
+the opposite direction from EBICglasso's own single global penalty
+(which this arc has consistently found under-penalizes noise,
+i.e. trades toward lower precision). No claim of general PC inferiority
+or superiority is made — per `docs/stage5e_charter.md`'s own decision
+structure, a mixed, shape-dependent picture is the complete answer.
+
+Rationale: PC's own decision rule structurally explains the direction
+of both effects, though the exact quantitative mechanism was not tested
+here (stated as a plausible reading, not established): removing an
+edge as soon as *any* one subset test fails to reject independence is,
+in effect, an OR-rule across many tests — for a strong true edge this
+does no harm (every subset should reject), but for a weak true edge it
+means many chances to be wrongly declared independent by one
+underpowered test among several, which plausibly explains why PC's
+recall on the weak-edge triangle shapes is worse than a method (MINT)
+that also does per-edge conjunctive testing but over a single, fully-
+specified conditioning set rather than many candidate subsets, and worse
+than EBICglasso's joint estimation (which does not test subsets at
+all). On the composed noisy networks, the same OR-rule works in PC's
+favor for precision: many chances to detect that a noise-noise or
+noise-signal pair is independent via *any* subset, which plausibly
+explains why PC's precision there beats both MINT's and EBICglasso's.
+
+Consequences: R6 now has two structurally different incumbents on
+record, not one. The two-incumbent picture is richer than either alone:
+on the composed noisy networks (this project's own primary DGP
+interest, per D-047's own framing), MINT sits between PC (higher
+precision, lower recall on weak edges) and EBICglasso (lower precision,
+comparable recall) — no single incumbent dominates, and MINT's own
+niche is that it does not trade recall for precision the way PC does,
+while still beating EBICglasso's precision by a wide margin. On the
+weak-signal triangle shapes, MINT and EBICglasso both handle the weak
+edge better than PC does, another point in favor of MINT's own
+niche relative to PC specifically, not just relative to EBICglasso.
+Does not retroactively alter D-047 through D-050 (all remain valid
+readings of the EBICglasso comparison specifically) or any Stage 1-4
+PROCEED/REASSESS verdict. Extends the same continuous-Gaussian scope
+limitation already disclosed in `docs/validated_operating_ranges.md`.
+`docs/validated_operating_ranges.md` should record this finding in its
+own Comparator benchmarking section. The plausible OR-rule mechanism
+above is a candidate for a future diagnostic charter (e.g. testing
+whether a stricter PC variant, such as requiring rejection at every
+tested subset rather than the first, changes the recall picture), not
+asserted here as established.
+
+**Correction, added the same day this entry was first recorded, after
+direct questioning surfaced that the "Consequences" paragraph above
+understated the result:** "MINT sits between PC and EBICglasso, no
+single incumbent dominates" is misleading as stated. On both composed
+noisy networks, **PC's F1 is higher than MINT's at every tested `N`,
+not merely comparable** — `chain_fork_hub`: PC matches MINT's perfect
+recall (`1.0`) and has *better* precision at every `N` (`.945`-`.950`
+vs. MINT's `.917`-`.939`), so PC strictly dominates MINT there, not
+just "trades differently." `overlap`: PC's recall is marginally below
+MINT's at low `N` (`.997` vs. MINT's perfect `1.0`) but its precision
+is high enough (`.97`+ vs. MINT's `.84`-`.93`) that PC's F1 still wins
+comfortably at every `N`. This is not an artifact of an unfair setup
+favoring PC — if anything the reverse: MINT's own `alpha(N)` was
+originally calibrated via truth-informed simulation on these exact DGP
+shapes in earlier charters, while PC's `alpha=.01` is a generic
+literature value with no relationship to these specific networks, so
+MINT had the tuning advantage here and still lost on F1. **The correct
+reading: MINT's own comparative niche on the composed noisy networks —
+this project's own primary DGP interest — is beating EBICglasso, not
+dominating incumbents in general; PC beats MINT there on the metric
+that matters most.** What remains genuinely in MINT's favor: it still
+beats PC specifically on recall for weak true edges (the
+triangle_moderate/strong finding above, unaffected by this correction),
+and it remains meaningfully faster than PC (roughly `2`-`6x`, smaller
+than the `2`-`3` orders of magnitude margin over EBICglasso). The
+per-cell evidence table earlier in this entry is unaffected by this
+correction — only the summary interpretation is revised.
+
+## D-052: A material share of MINT's residual false positives never reach DPI at all — a concrete, partial explanation for D-051's precision gap (R6)
+
+Date: 2026-09-01
+
+Stage: R6 / Stage 5f (diagnostic follow-up to D-051's own corrected finding)
+
+Status: Descriptive attribution, no PROCEED/REASSESS gate, no algorithm
+change — per `docs/stage5f_charter.md`'s own scope, this charter
+explains an existing finding via pure post-hoc measurement; it does
+not modify or retune MINT's pipeline.
+
+Decision timing: Predeclared before results — the MATERIAL (`>=.5`
+passthrough share) / PARTIAL (`>.1` and `<.5`) / MINIMAL (`<=.1`)
+thresholds, and the `>=4`-of-`7` majority rule, were fixed in
+`docs/stage5f_charter.md` and `stage5f_reporting.py`'s own module
+docstring before the run was launched.
+
+Question: Does `compose_screen_then_prune`'s own documented scope
+limit — DPI conditioning is only applied within validated 3/4/5-node
+clique candidate components, so any screened-in false edge that lands
+in a non-clique or isolated-pair component is passed through into the
+final graph completely untested — account for a material share of
+MINT's own residual false positives on the two composed noisy networks
+where D-051 found PC's precision beats MINT's?
+
+Prior specification: `docs/stage5f_charter.md`. Same DGPs
+(`chain_fork_hub`, `overlap`), same full `N` grid, same condition seeds
+and `alpha(N)`/screening `alpha` as D-047/D-051 — identical draws, zero
+modification to MINT's own pipeline. Every final edge is categorized
+`dpi_conditioned` or `passthrough_unconditioned` using
+`compose_screen_then_prune`'s own unmodified `shapes` output, then
+cross-referenced against ground truth.
+
+Evidence: Local run (MINT's own per-replicate cost is cheap, no CI
+sharding needed — `results/generated/stage5f_diagnostic/`),
+`2,000` replicates per `(dgp, N)` cell, all `14` cells `0` errors.
+`raw_metrics.csv` (28,000 rows), `report.json`, `stage5f_report.md`.
+
+| DGP shape | material | partial | minimal | Reading |
+|---|---|---|---|---|
+| chain_fork_hub | 0/7 | 7/7 | 0/7 | PARTIAL at every tested N |
+| overlap | 5/7 | 2/7 | 0/7 | MATERIAL at 5/7 tested N |
+
+**`chain_fork_hub`: passthrough-unconditioned edges are a real but
+non-dominant `~28`-`40%` of MINT's own false positives**, roughly
+stable across `N` (`.285` at `N=400` to a peak `.396` at `N=1500`, back
+to `.344` at `N=1750` — no clean monotone trend). **`overlap`:
+passthrough-unconditioned edges are the *majority* explanation at most
+tested `N`, and the largest share exactly where D-047/D-051 found the
+biggest MINT-vs-incumbent gap on this shape** — `.769`-`.823` at `N in
+{400, 500, 600, 750}`, still substantial but below the material
+threshold at `N in {1500, 1750}` (`.487`, `.457`). The share's own
+decline at high `N` is consistent with a natural mechanism, not a
+contradiction: as `N` grows, screening's own per-pair power increases
+(fewer noise-driven candidate edges survive screening at all — D-013's
+own finding), which plausibly means fewer noise variables remain
+available to accidentally chain a false edge into a validated clique
+component, shifting the *mix* of surviving false edges toward
+passthrough being relatively less dominant even as the shape of the
+underlying mechanism is unchanged. This was not directly tested here
+and is stated as a plausible reading, not established.
+
+Decision: **The hypothesis is supported, materially on `overlap` and
+partially on `chain_fork_hub`.** DPI's own clique-shape scope is a
+real, concrete, and now-measured contributor to MINT's residual false
+positives on both composed noisy networks — not the sole explanation
+(PARTIAL, not MATERIAL, on `chain_fork_hub`; even on `overlap`'s own
+MATERIAL cells, roughly a fifth to a quarter of false positives are
+`dpi_conditioned`-and-wrongly-retained, so DPI's own examined decisions
+still contribute too), but a real structural gap, not a marginal one.
+
+Rationale: This directly and concretely explains part of why PC — which
+never gives up on an edge regardless of its local component shape —
+achieves higher precision than MINT on these same networks (D-051).
+The larger passthrough share on `overlap` relative to `chain_fork_hub`
+is also consistent with `overlap`'s own larger MINT-vs-PC F1 gap in
+D-051 (MINT F1 `.910`-`.959` on overlap vs. PC's `.985`-`.988`, a wider
+gap than `chain_fork_hub`'s own MINT `.954`-`.966` vs. PC's
+`.970`-`.973`) — the shape with the bigger passthrough problem also has
+the bigger precision gap, a coherent (if not independently proven
+causal) pattern across the two DGPs tested.
+
+Consequences: Identifies a concrete, actionable candidate for a
+**future implementation charter**: extending DPI's own conditioning to
+examine non-clique or smaller (e.g. 2-node) components, rather than
+passing them through untested. Per this charter's own explicit
+non-goals, that is a real algorithm change requiring its own fresh
+validation (new false-edge-rate and true-edge-recall gates, not
+assumed safe just because it plausibly improves precision here) — not
+authorized or attempted by this diagnostic charter. Does not alter
+D-047 through D-051; this charter explains an existing finding, it does
+not re-test it. The OR-rule/multiple-testing hypothesis from D-051's
+own rationale remains untested and is not ruled out as an additional,
+co-occurring contributor — this charter measured one specific
+mechanism, not all plausible ones. `docs/validated_operating_ranges.md`
+should record this finding in its own Comparator benchmarking section.
