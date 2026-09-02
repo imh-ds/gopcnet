@@ -605,6 +605,36 @@ future diagnostic charter, not established). See D-050. This completes
 the two-axis characterization (noise-count: D-048/D-049; strength:
 D-050) `docs/stage5a_charter.md`'s own recommendation called for.
 
+**Second incumbent, PC-algorithm skeleton comparison (D-051): a
+structurally different comparator with the opposite precision/recall
+trade-off.** Reusing D-047's own exact draws (identical condition
+seeds), the PC algorithm's skeleton phase (subset-conditioning
+independence tests, `alpha=.01` fixed, no orientation phase implemented
+at all — see `docs/stage5e_charter.md` for why that scope avoids the
+entangled-with-direction-finding concern that applies to score-based
+DAG learners) **beats both MINT's and EBICglasso's own D-047 precision
+on the two composed noisy networks**, at every tested `N`
+(`chain_fork_hub` PC precision `.945`-`.950` vs. MINT `.917`-`.939`;
+`overlap` PC `.972`-`.977` vs. MINT `.840`-`.927`), while matching
+MINT's near-perfect recall there. **On the two weak-signal triangle
+shapes (`moderate`, `strong` — each has one deliberately weak true
+edge, partial correlation `-.12`/`-.08`), PC's recall degrades
+substantially more than either incumbent's on the identical DGP**
+(`triangle_strong, N=400`: PC recall `.720` vs. MINT `.868` vs.
+EBICglasso `.953`), though D-047 already showed both incumbents with
+imperfect recall there too — this is a difference of degree, not a new
+phenomenon in kind. Plausible mechanism (not established): PC removes
+an edge on the *first* conditioning subset that fails to reject
+independence, an OR-rule across many tests that plausibly helps
+precision (more chances to correctly detect a noise pair's
+independence) at the cost of recall on weak true edges (more chances
+for one underpowered test to wrongly declare independence). **Net
+reading: no single incumbent dominates on the composed noisy networks
+— MINT sits between PC (higher precision, same recall) and EBICglasso
+(lower precision, same recall), and beats PC specifically on the
+weak-signal triangle shapes where PC's recall degrades and MINT's does
+not as much.** See D-051.
+
 **Scope limitation, data type: continuous only — mixed/discrete data
 support is unvalidated, reserved for future work.** Every DGP validated
 anywhere in this project (Stage 0 through Stage 5d) is continuous

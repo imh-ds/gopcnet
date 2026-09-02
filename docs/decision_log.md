@@ -4028,3 +4028,129 @@ should record this finding in its own Comparator benchmarking section.
 The plausible mechanism above (estimation-noise coupling under strong
 true correlations) is a natural candidate for a future diagnostic
 charter, not asserted here as established.
+
+## D-051: PC's skeleton beats both MINT and EBICglasso on precision, but misses real edges MINT and EBICglasso both catch — a second incumbent with a genuinely different failure mode (R6)
+
+Date: 2026-09-01
+
+Stage: R6 / Stage 5e (second comparator charter, second incumbent)
+
+Status: Descriptive verdict, no PROCEED/REASSESS gate — same standing
+as every prior R6 charter; this charter tests an external comparator,
+not MINT's own correctness.
+
+Decision timing: Predeclared before results — the `0.01` F1 tolerance
+and the `>=4`-of-`7` majority rule for "comparable to or better" were
+fixed in `mintnet.experiments.stage5e_reporting`'s own module docstring
+before the run was launched.
+
+Question: Does the PC algorithm's skeleton phase (subset-conditioning
+independence tests, no orientation phase implemented at all — see
+`docs/stage5e_charter.md` for why that scope resolves the
+"entangled with direction-finding" concern raised in review before this
+charter was frozen) occupy a materially different position than MINT's
+conservative engine and EBICglasso, on the identical draws D-047's own
+numbers were computed on?
+
+Prior specification: `docs/stage5e_charter.md`. Same five shapes and
+`N` grid as Stage 5a, `alpha_pc=0.01` fixed (not tuned), condition
+seeds reused verbatim from `stage5a._condition_seed` so every cell
+draws the same data as D-047 — a paired comparison, not merely a
+comparable one. MINT and EBICglasso were not re-run; their numbers
+below are D-047's own, hardcoded in `stage5e_reporting.py` from
+`results/generated/stage5a_comparator_benchmark/stage5a_report.md`.
+
+Evidence: GitHub Actions run
+`https://github.com/imh-ds/mintnet/actions/runs/33589193320` (35
+matrix shards, one per `(dgp, N)` cell, plus one aggregation job — all
+36 jobs succeeded). Aggregated evidence: `raw_metrics.csv` (70,000
+rows), `report.json`, `stage5e_report.md`, `pc_vs_d047_f1.png`.
+
+| DGP shape | matches MINT (of 7) | matches EBICglasso (of 7) | Verdict |
+|---|---|---|---|
+| chain_fork_hub | 7/7 | 7/7 | PC comparable to or better than MINT |
+| overlap | 7/7 | 7/7 | PC comparable to or better than MINT |
+| triangle_balanced | 7/7 | 7/7 | PC comparable to or better than MINT |
+| triangle_moderate | 2/7 | 2/7 | PC trails both materially |
+| triangle_strong | 0/7 | 0/7 | PC trails both materially |
+
+**On the two composed, noisy `p=15` networks, PC's skeleton is not just
+comparable to MINT — it has *better* precision than MINT's own, at
+every tested `N`, while matching MINT's perfect recall.**
+`chain_fork_hub`: PC precision `.945`-`.950` vs. MINT's own D-047
+precision `.917`-`.939`; `overlap`: PC precision `.972`-`.977` vs.
+MINT's `.840`-`.927` (wider gap than chain_fork_hub). PC's recall stays
+at `1.0` on `chain_fork_hub` and `.997`-`1.000` on `overlap`, matching
+this arc's own recall-is-perfect pattern. Both comparisons beat
+EBICglasso by a wide margin (EBICglasso F1 `.839`-`.889` across both
+shapes, unchanged from D-047). On `triangle_balanced` (the DGP with no
+nuisance variables and three equal-strength true edges) all three
+methods are effectively indistinguishable, F1 `~1.0` throughout — the
+expected null result, consistent with D-047's own finding there.
+
+**On `triangle_moderate` and `triangle_strong`, PC's recall degrades
+substantially more than either incumbent's on the identical DGP —
+this is a difference of degree, not a wholly new phenomenon.** These
+two shapes each have one deliberately weak true edge (partial
+correlation `-.12` at `moderate`, `-.08` at `strong` —
+`src/mintnet/simulation/motifs.py`'s own precision matrices), and
+**D-047 already showed both MINT and EBICglasso with imperfect recall
+on these same two shapes at low `N`** (MINT `.868`, EBICglasso `.953`
+at `triangle_strong, N=400`). The auto-generated report text's own
+recall-check sentence ("unlike every prior R6 charter... new
+information") overstates this — recall imperfection here is not new to
+the arc. **What is new is the magnitude: PC's recall on the identical
+weak edge is substantially worse than either incumbent's at the same
+`N`** — `triangle_strong, N=400`: PC recall `.720` vs. MINT `.868` vs.
+EBICglasso `.953`; the gap narrows but does not close by `N=1750`
+(PC `.923` vs. MINT `.986` vs. EBICglasso `.999`). `triangle_moderate`
+shows the identical pattern at smaller magnitude.
+
+Decision: **Descriptive, not a gate.** PC is a genuinely different
+incumbent from EBICglasso — its own decision rule (subset-conditioning
+independence tests, edge removed on the *first* subset that fails to
+reject) trades toward higher precision and lower recall on weak edges,
+the opposite direction from EBICglasso's own single global penalty
+(which this arc has consistently found under-penalizes noise,
+i.e. trades toward lower precision). No claim of general PC inferiority
+or superiority is made — per `docs/stage5e_charter.md`'s own decision
+structure, a mixed, shape-dependent picture is the complete answer.
+
+Rationale: PC's own decision rule structurally explains the direction
+of both effects, though the exact quantitative mechanism was not tested
+here (stated as a plausible reading, not established): removing an
+edge as soon as *any* one subset test fails to reject independence is,
+in effect, an OR-rule across many tests — for a strong true edge this
+does no harm (every subset should reject), but for a weak true edge it
+means many chances to be wrongly declared independent by one
+underpowered test among several, which plausibly explains why PC's
+recall on the weak-edge triangle shapes is worse than a method (MINT)
+that also does per-edge conjunctive testing but over a single, fully-
+specified conditioning set rather than many candidate subsets, and worse
+than EBICglasso's joint estimation (which does not test subsets at
+all). On the composed noisy networks, the same OR-rule works in PC's
+favor for precision: many chances to detect that a noise-noise or
+noise-signal pair is independent via *any* subset, which plausibly
+explains why PC's precision there beats both MINT's and EBICglasso's.
+
+Consequences: R6 now has two structurally different incumbents on
+record, not one. The two-incumbent picture is richer than either alone:
+on the composed noisy networks (this project's own primary DGP
+interest, per D-047's own framing), MINT sits between PC (higher
+precision, lower recall on weak edges) and EBICglasso (lower precision,
+comparable recall) — no single incumbent dominates, and MINT's own
+niche is that it does not trade recall for precision the way PC does,
+while still beating EBICglasso's precision by a wide margin. On the
+weak-signal triangle shapes, MINT and EBICglasso both handle the weak
+edge better than PC does, another point in favor of MINT's own
+niche relative to PC specifically, not just relative to EBICglasso.
+Does not retroactively alter D-047 through D-050 (all remain valid
+readings of the EBICglasso comparison specifically) or any Stage 1-4
+PROCEED/REASSESS verdict. Extends the same continuous-Gaussian scope
+limitation already disclosed in `docs/validated_operating_ranges.md`.
+`docs/validated_operating_ranges.md` should record this finding in its
+own Comparator benchmarking section. The plausible OR-rule mechanism
+above is a candidate for a future diagnostic charter (e.g. testing
+whether a stricter PC variant, such as requiring rejection at every
+tested subset rather than the first, changes the recall picture), not
+asserted here as established.
