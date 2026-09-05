@@ -665,6 +665,26 @@ or smaller components — which would need its own fresh false-edge-rate
 and recall validation before any claim it improves precision safely.
 Not attempted or authorized by this diagnostic charter. See D-052.
 
+**Fix validated (D-053): growing-subset DPI closes most of the gap, at
+zero recall cost.** The candidate fix D-052 named — extending DPI's
+conditioning to non-clique and smaller components instead of passing
+them through untested — was implemented (`mintnet.pipeline.growing_subset_dpi`,
+ported from mintnet's `mi-native` branch, itself using only the
+already-validated Fisher-z partial-correlation primitive) and tested
+head-to-head against GOPC-original and PC on identical draws. Recall
+holds within `0.02` of GOPC-original at every tested cell (bit-identical
+on the shapes with no gap to begin with). Precision: **MATERIAL closure
+on `overlap`** (`69`-`86%` of the gap closed at every tested `N`,
+moving from `.84`-`.93` to `.95`-`.97` against PC's `.97`-`.98`) and
+**PARTIAL closure on `chain_fork_hub`** (`22`-`110%` depending on `N`,
+moving from `.91`-`.94` to `.92`-`.95` against PC's `.945`-`.95`; at
+`N=1500` it slightly exceeds PC's own precision). `mintnet.pipeline.fit_gopc`
+(screening + growing-subset DPI) is now this repo's own recommended
+default entry point — `compose_screen_then_prune` remains available
+unmodified, since D-047 through D-052 and the bootstrap-stability
+tooling (`docs/stage3_charter.md`) were validated against it
+specifically. See D-053.
+
 **Scope limitation, data type: continuous only — mixed/discrete data
 support is unvalidated, reserved for future work.** Every DGP validated
 anywhere in this project (Stage 0 through Stage 5d) is continuous

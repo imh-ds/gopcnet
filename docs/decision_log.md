@@ -4279,3 +4279,88 @@ own rationale remains untested and is not ruled out as an additional,
 co-occurring contributor — this charter measured one specific
 mechanism, not all plausible ones. `docs/validated_operating_ranges.md`
 should record this finding in its own Comparator benchmarking section.
+
+## D-053: Growing-subset DPI closes most of GOPC's precision gap with PC's skeleton, with zero recall cost — MATERIAL on `overlap`, PARTIAL on `chain_fork_hub`
+
+Date: 2026-09-05
+
+Stage: Stage 5g (fix attempt for D-052's own diagnosed cause)
+
+Status: PROCEED — recall holds and at least PARTIAL closure observed
+on both diagnosed shapes (`docs/stage5g_charter.md`'s own predeclared
+gate).
+
+Decision timing: Predeclared before results — the recall-regression
+tolerance (`0.02` absolute), the closure formula, and the MATERIAL
+(`>=.5`) / PARTIAL (`0`-`.5`) / NO (`<=0`) classification were fixed in
+`docs/stage5g_charter.md` before this repo's own GitHub Actions run was
+dispatched.
+
+Question: D-052 named a concrete, untested candidate fix for its own
+diagnosed cause of GOPC's residual false positives — extending DPI's
+conditioning to non-clique and smaller components instead of passing
+them through untested. A growing-conditioning-set variant that does
+exactly this was separately built and validated on a different
+codebase (mintnet's `mi-native` branch, D-053 there) for an unrelated
+purpose, using only the already-validated Fisher-z partial-correlation
+primitive. Does porting it into GOPC's own pipeline unchanged actually
+close the gap D-051 found against PC's skeleton — not assumed from its
+own different validation context?
+
+Prior specification: `docs/stage5g_charter.md`. Same five DGP shapes,
+same full `N` grid, same condition seeds, `screening_alpha`, and
+`alpha(N)` as D-047/D-051 — a three-way paired comparison against
+D-047's own archived GOPC-original rows and D-051's own archived PC
+rows (`evidence/stage5_benchmarks/`), not re-run. Only the pruning step
+changed: `compose_screen_then_prune` to
+`mintnet.pipeline.growing_subset_dpi.growing_subset_dpi`
+(`max_conditioning_size=4`, unchanged from its own Stage 6a validation).
+
+Evidence: GitHub Actions run
+[33952536740](https://github.com/imh-ds/gopcnet/actions/runs/33952536740)
+(35 shards + aggregate, all succeeded), `2,000` replicates per
+`(dgp, N)` cell, `0` errors. `raw_metrics.csv`, `report.json`,
+`stage5g_report.md`.
+
+| DGP shape | material | partial | none | gap cells (of 7) | Verdict |
+|---|---|---|---|---|---|
+| chain_fork_hub | 2 | 5 | 0 | 7 | PARTIAL closure at a majority of gap cells |
+| overlap | 7 | 0 | 0 | 7 | MATERIAL closure at every tested N |
+| triangle_balanced | 0 | 0 | 0 | 0 | no precision gap present (nothing to close) |
+| triangle_moderate | 0 | 0 | 0 | 0 | no precision gap present (nothing to close) |
+| triangle_strong | 0 | 0 | 0 | 0 | no precision gap present (nothing to close) |
+
+Recall holds within `0.02` of GOPC-original at every single tested
+cell — on the triangle shapes it is bit-identical (no gap existed
+there for the fix to touch); on `chain_fork_hub`/`overlap` it stays at
+`1.0000` throughout, same as GOPC-original.
+
+On `overlap`, precision moves from `.84`-`.93` (GOPC-original) to
+`.95`-`.97` (growing-subset), against PC's own `.97`-`.98` — closing
+`69`-`86`% of the gap at every tested `N`. On `chain_fork_hub`, the
+original gap was smaller to begin with (`.91`-`.94` vs. PC's
+`.945`-`.95`); growing-subset moves to `.92`-`.95`, closing `22`-`110`%
+of it depending on `N` — at `N=1500` it slightly exceeds PC's own
+precision.
+
+Rationale: `overlap` was the shape D-052 itself flagged as having the
+larger passthrough-unconditioned share; this charter's own per-shape
+split (MATERIAL there, only PARTIAL on `chain_fork_hub`) is consistent
+with that — the diagnosed mechanism explains most of the gap where
+D-052 found it was the biggest contributor, and a smaller-but-real
+share where D-052 found a smaller one.
+
+Consequences: `mintnet.pipeline.fit_gopc` is added as this repo's own
+recommended default entry point (screening + growing-subset DPI),
+superseding `compose_screen_then_prune` for new work. Per this
+project's own discipline, `compose_screen_then_prune` itself is left
+unmodified rather than edited in place — it remains the frozen
+mechanism `docs/stage5a_charter.md` through `stage5f_charter.md`
+(D-047 through D-052) and `docs/stage3_charter.md`'s bootstrap-stability
+tooling were validated against, and silently changing it would
+invalidate already-cited evidence rather than superseding it
+transparently. `chain_fork_hub`'s own residual, only-partially-closed
+gap is not chased further by this charter — whether it is worth a
+hybrid GOPC/PC method (`docs/future_directions.md`) or is an acceptable
+remaining tradeoff to report as-is is a separate decision, deliberately
+not made here.

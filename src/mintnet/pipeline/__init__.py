@@ -6,6 +6,7 @@ from .compose import (
     connected_components,
     describe_component,
 )
+from .gopc import fit_gopc
 from .growing_subset_dpi import GrowingSubsetResult, growing_subset_dpi
 from .sequential import PairDecision, sequential_screen_and_prune, sequential_screen_and_prune_detailed
 
@@ -19,4 +20,5 @@ __all__ = [
     "PairDecision",
     "growing_subset_dpi",
     "GrowingSubsetResult",
+    "fit_gopc",
 ]
