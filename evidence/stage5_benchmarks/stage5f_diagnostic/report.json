@@ -1,0 +1,162 @@
+{
+  "by_cell": [
+    {
+      "dgp": "chain_fork_hub",
+      "n": 400,
+      "n_errors": 0,
+      "dpi_conditioned_true_edge": 11310,
+      "dpi_conditioned_false_edge": 869,
+      "passthrough_true_edge": 690,
+      "passthrough_false_edge": 347,
+      "passthrough_share_of_false_edges": 0.28536184210526316
+    },
+    {
+      "dgp": "chain_fork_hub",
+      "n": 500,
+      "n_errors": 0,
+      "dpi_conditioned_true_edge": 11522,
+      "dpi_conditioned_false_edge": 938,
+      "passthrough_true_edge": 478,
+      "passthrough_false_edge": 372,
+      "passthrough_share_of_false_edges": 0.28396946564885495
+    },
+    {
+      "dgp": "chain_fork_hub",
+      "n": 600,
+      "n_errors": 0,
+      "dpi_conditioned_true_edge": 11578,
+      "dpi_conditioned_false_edge": 940,
+      "passthrough_true_edge": 422,
+      "passthrough_false_edge": 400,
+      "passthrough_share_of_false_edges": 0.29850746268656714
+    },
+    {
+      "dgp": "chain_fork_hub",
+      "n": 750,
+      "n_errors": 0,
+      "dpi_conditioned_true_edge": 11634,
+      "dpi_conditioned_false_edge": 828,
+      "passthrough_true_edge": 366,
+      "passthrough_false_edge": 361,
+      "passthrough_share_of_false_edges": 0.3036164844407065
+    },
+    {
+      "dgp": "chain_fork_hub",
+      "n": 1000,
+      "n_errors": 0,
+      "dpi_conditioned_true_edge": 11602,
+      "dpi_conditioned_false_edge": 775,
+      "passthrough_true_edge": 398,
+      "passthrough_false_edge": 394,
+      "passthrough_share_of_false_edges": 0.33704020530367834
+    },
+    {
+      "dgp": "chain_fork_hub",
+      "n": 1500,
+      "n_errors": 0,
+      "dpi_conditioned_true_edge": 11590,
+      "dpi_conditioned_false_edge": 605,
+      "passthrough_true_edge": 410,
+      "passthrough_false_edge": 396,
+      "passthrough_share_of_false_edges": 0.3956043956043956
+    },
+    {
+      "dgp": "chain_fork_hub",
+      "n": 1750,
+      "n_errors": 0,
+      "dpi_conditioned_true_edge": 11682,
+      "dpi_conditioned_false_edge": 611,
+      "passthrough_true_edge": 318,
+      "passthrough_false_edge": 321,
+      "passthrough_share_of_false_edges": 0.3444206008583691
+    },
+    {
+      "dgp": "overlap",
+      "n": 400,
+      "n_errors": 0,
+      "dpi_conditioned_true_edge": 7872,
+      "dpi_conditioned_false_edge": 690,
+      "passthrough_true_edge": 12128,
+      "passthrough_false_edge": 2291,
+      "passthrough_share_of_false_edges": 0.7685340489768534
+    },
+    {
+      "dgp": "overlap",
+      "n": 500,
+      "n_errors": 0,
+      "dpi_conditioned_true_edge": 8554,
+      "dpi_conditioned_false_edge": 692,
+      "passthrough_true_edge": 11446,
+      "passthrough_false_edge": 2965,
+      "passthrough_share_of_false_edges": 0.810773858353842
+    },
+    {
+      "dgp": "overlap",
+      "n": 600,
+      "n_errors": 0,
+      "dpi_conditioned_true_edge": 9238,
+      "dpi_conditioned_false_edge": 726,
+      "passthrough_true_edge": 10762,
+      "passthrough_false_edge": 3365,
+      "passthrough_share_of_false_edges": 0.8225372769494012
+    },
+    {
+      "dgp": "overlap",
+      "n": 750,
+      "n_errors": 0,
+      "dpi_conditioned_true_edge": 11046,
+      "dpi_conditioned_false_edge": 776,
+      "passthrough_true_edge": 8954,
+      "passthrough_false_edge": 3397,
+      "passthrough_share_of_false_edges": 0.8140426551641505
+    },
+    {
+      "dgp": "overlap",
+      "n": 1000,
+      "n_errors": 0,
+      "dpi_conditioned_true_edge": 14070,
+      "dpi_conditioned_false_edge": 895,
+      "passthrough_true_edge": 5930,
+      "passthrough_false_edge": 2780,
+      "passthrough_share_of_false_edges": 0.7564625850340136
+    },
+    {
+      "dgp": "overlap",
+      "n": 1500,
+      "n_errors": 0,
+      "dpi_conditioned_true_edge": 18316,
+      "dpi_conditioned_false_edge": 1077,
+      "passthrough_true_edge": 1684,
+      "passthrough_false_edge": 1024,
+      "passthrough_share_of_false_edges": 0.48738695859114706
+    },
+    {
+      "dgp": "overlap",
+      "n": 1750,
+      "n_errors": 0,
+      "dpi_conditioned_true_edge": 18784,
+      "dpi_conditioned_false_edge": 1040,
+      "passthrough_true_edge": 1216,
+      "passthrough_false_edge": 876,
+      "passthrough_share_of_false_edges": 0.4572025052192067
+    }
+  ],
+  "by_shape": [
+    {
+      "dgp": "chain_fork_hub",
+      "n_material": 0,
+      "n_partial": 7,
+      "n_minimal": 0,
+      "n_tested": 7,
+      "reading": "PARTIAL: passthrough-unconditioned edges are a non-trivial but non-majority contributor at a majority of tested N (0 material + 7 partial of 7)"
+    },
+    {
+      "dgp": "overlap",
+      "n_material": 5,
+      "n_partial": 2,
+      "n_minimal": 0,
+      "n_tested": 7,
+      "reading": "MATERIAL: passthrough-unconditioned edges are a majority of MINT's own false positives at 5/7 tested N"
+    }
+  ]
+}

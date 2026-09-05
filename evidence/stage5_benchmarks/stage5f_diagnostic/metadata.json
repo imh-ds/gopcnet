@@ -1,0 +1,8 @@
+{
+  "charter_sha256": "7cd42b5a0232c00d344200d6dc3d3b579b0e55b28e836a3b98f3c4ccf650cc4e",
+  "git_commit": "092b6006097de1dceede3e603789aa7153621925",
+  "python": "3.14.3 (tags/v3.14.3:323c59a, Feb  3 2026, 16:04:56) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "recorded_at_utc": "2026-09-02T04:21:56.040547+00:00",
+  "runtime_seconds": 82.39738710000529
+}
