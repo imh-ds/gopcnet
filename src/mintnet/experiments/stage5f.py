@@ -179,7 +179,35 @@ def _write_evidence(
     (output_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
 
 
-def run_stage5f(config: Stage5fConfig, output_dir: Path, max_workers: int | None = None) -> pd.DataFrame:
+# --- Generic shard-aggregation contract -------------------------------
+# See stage5a.py's own comment of the same name for the full contract
+# this module opts into.
+
+load_config = load_stage5f_config
+COMBINATION_COLUMNS: tuple[str, ...] = ("dgp", "n")
+
+
+def expected_row_count(config: Stage5fConfig) -> int:
+    return len(DGPS) * len(config.sample_sizes) * config.replicates
+
+
+def expected_combinations(config: Stage5fConfig) -> set[tuple[str, int]]:
+    return {(dgp, n) for dgp in DGPS for n in config.sample_sizes}
+
+
+def run_stage5f(
+    config: Stage5fConfig,
+    output_dir: Path,
+    max_workers: int | None = None,
+    dgps: tuple[str, ...] | None = None,
+    sample_sizes: tuple[int, ...] | None = None,
+    write_report: bool = True,
+) -> pd.DataFrame:
+    """`dgps`/`sample_sizes` restrict which cells actually run, for a
+    single-cell CI shard -- mirrors `stage5a.run_stage5a`'s own filter
+    contract exactly, including deriving `dgp_index`/`sample_index`
+    from the FULL `DGPS`/`config.sample_sizes`, not a shard's own
+    filtered subset, so seeds match an unsharded run bit-for-bit."""
     import os
     from concurrent.futures import ProcessPoolExecutor
 
@@ -187,11 +215,18 @@ def run_stage5f(config: Stage5fConfig, output_dir: Path, max_workers: int | None
     selected = select_form(fit_candidate_forms())
     alpha_by_n = {n: selected.predict(float(n)) for n in config.sample_sizes}
 
+    target_dgps = set(dgps) if dgps is not None else set(DGPS)
+    target_sizes = set(sample_sizes) if sample_sizes is not None else set(config.sample_sizes)
+
     tasks = [
         (dgp_index, dgp_name, sample_index, n, alpha_by_n[n], config)
         for dgp_index, dgp_name in enumerate(DGPS)
+        if dgp_name in target_dgps
         for sample_index, n in enumerate(config.sample_sizes)
+        if n in target_sizes
     ]
+    if not tasks:
+        raise ValueError("dgps/sample_sizes filter selected no cells")
 
     if max_workers is None:
         max_workers = min(len(tasks), max(1, (os.cpu_count() or 1) - 1))
@@ -207,6 +242,8 @@ def run_stage5f(config: Stage5fConfig, output_dir: Path, max_workers: int | None
 
     raw = pd.DataFrame(rows)
     _write_evidence(config, output_dir, raw, alpha_by_n, time.perf_counter() - run_started)
+    if not write_report:
+        return raw
 
     from mintnet.experiments.stage5f_reporting import write_stage5f_report
 
@@ -219,8 +256,26 @@ def main() -> None:
     parser.add_argument("--config", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--workers", type=int, default=None)
+    parser.add_argument(
+        "--dgps", type=str, default=None, help="comma-separated subset of DGP shapes to run (default: all)"
+    )
+    parser.add_argument(
+        "--sample-sizes", type=str, default=None, help="comma-separated subset of N values to run (default: all)"
+    )
+    parser.add_argument(
+        "--no-report", action="store_true", help="skip the descriptive-verdict report (use for CI shards)"
+    )
     arguments = parser.parse_args()
-    run_stage5f(load_stage5f_config(arguments.config), arguments.output, max_workers=arguments.workers)
+    dgps = tuple(arguments.dgps.split(",")) if arguments.dgps else None
+    sample_sizes = tuple(int(value) for value in arguments.sample_sizes.split(",")) if arguments.sample_sizes else None
+    run_stage5f(
+        load_stage5f_config(arguments.config),
+        arguments.output,
+        max_workers=arguments.workers,
+        dgps=dgps,
+        sample_sizes=sample_sizes,
+        write_report=not arguments.no_report,
+    )
 
 
 if __name__ == "__main__":
