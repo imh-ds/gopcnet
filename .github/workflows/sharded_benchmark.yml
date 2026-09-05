@@ -1,0 +1,168 @@
+name: Sharded benchmark (generic)
+
+# Manual trigger only -- reusable dispatch target for any heavy,
+# multi-cell experiment, not just Stage 5a (its first user). Each cell
+# in the dim1 x dim2 grid runs as its own isolated matrix job (own
+# runner, own cores), which sidesteps the BLAS-thread oversubscription
+# that made a single-machine multi-process run of Stage 5a slower than
+# expected, and survives the triggering machine being off. A final job
+# aggregates every shard's raw_metrics.csv into the same report an
+# unsharded run would produce, via scripts/aggregate_shards.py.
+#
+# To reuse for a new experiment, the runner module must:
+#   1. Be invocable as `python -m <module> --config <path> --output
+#      <dir> <dim1_flag> <value> <dim2_flag> <value> --no-report` and
+#      write a raw_metrics.csv there (see stage5a.py's own `main()`).
+#   2. Derive seeds from the FULL grid's index, not a shard's own
+#      filtered subset, so sharded output matches an unsharded run
+#      (see stage5a.py's `run_stage5a` docstring and
+#      test_stage5a_sharded_run_matches_unsharded_run).
+#   3. Expose the shard-aggregation contract documented at the top of
+#      scripts/aggregate_shards.py and in stage5a.py's own "Generic
+#      shard-aggregation contract" comment: `load_config`,
+#      `expected_row_count`, `expected_combinations`,
+#      `COMBINATION_COLUMNS`, plus a `<module>_reporting` companion
+#      module exposing `write_report(raw, config, output_dir)`.
+# Two or three shard dimensions are supported. Leave dim3_values empty
+# (the default) for a two-dimension run; set both dim3_flag and
+# dim3_values for a three-dimension one -- every cell still ends up as
+# its own single-task shard either way, which matters on GitHub-hosted
+# runners' 2 vCPUs: a shard left with more than one unsharded task
+# inside it (e.g. Stage 5b's own first run, which sharded only (dgp,
+# noise multiplier) and left N unsplit) can fall back to running those
+# tasks serially rather than in parallel, since `run_stage5a`/`_5b`'s
+# own auto worker-count is `min(tasks, cpu_count-1)` = `min(2, 1)` on a
+# 2-vCPU runner -- so the single slowest shard then dominates the whole
+# run's wall-clock. Prefer sharding every varying dimension over
+# leaving any of them to run serially inside one shard.
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_module:
+        description: "Import path of the shardable runner module"
+        required: false
+        default: "mintnet.experiments.stage5a"
+      config:
+        description: "Config YAML path"
+        required: false
+        default: "configs/stage5a_comparator_benchmark.yaml"
+      dim1_flag:
+        description: "CLI flag for the first shard dimension"
+        required: false
+        default: "--dgps"
+      dim1_values:
+        description: "Comma-separated values for the first shard dimension"
+        required: false
+        default: "chain_fork_hub,overlap,triangle_balanced,triangle_moderate,triangle_strong"
+      dim2_flag:
+        description: "CLI flag for the second shard dimension"
+        required: false
+        default: "--sample-sizes"
+      dim2_values:
+        description: "Comma-separated values for the second shard dimension"
+        required: false
+        default: "400,500,600,750,1000,1500,1750"
+      dim3_flag:
+        description: "CLI flag for an optional third shard dimension"
+        required: false
+        default: ""
+      dim3_values:
+        description: "Comma-separated values for the third shard dimension (leave empty for a two-dimension run)"
+        required: false
+        default: ""
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build.outputs.matrix }}
+    steps:
+      - id: build
+        env:
+          DIM1_VALUES: ${{ inputs.dim1_values }}
+          DIM2_VALUES: ${{ inputs.dim2_values }}
+          DIM3_VALUES: ${{ inputs.dim3_values }}
+        run: |
+          python3 <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          import os
+
+          v1 = os.environ["DIM1_VALUES"].split(",")
+          v2 = os.environ["DIM2_VALUES"].split(",")
+          dim3_values = os.environ.get("DIM3_VALUES", "")
+          if dim3_values:
+              v3 = dim3_values.split(",")
+              combos = [{"v1": a, "v2": b, "v3": c} for a in v1 for b in v2 for c in v3]
+          else:
+              combos = [{"v1": a, "v2": b, "v3": ""} for a in v1 for b in v2]
+          print("matrix=" + json.dumps({"include": combos}))
+          PY
+
+  shard:
+    needs: plan
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    env:
+      OMP_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      NUMEXPR_NUM_THREADS: "2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e .
+      - env:
+          RUNNER_MODULE: ${{ inputs.runner_module }}
+          CONFIG: ${{ inputs.config }}
+          DIM1_FLAG: ${{ inputs.dim1_flag }}
+          DIM2_FLAG: ${{ inputs.dim2_flag }}
+          DIM3_FLAG: ${{ inputs.dim3_flag }}
+          V1: ${{ matrix.v1 }}
+          V2: ${{ matrix.v2 }}
+          V3: ${{ matrix.v3 }}
+        run: |
+          set -e
+          cmd=(python -m "$RUNNER_MODULE" --config "$CONFIG" --output results/generated/shard "$DIM1_FLAG" "$V1" "$DIM2_FLAG" "$V2")
+          if [ -n "$V3" ]; then
+            cmd+=("$DIM3_FLAG" "$V3")
+          fi
+          cmd+=(--no-report)
+          "${cmd[@]}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "shard-${{ matrix.v1 }}-${{ matrix.v2 }}${{ matrix.v3 != '' && format('-{0}', matrix.v3) || '' }}"
+          path: results/generated/shard
+          retention-days: 14
+
+  aggregate:
+    needs: shard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "shard-*"
+          path: shards
+      - env:
+          RUNNER_MODULE: ${{ inputs.runner_module }}
+          CONFIG: ${{ inputs.config }}
+        run: >
+          python scripts/aggregate_shards.py
+          --module "$RUNNER_MODULE"
+          --config "$CONFIG"
+          --shards-dir shards
+          --output results/generated/aggregated
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aggregated-benchmark
+          path: results/generated/aggregated
+          retention-days: 90

@@ -1,0 +1,9 @@
+strengths: [0.30, 0.40, 0.50, 0.70]
+sample_sizes: [750, 1000, 1500]
+replicates: 1000
+master_seed: 20260830
+development_replicates: [0, 499]
+validation_replicates: [500, 999]
+minimum_conditional_accuracy: 0.80
+maximum_true_edge_prune_fpr: 0.10
+required_margin: 0.02

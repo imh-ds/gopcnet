@@ -1,0 +1,12 @@
+sample_sizes: [750]
+strength: 0.5
+triangle_family: moderate
+noise_count: 6
+uncorrected_alphas: [0.01, 0.05]
+bh_q_values: [0.10]
+replicates: 4
+master_seed: 20260829
+development_replicates: [0, 1]
+validation_replicates: [2, 3]
+minimum_recall: 0.80
+maximum_fdr: 0.10

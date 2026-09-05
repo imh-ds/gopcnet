@@ -1,0 +1,13 @@
+sample_sizes: [750, 1500]
+strength: 0.5
+screening_alpha_grid: [0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001]
+fixed_alpha_p5: 0.001
+replicates: 2000
+master_seed: 20260830
+development_replicates: [0, 999]
+validation_replicates: [1000, 1999]
+minimum_recall: 0.99
+maximum_fdr: 0.05
+minimum_indirect_tpr: 0.80
+maximum_true_edge_fpr: 0.10
+false_edge_rate_tolerance: 0.01

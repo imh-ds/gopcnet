@@ -1,0 +1,12 @@
+sample_sizes: [1500, 1600, 1750]
+strength: 0.5
+screening_alpha: 0.0001
+replicates: 60
+development_replicates: [0, 29]
+validation_replicates: [30, 59]
+bootstraps: 500
+master_seed: 20260829
+pi_min_candidates: [0.80, 0.90, 0.95, 0.98]
+minimum_overlap_indirect_tpr: 0.80
+maximum_true_edge_fpr: 0.10
+false_edge_rate_tolerance: 0.01

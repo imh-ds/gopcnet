@@ -1,0 +1,5 @@
+sample_sizes: [750]
+strength: 0.5
+screening_alpha: 0.001
+replicates: 20
+master_seed: 20260830

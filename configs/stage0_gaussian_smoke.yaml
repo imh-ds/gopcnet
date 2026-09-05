@@ -1,0 +1,13 @@
+sample_sizes: [100, 300]
+rhos: [0.0, 0.7]
+k_values: [3, 5]
+replicates: 3
+master_seed: 20260828
+development_replicates: [0, 0]
+validation_replicates: [1, 2]
+moderate_sample_sizes: [300]
+moderate_rhos: [0.7]
+max_absolute_bias: 0.50
+max_rmse: 0.75
+min_rank_spearman: 0.0
+max_null_q95: 1.0

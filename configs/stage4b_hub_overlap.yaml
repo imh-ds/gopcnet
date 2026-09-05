@@ -1,0 +1,10 @@
+sample_sizes: [750, 1500]
+hub_strength: 0.5
+alphas: [0.0001, 0.001, 0.005, 0.01, 0.05, 0.10, 0.20, 0.30, 0.50]
+replicates: 2000
+master_seed: 20260830
+development_replicates: [0, 999]
+validation_replicates: [1000, 1999]
+minimum_indirect_prune_tpr: 0.80
+maximum_true_edge_prune_fpr: 0.10
+required_margin: 0.02
