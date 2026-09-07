@@ -57,6 +57,18 @@ validation history in full.
   is unchanged, stays internal, and now delegates its own
   `bootstrap_resample` to `gopcnet.stability`'s copy rather than
   duplicating it).
+- `compute_centrality` (top-level, alongside its `CentralityResult`
+  return type, and the four individual measures it bundles --
+  `strength`, `expected_influence`, `closeness_centrality`,
+  `betweenness_centrality`): standard node centrality for any weighted
+  network of the shape `fit_gopc`/`fit_gopc_fixed_order`/
+  `bootstrap_edge_stability` already produce. `closeness`/`betweenness`
+  use `1 / |weight|` as each edge's distance (qgraph/bootnet
+  convention -- sign doesn't affect distance, only
+  `expected_influence`). Betweenness uses the full Brandes (2001)
+  algorithm, splitting tied shortest paths proportionally rather than
+  picking one arbitrarily. Lives in the new
+  `gopcnet.metrics.centrality` module.
 
 ### Removed
 - `gopcnet.experiments`, `gopcnet.simulation`, and `gopcnet.bootstrap`

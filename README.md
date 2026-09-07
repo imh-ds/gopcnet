@@ -106,13 +106,42 @@ This works with `fit_ebicglasso` and `fit_pc_skeleton` directly too
 hyperparameters, since every one of their parameters already has a
 default).
 
+## Centrality
+
+`compute_centrality` takes any weight matrix of the shape `fit_gopc`,
+`fit_gopc_fixed_order`, and `bootstrap_edge_stability` already produce
+(signed, symmetric, zero diagonal) and reports four standard node
+centrality measures:
+
+```python
+from gopcnet import compute_centrality
+
+centrality = compute_centrality(result.weights)
+centrality.strength            # sum of |weight| per node
+centrality.expected_influence  # signed sum of weight per node (Robinaugh et al., 2016)
+centrality.closeness           # 1 / (sum of shortest-path distances to every reachable node)
+centrality.betweenness         # fraction of others' shortest paths passing through this node
+```
+
+`closeness` and `betweenness` both need a *distance*, not a weight,
+per edge; following the qgraph/bootnet convention, distance is
+`1 / |weight|` -- a stronger association, positive or negative, is a
+shorter, more direct connection, so sign affects `expected_influence`
+but not the two path-based measures. An isolated node (no path to any
+other node) gets `0.0` for both, not an error. Each measure is also
+available on its own (`strength`, `expected_influence`,
+`closeness_centrality`, `betweenness_centrality`) if you don't need
+all four. Not GOPC-specific -- any weighted adjacency matrix of this
+shape works.
+
 ## What's in the package
 
 `pip install`ing this package gives you `gopcnet.pipeline` (the two
 `fit_gopc*` functions), `gopcnet.comparators` (`fit_ebicglasso`,
 `fit_pc_skeleton`), `gopcnet.stability` (`bootstrap_edge_stability`),
-and the `gopcnet.screening`, `gopcnet.dpi`, and `gopcnet.mi` modules
-they're built from. It does **not** include `gopcnet.experiments`,
+`gopcnet.metrics` (`compute_centrality`), and the `gopcnet.screening`,
+`gopcnet.dpi`, and `gopcnet.mi` modules they're built from. It does
+**not** include `gopcnet.experiments`,
 `gopcnet.simulation`, or `gopcnet.bootstrap` -- this repository's own
 internal scaffolding for running and validating the Stage 1-5h
 benchmarks behind `docs/decision_log.md` (`gopcnet.bootstrap` is an
