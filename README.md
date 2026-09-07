@@ -19,17 +19,34 @@ Not yet published to PyPI -- install directly from this repository.
 ## Usage
 
 ```python
-from gopcnet.pipeline import fit_gopc
+from gopcnet import fit_gopc
 
 adjacency = fit_gopc(data, screening_alpha=0.001, dpi_alpha=0.01)
 ```
 
-`fit_gopc` is the recommended default pipeline (see `docs/decision_log.md`'s
-D-053): it closes most of GOPC's precision gap with a PC-algorithm
-skeleton comparator on the composed networks this repo's own Stage 5
-benchmarks test, with zero measured recall cost. `docs/decision_log.md`
-and `docs/validated_operating_ranges.md` track this repo's own
-mechanism-by-mechanism validation history in full.
+`fit_gopc` (growing-order GOPC) is the recommended default pipeline
+(see `docs/decision_log.md`'s D-053): it closes most of GOPC's
+precision gap with a PC-algorithm skeleton comparator on the composed
+networks this repo's own Stage 5 benchmarks test, with zero measured
+recall cost. `docs/decision_log.md` and `docs/validated_operating_ranges.md`
+track this repo's own mechanism-by-mechanism validation history in
+full.
+
+A second variant, `fit_gopc_fixed_order`, is also available with the
+same call signature -- closer in spirit to LOPC (Zuo et al., 2014), and
+generally dominated by `fit_gopc` on this repo's own benchmarks, but
+kept available for direct comparison:
+
+```python
+from gopcnet import fit_gopc_fixed_order
+
+adjacency = fit_gopc_fixed_order(data, screening_alpha=0.001, dpi_alpha=0.01)
+```
+
+Both variants require continuous, approximately Gaussian data --
+ordinal/categorical psychometric data is out of scope and has not been
+validated. See each function's own docstring for full parameter and
+return-value documentation, and `CHANGELOG.md` for release history.
 
 ## A note on the package name
 

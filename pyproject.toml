@@ -6,7 +6,16 @@ build-backend = "setuptools.build_meta"
 name = "gopcnet"
 version = "0.1.0"
 description = "Growing-Order Partial Correlation (GOPC) network estimation for network psychometrics"
+readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.11,<3.12"
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+]
 dependencies = [
     "matplotlib>=3.8",
     "numpy>=1.26",
@@ -15,6 +24,9 @@ dependencies = [
     "scipy>=1.11",
     "scikit-learn>=1.3",
 ]
+
+[project.urls]
+Repository = "https://github.com/imh-ds/gopcnet"
 
 [project.optional-dependencies]
 test = ["pytest>=8.0"]
