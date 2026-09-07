@@ -1,7 +1,7 @@
 """The package's two public GOPC entry points: `fit_gopc` (growing-order,
 the recommended default) and `fit_gopc_fixed_order` (fixed-order, the
-paper's other variant). Both take a data array and return an adjacency
-matrix directly -- the same signature -- so switching between them is a
+paper's other variant). Both take a data array and return a
+`GOPCResult` -- the same signature -- so switching between them is a
 one-line change.
 
 `fit_gopc` (growing-order) is the recommended default. See
@@ -25,16 +25,35 @@ transparently.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import numpy as np
 
 from gopcnet.pipeline.compose import compose_screen_then_prune
 from gopcnet.pipeline.growing_subset_dpi import growing_subset_dpi
+from gopcnet.pipeline.weights import compute_fixed_order_weights, compute_growing_order_weights
 from gopcnet.screening import compute_pairwise_screening_evidence, screen_uncorrected
+
+
+@dataclass(frozen=True)
+class GOPCResult:
+    """A fitted GOPC network: which edges survive, and how strong each one is.
+
+    `weights` is a signed, symmetric, zero-diagonal partial-correlation
+    matrix, zero everywhere `adjacency` is False. See
+    `gopcnet.pipeline.weights` and `docs/decision_log.md`'s D-055 for
+    exactly what partial correlation each retained edge's weight is
+    (it differs by variant, and by whether the edge was ever
+    conditioning-tested at all).
+    """
+
+    adjacency: np.ndarray
+    weights: np.ndarray
 
 
 def fit_gopc(
     data: np.ndarray, *, screening_alpha: float, dpi_alpha: float, max_conditioning_size: int = 4
-) -> np.ndarray:
+) -> GOPCResult:
     """Estimate a network with growing-order GOPC (the paper's
     recommended default; see `docs/decision_log.md`'s D-053).
 
@@ -70,9 +89,12 @@ def fit_gopc(
 
     Returns
     -------
-    np.ndarray
-        ``(n_variables, n_variables)`` boolean, symmetric adjacency
-        matrix.
+    GOPCResult
+        `.adjacency`: ``(n_variables, n_variables)`` boolean, symmetric
+        adjacency matrix. `.weights`: same shape, signed partial
+        correlations (zero where `.adjacency` is False) -- see
+        `docs/decision_log.md`'s D-055 for exactly what each retained
+        edge's weight represents for this variant.
 
     Examples
     --------
@@ -83,7 +105,7 @@ def fit_gopc(
     >>> x2 = 0.6 * x1 + np.sqrt(1 - 0.6**2) * rng.normal(size=500)
     >>> x3 = 0.6 * x2 + np.sqrt(1 - 0.6**2) * rng.normal(size=500)
     >>> data = np.column_stack([x1, x2, x3])
-    >>> fit_gopc(data, screening_alpha=0.05, dpi_alpha=0.05)
+    >>> fit_gopc(data, screening_alpha=0.05, dpi_alpha=0.05).adjacency
     array([[False,  True, False],
            [ True, False,  True],
            [False,  True, False]])
@@ -96,10 +118,17 @@ def fit_gopc(
     evidence = compute_pairwise_screening_evidence(data)
     screened = screen_uncorrected(evidence, screening_alpha)
     result = growing_subset_dpi(data, screened, dpi_alpha, max_conditioning_size=max_conditioning_size)
-    return result.adjacency
+    weights = compute_growing_order_weights(
+        data,
+        result.adjacency,
+        screened,
+        result.conditioning_size_used,
+        max_conditioning_size=max_conditioning_size,
+    )
+    return GOPCResult(adjacency=result.adjacency, weights=weights)
 
 
-def fit_gopc_fixed_order(data: np.ndarray, *, screening_alpha: float, dpi_alpha: float) -> np.ndarray:
+def fit_gopc_fixed_order(data: np.ndarray, *, screening_alpha: float, dpi_alpha: float) -> GOPCResult:
     """Estimate a network with fixed-order GOPC (the paper's other
     variant; see `docs/decision_log.md`'s D-047 through D-052 and the
     paper's Section 3.1).
@@ -122,10 +151,9 @@ def fit_gopc_fixed_order(data: np.ndarray, *, screening_alpha: float, dpi_alpha:
     the frozen mechanism this package's own archived evidence
     (`docs/stage5a_charter.md` through `stage5f_charter.md`) was
     validated against -- this wrapper does not change its behavior,
-    only its call signature (returning the adjacency matrix directly,
-    matching `fit_gopc`'s own signature, rather than the
-    ``(adjacency, shapes)`` tuple `compose_screen_then_prune` itself
-    returns).
+    only its call signature (returning a `GOPCResult`, matching
+    `fit_gopc`'s own signature, rather than the ``(adjacency, shapes)``
+    tuple `compose_screen_then_prune` itself returns).
 
     Parameters
     ----------
@@ -142,9 +170,12 @@ def fit_gopc_fixed_order(data: np.ndarray, *, screening_alpha: float, dpi_alpha:
 
     Returns
     -------
-    np.ndarray
-        ``(n_variables, n_variables)`` boolean, symmetric adjacency
-        matrix.
+    GOPCResult
+        `.adjacency`: ``(n_variables, n_variables)`` boolean, symmetric
+        adjacency matrix. `.weights`: same shape, signed partial
+        correlations (zero where `.adjacency` is False) -- see
+        `docs/decision_log.md`'s D-055 for exactly what each retained
+        edge's weight represents for this variant.
 
     Examples
     --------
@@ -155,7 +186,7 @@ def fit_gopc_fixed_order(data: np.ndarray, *, screening_alpha: float, dpi_alpha:
     >>> x2 = 0.6 * x1 + np.sqrt(1 - 0.6**2) * rng.normal(size=500)
     >>> x3 = 0.6 * x2 + np.sqrt(1 - 0.6**2) * rng.normal(size=500)
     >>> data = np.column_stack([x1, x2, x3])
-    >>> fit_gopc_fixed_order(data, screening_alpha=0.05, dpi_alpha=0.05)
+    >>> fit_gopc_fixed_order(data, screening_alpha=0.05, dpi_alpha=0.05).adjacency
     array([[False,  True, False],
            [ True, False,  True],
            [False,  True, False]])
@@ -167,5 +198,6 @@ def fit_gopc_fixed_order(data: np.ndarray, *, screening_alpha: float, dpi_alpha:
     """
     evidence = compute_pairwise_screening_evidence(data)
     screened = screen_uncorrected(evidence, screening_alpha)
-    final, _shapes = compose_screen_then_prune(data, screened, dpi_alpha)
-    return final
+    final, shapes = compose_screen_then_prune(data, screened, dpi_alpha)
+    weights = compute_fixed_order_weights(data, final, shapes)
+    return GOPCResult(adjacency=final, weights=weights)

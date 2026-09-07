@@ -8,10 +8,13 @@ recommended default, and `fit_gopc_fixed_order`); see
 `gopcnet.pipeline` and this project's own paper (`manuscript/`, not
 distributed with the package) for the full methodological framing and
 its relationship to LOPC (Zuo, Yu, Tadesse, & Ressom, 2014) and the PC
-algorithm.
+algorithm. Both return a `GOPCResult` -- `.adjacency` (boolean) and
+`.weights` (signed partial correlations; see `docs/decision_log.md`'s
+D-055 for the convention).
 
     >>> from gopcnet import fit_gopc
-    >>> adjacency = fit_gopc(data, screening_alpha=0.001, dpi_alpha=0.01)
+    >>> result = fit_gopc(data, screening_alpha=0.001, dpi_alpha=0.01)
+    >>> result.adjacency, result.weights
 
 Two comparator methods used throughout this project's own benchmarks
 (`docs/decision_log.md`) are also exposed directly, for users who want
@@ -36,12 +39,13 @@ from a checkout of this repository itself.
 """
 
 from gopcnet.comparators import EBICglassoResult, PCSkeletonResult, fit_ebicglasso, fit_pc_skeleton
-from gopcnet.pipeline import fit_gopc, fit_gopc_fixed_order
+from gopcnet.pipeline import GOPCResult, fit_gopc, fit_gopc_fixed_order
 
 __version__ = "0.1.0"
 __all__ = [
     "fit_gopc",
     "fit_gopc_fixed_order",
+    "GOPCResult",
     "fit_ebicglasso",
     "EBICglassoResult",
     "fit_pc_skeleton",

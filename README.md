@@ -21,7 +21,9 @@ Not yet published to PyPI -- install directly from this repository.
 ```python
 from gopcnet import fit_gopc
 
-adjacency = fit_gopc(data, screening_alpha=0.001, dpi_alpha=0.01)
+result = fit_gopc(data, screening_alpha=0.001, dpi_alpha=0.01)
+result.adjacency  # (p, p) boolean, symmetric
+result.weights    # (p, p) signed partial correlations, zero where adjacency is False
 ```
 
 `fit_gopc` (growing-order GOPC) is the recommended default pipeline
@@ -40,13 +42,24 @@ kept available for direct comparison:
 ```python
 from gopcnet import fit_gopc_fixed_order
 
-adjacency = fit_gopc_fixed_order(data, screening_alpha=0.001, dpi_alpha=0.01)
+result = fit_gopc_fixed_order(data, screening_alpha=0.001, dpi_alpha=0.01)
 ```
 
 Both variants require continuous, approximately Gaussian data --
 ordinal/categorical psychometric data is out of scope and has not been
 validated. See each function's own docstring for full parameter and
 return-value documentation, and `CHANGELOG.md` for release history.
+
+**Edge weights.** `.weights` is a signed partial-correlation matrix,
+but what "partial correlation" means for a given edge depends on which
+variant produced it and whether that edge was ever conditioning-tested
+at all -- see `docs/decision_log.md`'s D-055 for the exact convention
+and why it was chosen (in short: the single deciding test's own value
+for fixed-order GOPC; the weakest of every subset an edge had to
+survive for growing-order GOPC; the raw marginal correlation for any
+edge no conditioning test ever ran on). This is a derived diagnostic
+quantity, not a separately benchmarked one -- only the boolean
+adjacency's precision/recall has been validated.
 
 Two comparator methods used throughout this project's own benchmarks
 are also available, for benchmarking GOPC against them on your own

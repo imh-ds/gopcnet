@@ -228,7 +228,7 @@ def _run_cell(
                             screening_alpha=screening_alpha,
                             dpi_alpha=dpi_alpha,
                             max_conditioning_size=_MAX_CONDITIONING_SIZE,
-                        )
+                        ).adjacency
                     elif method == "pc":
                         estimated = fit_pc_skeleton(data, alpha=_PC_ALPHA).adjacency
                     else:

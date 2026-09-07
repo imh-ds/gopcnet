@@ -15,6 +15,12 @@ validation history in full.
 - `fit_gopc` and `fit_gopc_fixed_order` are now importable directly
   from the top-level package (`from gopcnet import fit_gopc`), not
   only from `gopcnet.pipeline`.
+- **Breaking:** `fit_gopc` and `fit_gopc_fixed_order` now return a
+  `GOPCResult(adjacency, weights)` dataclass instead of a bare boolean
+  array. `result.adjacency` is the same array either function returned
+  before; `result.weights` is new (see Added, below). Update
+  `adjacency = fit_gopc(...)` call sites to
+  `result = fit_gopc(...); result.adjacency`.
 
 ### Added
 - `fit_gopc_fixed_order`: a convenience wrapper around
@@ -32,6 +38,13 @@ validation history in full.
   top-level package, alongside `gopcnet.comparators` where they already
   lived, so users can benchmark GOPC against them without reaching
   into a submodule.
+- Weighted edges: both `fit_gopc*` functions' `GOPCResult.weights` is a
+  signed, symmetric partial-correlation matrix (zero where `.adjacency`
+  is False), computed by the new `gopcnet.pipeline.weights` module
+  without changing either underlying pruning mechanism's decision
+  logic. See README.md's "Edge weights" section and
+  `docs/decision_log.md`'s D-055 for the convention (it differs by
+  variant, and for whether an edge was ever conditioning-tested).
 
 ### Removed
 - `gopcnet.experiments`, `gopcnet.simulation`, and `gopcnet.bootstrap`

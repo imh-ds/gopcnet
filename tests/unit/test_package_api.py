@@ -10,6 +10,7 @@ def test_public_api_matches_all() -> None:
     assert set(gopcnet.__all__) == {
         "fit_gopc",
         "fit_gopc_fixed_order",
+        "GOPCResult",
         "fit_ebicglasso",
         "EBICglassoResult",
         "fit_pc_skeleton",
@@ -21,6 +22,7 @@ def test_public_api_matches_all() -> None:
 def test_public_names_are_importable_from_top_level() -> None:
     from gopcnet import (
         EBICglassoResult,
+        GOPCResult,
         PCSkeletonResult,
         fit_ebicglasso,
         fit_gopc,
@@ -32,6 +34,7 @@ def test_public_names_are_importable_from_top_level() -> None:
     assert callable(fit_gopc_fixed_order)
     assert callable(fit_ebicglasso)
     assert callable(fit_pc_skeleton)
+    assert GOPCResult is not None
     assert EBICglassoResult is not None
     assert PCSkeletonResult is not None
 

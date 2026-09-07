@@ -4451,3 +4451,90 @@ narrower finding it always was;
 The "GOPC-original stays essentially flat" phrasing used in earlier
 manuscript drafts is corrected here to "mildly declining" — a real,
 if minor, overstatement this charter's own evidence caught.
+
+## D-055: Edge-weight convention for `fit_gopc` and `fit_gopc_fixed_order` — signed partial correlation, minimum-magnitude across all tested subsets for growing-order
+
+Date: 2026-09-07
+
+Stage: Package development (`gopcnet`'s public API), not a Stage 1-5h
+benchmark charter — this is a definitional/software decision about how
+to report a quantity from evidence already gathered, not a new claim
+about method performance requiring predeclaration or fresh evidence.
+
+Status: Definitional decision, no gate.
+
+Question: `fit_gopc` and `fit_gopc_fixed_order` returned a boolean
+adjacency matrix only — no edge weight — which is not enough for real
+downstream use (centrality, plotting, comparing edge strength across
+groups all need a weighted network, the standard qgraph/bootnet
+output shape). Both frozen pruning mechanisms
+(`compose_screen_then_prune`, `growing_subset_dpi`) already compute a
+partial correlation for every tested pair internally, via
+`gopcnet.dpi.multi_conditional.compute_partial_correlation_evidence`,
+but discard the value and keep only the retain/prune decision
+(`p_value <= alpha`). What is "the" weight for a retained edge, given
+that fixed-order and growing-order GOPC test each edge differently?
+
+Decision: Add `gopcnet.pipeline.weights` as a strictly additive layer
+that consumes each mechanism's existing outputs and re-runs the same
+conditioning tests purely to read off `partial_correlation` (never
+`p_value`) — `compose_screen_then_prune` and `growing_subset_dpi`
+themselves are untouched, so nothing about the retain/prune decision
+logic this repo's own charters validated changes. The convention,
+by case:
+
+- **Untested edges** (isolated pair; or a component passed through
+  because it isn't a validated-shape clique): weight is the raw,
+  unconditional Pearson correlation from screening. No conditioning
+  test ever ran, so there is no partial correlation to report.
+- **Fixed-order GOPC**: exactly one conditioning test decided the
+  edge — on every other member of its own clique. Weight is that
+  single test's own partial correlation. Unambiguous; this is the
+  same quantity a standard qgraph-style partial correlation network
+  reports, restricted to validated clique sizes.
+- **Growing-order GOPC**: retention requires *every* subset tested,
+  across every conditioning size up to the one that decided the edge,
+  to reject independence (the same OR-rule-for-pruning /
+  AND-rule-for-retention the Stage 5e PC comparator and D-052 already
+  established for this mechanism). There is no single deciding test to
+  point to. Weight is the **minimum-magnitude** partial correlation
+  among all subsets actually tested for that edge, sign preserved —
+  the weakest surviving evidence, which is exactly what the retain
+  rule itself guarantees still holds after every conditioning set
+  checked. Rejected alternatives: the *first* subset tested (arbitrary
+  — depends on `itertools.combinations`' own enumeration order, not a
+  property of the data); the *last* subset tested (same problem,
+  opposite end); the marginal correlation (ignores that conditioning
+  ran at all, understating how much of the association survived
+  scrutiny).
+
+Non-claims: this is not a new validated performance quantity —
+weight-recovery accuracy (e.g., how close a retained edge's weight is
+to a DGP's true partial correlation) has not been benchmarked, only
+the boolean retain/prune structure this repo's charters already
+validated. `gopcnet.pipeline.weights`'s re-run of conditioning tests is
+read-only with respect to the decision (it consumes `adjacency`,
+`conditioning_size_used`, and, for fixed-order, the exact `shapes`
+dict `compose_screen_then_prune` already produced — never re-derives
+which components were validated-shape cliques or which subsets a
+retained edge needed to survive).
+
+Evidence: `tests/unit/test_weights.py` (marginal-correlation fallback,
+single-test fixed-order weight, min-magnitude growing-order weight,
+symmetry/zero-diagonal, zero-off-adjacency) and
+`tests/unit/test_gopc.py`'s two new weight-matching tests (each
+`fit_gopc*` function's own `.weights` reproduced by manually calling
+`gopcnet.pipeline.weights` against the same underlying mechanism call).
+464 pre-existing tests plus these new ones all pass.
+
+Consequences: `fit_gopc` and `fit_gopc_fixed_order` now return a
+`GOPCResult(adjacency, weights)` dataclass instead of a bare array —
+an API-breaking change, acceptable pre-1.0 and GitHub-only
+(`docs/decision_log.md` itself is unaffected; no archived Stage 1-5h
+evidence used either function's return value directly, only
+`compose_screen_then_prune`/`growing_subset_dpi`, which are unchanged).
+`gopcnet.experiments.stage5h`'s one call site updated to `.adjacency`.
+This is the foundation the next package-development steps (a
+generalized bootstrap edge-stability API across all four methods, then
+a centrality module) build on — both need edge weights, not just
+presence/absence.
