@@ -15,6 +15,8 @@ def test_public_api_matches_all() -> None:
         "EBICglassoResult",
         "fit_pc_skeleton",
         "PCSkeletonResult",
+        "bootstrap_edge_stability",
+        "EdgeStabilityResult",
         "__version__",
     }
 
@@ -22,8 +24,10 @@ def test_public_api_matches_all() -> None:
 def test_public_names_are_importable_from_top_level() -> None:
     from gopcnet import (
         EBICglassoResult,
+        EdgeStabilityResult,
         GOPCResult,
         PCSkeletonResult,
+        bootstrap_edge_stability,
         fit_ebicglasso,
         fit_gopc,
         fit_gopc_fixed_order,
@@ -34,9 +38,11 @@ def test_public_names_are_importable_from_top_level() -> None:
     assert callable(fit_gopc_fixed_order)
     assert callable(fit_ebicglasso)
     assert callable(fit_pc_skeleton)
+    assert callable(bootstrap_edge_stability)
     assert GOPCResult is not None
     assert EBICglassoResult is not None
     assert PCSkeletonResult is not None
+    assert EdgeStabilityResult is not None
 
 
 def test_internal_research_scaffolding_is_not_part_of_the_public_api() -> None:

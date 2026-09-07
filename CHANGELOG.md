@@ -45,6 +45,18 @@ validation history in full.
   logic. See README.md's "Edge weights" section and
   `docs/decision_log.md`'s D-055 for the convention (it differs by
   variant, and for whether an edge was ever conditioning-tested).
+- `bootstrap_edge_stability` (top-level, alongside its
+  `EdgeStabilityResult` return type): a generic nonparametric bootstrap
+  usable with any of the four fit functions -- bind a method's own
+  hyperparameters with `functools.partial` and pass it in. Reports each
+  pair's edge-inclusion frequency across resamples, plus
+  weight mean/std for the two `fit_gopc*` functions (`None` for the
+  comparators, which don't define an edge weight). Lives in the new
+  `gopcnet.stability` module, distinct from the older,
+  `compose_screen_then_prune`-specific `gopcnet.bootstrap` tool (which
+  is unchanged, stays internal, and now delegates its own
+  `bootstrap_resample` to `gopcnet.stability`'s copy rather than
+  duplicating it).
 
 ### Removed
 - `gopcnet.experiments`, `gopcnet.simulation`, and `gopcnet.bootstrap`

@@ -1,5 +1,8 @@
-"""Bootstrap resampling and edge-stability estimation for the composed
-screen-then-prune pipeline. See docs/stage3_charter.md.
+"""Bootstrap edge-stability estimation for the composed screen-then-prune
+pipeline specifically -- frozen, see docs/stage3_charter.md. For a
+generic version usable with any of this package's four fit functions,
+see `gopcnet.stability.bootstrap_edge_stability` (which also owns
+`bootstrap_resample`, reused here unchanged).
 """
 
 from __future__ import annotations
@@ -10,6 +13,7 @@ import numpy as np
 
 from gopcnet.pipeline import compose_screen_then_prune
 from gopcnet.screening import compute_pairwise_screening_evidence, screen_uncorrected
+from gopcnet.stability import bootstrap_resample
 
 
 @dataclass(frozen=True)
@@ -32,13 +36,6 @@ class StabilityResult:
     pi_final: np.ndarray
     successful_bootstraps: int
     failed_bootstraps: int
-
-
-def bootstrap_resample(data: np.ndarray, rng: np.random.Generator) -> np.ndarray:
-    """Draw one nonparametric row bootstrap resample of `data` (same row count, with replacement)."""
-    n = data.shape[0]
-    indices = rng.integers(0, n, size=n)
-    return data[indices]
 
 
 def compute_edge_stability(

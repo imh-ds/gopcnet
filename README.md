@@ -75,19 +75,54 @@ ebic_result = fit_ebicglasso(data)
 pc_result = fit_pc_skeleton(data, alpha=0.01)
 ```
 
+## Bootstrap edge stability
+
+`bootstrap_edge_stability` runs a nonparametric row bootstrap through
+any one of the four fit functions above and reports, per pair, how
+often it was retained as an edge across resamples -- and, for the two
+`fit_gopc*` functions, the mean/std of its edge weight across those
+same resamples. Bind a method's own hyperparameters with
+`functools.partial` first, since this function doesn't know about them:
+
+```python
+from functools import partial
+import numpy as np
+from gopcnet import fit_gopc, bootstrap_edge_stability
+
+fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+stability = bootstrap_edge_stability(data, fit, bootstraps=1000, rng=np.random.default_rng(0))
+
+stability.inclusion_probability  # (p, p): fraction of resamples each pair was an edge
+stability.weight_mean            # (p, p) or None -- None for fit_ebicglasso/fit_pc_skeleton,
+stability.weight_std             #   which don't define an edge weight at all (D-055)
+```
+
+A resample on which the fit raises (a degenerate, near-zero-variance
+draw) is excluded from both the numerator and denominator rather than
+counted as edge-absent; `stability.failed_bootstraps` records how many.
+
+This works with `fit_ebicglasso` and `fit_pc_skeleton` directly too
+(no `functools.partial` needed unless you want non-default
+hyperparameters, since every one of their parameters already has a
+default).
+
 ## What's in the package
 
 `pip install`ing this package gives you `gopcnet.pipeline` (the two
 `fit_gopc*` functions), `gopcnet.comparators` (`fit_ebicglasso`,
-`fit_pc_skeleton`), and the `gopcnet.screening`, `gopcnet.dpi`, and
-`gopcnet.mi` modules they're built from. It does **not** include
-`gopcnet.experiments`, `gopcnet.simulation`, or `gopcnet.bootstrap` --
-this repository's own internal scaffolding for running and validating
-the Stage 1-5h benchmarks behind `docs/decision_log.md`. That code is
-still in this repository and still tested; it's simply not part of
-what an installed copy of the package ships. If you want to reproduce
-or extend those benchmarks, work from a checkout of this repository
-rather than an installed `gopcnet`.
+`fit_pc_skeleton`), `gopcnet.stability` (`bootstrap_edge_stability`),
+and the `gopcnet.screening`, `gopcnet.dpi`, and `gopcnet.mi` modules
+they're built from. It does **not** include `gopcnet.experiments`,
+`gopcnet.simulation`, or `gopcnet.bootstrap` -- this repository's own
+internal scaffolding for running and validating the Stage 1-5h
+benchmarks behind `docs/decision_log.md` (`gopcnet.bootstrap` is an
+older, narrower bootstrap tool specific to one internal pipeline
+variant -- not the generic `gopcnet.stability.bootstrap_edge_stability`
+described above, which is a separate, newer, fully public module).
+That code is still in this repository and still tested; it's simply
+not part of what an installed copy of the package ships. If you want
+to reproduce or extend those benchmarks, work from a checkout of this
+repository rather than an installed `gopcnet`.
 
 ## A note on the package name
 
