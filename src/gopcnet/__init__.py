@@ -65,6 +65,26 @@ for the exact convention):
     ... )
     >>> cs_coefficient(case_drop).cs_coefficient
 
+`bootstrap_replicates`/`difference_test` answer yet another question:
+is one specific edge (or one node's centrality) really different from
+another, or is that within bootstrap noise? `bootstrap_replicates`
+keeps every bootstrap replicate's raw statistic vector (rather than
+aggregating, like `bootstrap_edge_stability` does), so `difference_test`
+can build a paired percentile bootstrap CI for the difference between
+any two of its entries (see `docs/decision_log.md`'s D-057):
+
+    >>> from gopcnet import bootstrap_replicates, difference_test
+    >>> replicates = bootstrap_replicates(
+    ...     data, fit, lambda r: strength(r.weights), bootstraps=1000, rng=np.random.default_rng(0),
+    ... )
+    >>> difference_test(replicates, index_a=0, index_b=1)  # node 0's strength vs node 1's
+
+`threshold_by_inclusion_probability` is a smaller, separate
+convenience: turn `EdgeStabilityResult.inclusion_probability` into a
+"safe" adjacency matrix directly (only edges above some inclusion
+frequency survive), matching the idea behind `bootnet`'s own
+`bootInclude()`.
+
 This package was previously named `mintnet`; see README.md's "A note
 on the package name" section if you find `mintnet.*` references in
 this repository's own historical charters or decision log.
@@ -94,12 +114,17 @@ from gopcnet.metrics import (
 )
 from gopcnet.pipeline import GOPCResult, fit_gopc, fit_gopc_fixed_order
 from gopcnet.stability import (
+    BootstrapReplicates,
     CaseDropResult,
     CSCoefficientResult,
+    DifferenceTestResult,
     EdgeStabilityResult,
     bootstrap_edge_stability,
+    bootstrap_replicates,
     case_drop_bootstrap,
     cs_coefficient,
+    difference_test,
+    threshold_by_inclusion_probability,
 )
 
 __version__ = "0.1.0"
@@ -117,6 +142,11 @@ __all__ = [
     "CaseDropResult",
     "cs_coefficient",
     "CSCoefficientResult",
+    "bootstrap_replicates",
+    "BootstrapReplicates",
+    "difference_test",
+    "DifferenceTestResult",
+    "threshold_by_inclusion_probability",
     "compute_centrality",
     "CentralityResult",
     "strength",

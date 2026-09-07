@@ -33,6 +33,17 @@ full-sample estimate at all -- the correlation-stability (CS)
 coefficient from Epskamp, Borsboom, & Fried (2018). See
 `docs/decision_log.md`'s D-056 for the exact convention this
 implementation follows.
+
+A third capability, `bootstrap_replicates`/`difference_test`: is one
+edge (or one node's centrality) really different from another, or is
+that within bootstrap noise? `bootstrap_replicates` runs the same
+nonparametric bootstrap `bootstrap_edge_stability` does, but keeps
+every replicate's raw statistic vector instead of aggregating it, so
+`difference_test` can build a paired percentile bootstrap CI for the
+difference between any two of its entries. `threshold_by_inclusion_probability`
+is a smaller, unrelated convenience: turn `EdgeStabilityResult
+.inclusion_probability` into a "safe" adjacency matrix directly. See
+`docs/decision_log.md`'s D-057.
 """
 
 from __future__ import annotations
@@ -320,3 +331,140 @@ def cs_coefficient(
         correlation_threshold=correlation_threshold,
         pass_rate_threshold=pass_rate_threshold,
     )
+
+
+@dataclass(frozen=True)
+class BootstrapReplicates:
+    """Raw per-replicate statistic vectors from a nonparametric
+    bootstrap (`bootstrap_resample` -- with replacement, full sample
+    size), for `difference_test` or your own analysis. Unlike
+    `EdgeStabilityResult`, nothing here is aggregated: memory cost is
+    `O(bootstraps * n_features)`, not `O(n_features)`.
+
+    `full_sample_statistic` is `statistic(fit(data))` on the complete
+    sample -- the point-estimate reference `difference_test` reports
+    the difference against. `replicate_statistics` is a
+    `(successful, n_features)` array.
+    """
+
+    full_sample_statistic: np.ndarray
+    replicate_statistics: np.ndarray
+    successful: int
+    failed: int
+
+
+def bootstrap_replicates(
+    data: np.ndarray,
+    fit: Callable[[np.ndarray], _FitResult],
+    statistic: Callable[[_FitResult], np.ndarray],
+    *,
+    bootstraps: int,
+    rng: np.random.Generator,
+) -> BootstrapReplicates:
+    """Nonparametric bootstrap, recording every successful replicate's
+    `statistic(fit(resample))` rather than aggregating it -- feed the
+    result to `difference_test` to compare two of its entries (two
+    edges' weights, or two nodes' centrality), or use the raw array
+    directly for anything else a percentile bootstrap CI is useful for.
+
+    A resample on which `fit` raises `ValueError` is excluded, the same
+    convention `bootstrap_edge_stability` and `case_drop_bootstrap` use.
+    """
+    if bootstraps < 1:
+        raise ValueError("bootstraps must be at least 1")
+    full_sample_statistic = np.asarray(statistic(fit(data)))
+    values: list[np.ndarray] = []
+    failed = 0
+    for _ in range(bootstraps):
+        resample = bootstrap_resample(data, rng)
+        try:
+            result = fit(resample)
+            values.append(np.asarray(statistic(result)))
+        except ValueError:
+            failed += 1
+            continue
+    if not values:
+        raise RuntimeError("every bootstrap resample was degenerate; cannot compute replicate statistics")
+    return BootstrapReplicates(
+        full_sample_statistic=full_sample_statistic,
+        replicate_statistics=np.array(values),
+        successful=len(values),
+        failed=failed,
+    )
+
+
+@dataclass(frozen=True)
+class DifferenceTestResult:
+    """Bootstrap difference test between two entries of the same
+    statistic vector (two edges' weights, or two nodes' centrality).
+
+    `difference` is the full-sample point estimate
+    (`full_sample_statistic[index_a] - full_sample_statistic[index_b]`).
+    `ci_low`/`ci_high` is the `alpha`-level percentile bootstrap CI of
+    the *replicate* differences -- computed per replicate, from the
+    same resampled data both entries were estimated from, so
+    correlated variability between the two is preserved rather than
+    treating them as independent. `significant` is True iff that CI
+    excludes zero.
+    """
+
+    difference: float
+    ci_low: float
+    ci_high: float
+    significant: bool
+    alpha: float
+
+
+def difference_test(
+    replicates: BootstrapReplicates,
+    index_a: int,
+    index_b: int,
+    *,
+    alpha: float = 0.05,
+) -> DifferenceTestResult:
+    """Test whether entry `index_a` and entry `index_b` of `replicates`'
+    statistic vector differ, using a paired percentile bootstrap CI on
+    their difference. See `docs/decision_log.md`'s D-057 for why paired
+    percentile rather than, say, a normal-approximation CI from
+    `bootstrap_edge_stability`'s mean/std."""
+    if not (0.0 < alpha < 1.0):
+        raise ValueError("alpha must be in (0, 1)")
+    n_features = replicates.full_sample_statistic.shape[0]
+    if not (0 <= index_a < n_features) or not (0 <= index_b < n_features):
+        raise ValueError("index_a and index_b must be valid indices into the statistic vector")
+    if index_a == index_b:
+        raise ValueError("index_a and index_b must refer to different entries")
+
+    difference = float(replicates.full_sample_statistic[index_a] - replicates.full_sample_statistic[index_b])
+    replicate_differences = (
+        replicates.replicate_statistics[:, index_a] - replicates.replicate_statistics[:, index_b]
+    )
+    ci_low, ci_high = np.percentile(replicate_differences, [100 * alpha / 2, 100 * (1 - alpha / 2)])
+    significant = bool(ci_low > 0.0 or ci_high < 0.0)
+
+    return DifferenceTestResult(
+        difference=difference,
+        ci_low=float(ci_low),
+        ci_high=float(ci_high),
+        significant=significant,
+        alpha=alpha,
+    )
+
+
+def threshold_by_inclusion_probability(
+    inclusion_probability: np.ndarray,
+    *,
+    threshold: float = 0.5,
+) -> np.ndarray:
+    """A "safe" adjacency matrix built from bootstrap evidence rather
+    than a single point estimate: an edge survives only if its
+    `EdgeStabilityResult.inclusion_probability` is at least `threshold`.
+    Matches the idea behind `bootnet`'s own `bootInclude()`."""
+    if not (0.0 <= threshold <= 1.0):
+        raise ValueError("threshold must be in [0, 1]")
+    values = np.asarray(inclusion_probability, dtype=float)
+    if values.ndim != 2 or values.shape[0] != values.shape[1]:
+        raise ValueError("inclusion_probability must be a square matrix")
+    adjacency = values >= threshold
+    np.fill_diagonal(adjacency, False)
+    return adjacency

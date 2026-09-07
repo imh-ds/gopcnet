@@ -21,6 +21,11 @@ def test_public_api_matches_all() -> None:
         "CaseDropResult",
         "cs_coefficient",
         "CSCoefficientResult",
+        "bootstrap_replicates",
+        "BootstrapReplicates",
+        "difference_test",
+        "DifferenceTestResult",
+        "threshold_by_inclusion_probability",
         "compute_centrality",
         "CentralityResult",
         "strength",
@@ -33,25 +38,30 @@ def test_public_api_matches_all() -> None:
 
 def test_public_names_are_importable_from_top_level() -> None:
     from gopcnet import (
+        BootstrapReplicates,
         CaseDropResult,
         CentralityResult,
         CSCoefficientResult,
+        DifferenceTestResult,
         EBICglassoResult,
         EdgeStabilityResult,
         GOPCResult,
         PCSkeletonResult,
         betweenness_centrality,
         bootstrap_edge_stability,
+        bootstrap_replicates,
         case_drop_bootstrap,
         closeness_centrality,
         compute_centrality,
         cs_coefficient,
+        difference_test,
         expected_influence,
         fit_ebicglasso,
         fit_gopc,
         fit_gopc_fixed_order,
         fit_pc_skeleton,
         strength,
+        threshold_by_inclusion_probability,
     )
 
     assert callable(fit_gopc)
@@ -61,6 +71,9 @@ def test_public_names_are_importable_from_top_level() -> None:
     assert callable(bootstrap_edge_stability)
     assert callable(case_drop_bootstrap)
     assert callable(cs_coefficient)
+    assert callable(bootstrap_replicates)
+    assert callable(difference_test)
+    assert callable(threshold_by_inclusion_probability)
     assert callable(compute_centrality)
     assert callable(strength)
     assert callable(expected_influence)
@@ -72,6 +85,8 @@ def test_public_names_are_importable_from_top_level() -> None:
     assert EdgeStabilityResult is not None
     assert CaseDropResult is not None
     assert CSCoefficientResult is not None
+    assert BootstrapReplicates is not None
+    assert DifferenceTestResult is not None
     assert CentralityResult is not None
 
 

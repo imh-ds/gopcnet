@@ -145,6 +145,49 @@ literature's own `0.7`/`0.95` thresholds by default (both overridable)
 including the monotonic pass-rate rule and how an undefined (NaN)
 correlation is handled.
 
+## Bootstrap difference testing
+
+Is one specific edge (or one node's centrality) really different from
+another, or is that within bootstrap noise? Neither tool above answers
+this: `bootstrap_edge_stability` only keeps aggregates (mean/std),
+which can't build a CI on a *difference* between two specific entries
+without wrongly treating them as independent.
+
+```python
+from functools import partial
+import numpy as np
+from gopcnet import fit_gopc, strength, bootstrap_replicates, difference_test
+
+fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+replicates = bootstrap_replicates(
+    data, fit, lambda r: strength(r.weights), bootstraps=1000, rng=np.random.default_rng(0),
+)
+result = difference_test(replicates, index_a=0, index_b=1)  # node 0's strength vs node 1's
+result.difference     # full-sample point estimate: strength[0] - strength[1]
+result.ci_low, result.ci_high  # 95% paired percentile bootstrap CI on that difference
+result.significant    # True iff the CI excludes zero
+```
+
+`bootstrap_replicates` runs the same nonparametric bootstrap
+`bootstrap_edge_stability` does, but keeps every replicate's raw
+statistic vector instead of aggregating -- pass any statistic function,
+same as `case_drop_bootstrap`. The CI is built from each replicate's
+own `statistic_a - statistic_b` (both computed from the same resampled
+draw), not from independently-combined means/stds -- see
+`docs/decision_log.md`'s D-057 for why that distinction matters.
+
+`threshold_by_inclusion_probability` is a smaller, separate
+convenience: turn `EdgeStabilityResult.inclusion_probability` directly
+into a "safe" adjacency matrix (only edges above some inclusion
+frequency survive), matching the idea behind `bootnet`'s own
+`bootInclude()`:
+
+```python
+from gopcnet import threshold_by_inclusion_probability
+
+safe_adjacency = threshold_by_inclusion_probability(stability.inclusion_probability, threshold=0.9)
+```
+
 ## Centrality
 
 `compute_centrality` takes any weight matrix of the shape `fit_gopc`,
@@ -178,8 +221,9 @@ shape works.
 `pip install`ing this package gives you `gopcnet.pipeline` (the two
 `fit_gopc*` functions), `gopcnet.comparators` (`fit_ebicglasso`,
 `fit_pc_skeleton`), `gopcnet.stability` (`bootstrap_edge_stability`,
-`case_drop_bootstrap`, `cs_coefficient`), `gopcnet.metrics`
-(`compute_centrality`), and the `gopcnet.screening`,
+`case_drop_bootstrap`, `cs_coefficient`, `bootstrap_replicates`,
+`difference_test`, `threshold_by_inclusion_probability`),
+`gopcnet.metrics` (`compute_centrality`), and the `gopcnet.screening`,
 `gopcnet.dpi`, and `gopcnet.mi` modules they're built from. It does
 **not** include `gopcnet.experiments`,
 `gopcnet.simulation`, or `gopcnet.bootstrap` -- this repository's own

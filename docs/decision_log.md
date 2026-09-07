@@ -4623,3 +4623,79 @@ level alongside `bootstrap_edge_stability`. `gopcnet.stability`'s
 module docstring documents both bootstrap flavors side by side so a
 reader doesn't confuse "edge-inclusion stability" with "sample-size
 reliability" — two different, both legitimate, senses of "stability."
+
+## D-057: Bootstrap difference-test convention — paired percentile CI on the replicate-level difference, and a separate inclusion-probability threshold helper
+
+Date: 2026-09-07
+
+Stage: Package development (`gopcnet`'s public API), not a Stage 1-5h
+benchmark charter — same definitional-decision pattern as D-055/D-056.
+
+Status: Definitional decision, no gate.
+
+Question: `bootnet`'s `differenceTest()` answers a question neither
+`bootstrap_edge_stability` nor `case_drop_bootstrap` can: is one
+specific edge (or one node's centrality) actually different from
+another, or is the apparent gap within bootstrap noise?
+`bootstrap_edge_stability` only keeps aggregates (mean/std/inclusion
+frequency) — not enough to build a CI on a *difference* between two
+specific entries, since that needs each replicate's paired values
+(both computed from the same resampled draw) to preserve their
+correlated variability; a mean/std-only summary would have to
+(wrongly) treat the two entries as independent. Separately, `bootnet`
+also offers `bootInclude()`/`bootThreshold()` — turning bootstrap
+evidence into a single "safe" network — which is easy to add without
+any new bootstrap machinery, since `EdgeStabilityResult
+.inclusion_probability` already has everything `bootInclude()`-style
+thresholding needs.
+
+Decision: Add `gopcnet.stability.bootstrap_replicates` (the same
+nonparametric bootstrap `bootstrap_edge_stability` runs, generalized
+via the same generic-callable `fit`/`statistic` pattern
+`case_drop_bootstrap` already established, but keeping every
+replicate's raw statistic vector instead of aggregating) and
+`difference_test` (consumes it). Conventions:
+
+- **Paired percentile bootstrap CI**, not a normal-approximation CI
+  from separately-computed means/stds. The difference is computed
+  *per replicate* (`statistic_a - statistic_b` from the same resampled
+  draw) before taking percentiles, not `mean(a) - mean(b)` with
+  independently-combined variances — this is the standard, more
+  robust way to test a bootstrap difference precisely because it
+  doesn't assume the two quantities are independent (they're
+  estimated from the same resampled data and are typically
+  correlated).
+- **`alpha` default `0.05`**, matching the conventional two-sided
+  95% CI, independently configurable from `cs_coefficient`'s own
+  `alpha`-shaped thresholds (these are unrelated parameters despite
+  the shared name pattern).
+- **The point estimate is the full-sample fit's own difference**, not
+  the mean of the bootstrap replicate differences — the bootstrap
+  supplies the CI around a point estimate that itself comes from the
+  actual data, not from resampled surrogates, matching how
+  `case_drop_bootstrap`'s `full_sample_statistic` field is used.
+- `threshold_by_inclusion_probability` is added as a separate, simpler
+  function (not a `difference_test` variant) since it needs none of
+  `bootstrap_replicates`' raw-replicate machinery — it operates
+  directly on `EdgeStabilityResult.inclusion_probability`.
+
+Non-claims: like D-055/D-056, none of this is a new validated
+performance claim about GOPC itself — these are generic statistical
+tools applicable to any of the four fit functions' output, following
+the same generic-callable design established for
+`bootstrap_edge_stability` and `case_drop_bootstrap`.
+
+Evidence: `tests/unit/test_difference_test.py` and
+`tests/unit/test_threshold_by_inclusion_probability.py` — deterministic
+tests constructing known replicate arrays to pin the paired-CI
+mechanics and significance boundary, plus integration tests against
+real `fit_gopc` runs.
+
+Consequences: `bootstrap_replicates`, `difference_test`,
+`threshold_by_inclusion_probability`, `BootstrapReplicates`, and
+`DifferenceTestResult` are exported at the top level. This closes out
+the bootnet feature-comparison review that produced D-055 through
+D-057 — `gopcnet` now has an edge-weight convention, generalized
+bootstrap edge-stability, centrality, a CS-coefficient, and bootstrap
+difference testing, covering the reliability/interpretation tooling a
+real network-psychometrics analysis needs beyond a bare fit function.

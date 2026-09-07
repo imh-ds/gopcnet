@@ -81,6 +81,21 @@ validation history in full.
   0.7/0.95 thresholds by default, a monotonic pass-rate rule). See
   README.md's "Correlation-stability (CS) coefficient" section and
   `docs/decision_log.md`'s D-056 for the exact convention.
+- `bootstrap_replicates`/`difference_test` (top-level, alongside their
+  `BootstrapReplicates`/`DifferenceTestResult` return types): test
+  whether one edge or node's statistic really differs from another's,
+  or is within bootstrap noise -- `bootnet`'s `differenceTest()`.
+  `bootstrap_replicates` runs the same nonparametric bootstrap
+  `bootstrap_edge_stability` does but keeps every replicate's raw
+  statistic vector; `difference_test` builds a paired percentile
+  bootstrap CI on the difference between two of its entries (per
+  replicate, not from independently-combined means/stds, so
+  correlated variability between the two is preserved). See
+  `docs/decision_log.md`'s D-057.
+- `threshold_by_inclusion_probability` (top-level): turn an
+  `EdgeStabilityResult.inclusion_probability` matrix directly into a
+  "safe" adjacency matrix (only edges above some inclusion frequency
+  survive) -- matches the idea behind `bootnet`'s `bootInclude()`.
 
 ### Removed
 - `gopcnet.experiments`, `gopcnet.simulation`, and `gopcnet.bootstrap`
