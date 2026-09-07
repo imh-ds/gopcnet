@@ -17,6 +17,10 @@ def test_public_api_matches_all() -> None:
         "PCSkeletonResult",
         "bootstrap_edge_stability",
         "EdgeStabilityResult",
+        "case_drop_bootstrap",
+        "CaseDropResult",
+        "cs_coefficient",
+        "CSCoefficientResult",
         "compute_centrality",
         "CentralityResult",
         "strength",
@@ -29,15 +33,19 @@ def test_public_api_matches_all() -> None:
 
 def test_public_names_are_importable_from_top_level() -> None:
     from gopcnet import (
+        CaseDropResult,
         CentralityResult,
+        CSCoefficientResult,
         EBICglassoResult,
         EdgeStabilityResult,
         GOPCResult,
         PCSkeletonResult,
         betweenness_centrality,
         bootstrap_edge_stability,
+        case_drop_bootstrap,
         closeness_centrality,
         compute_centrality,
+        cs_coefficient,
         expected_influence,
         fit_ebicglasso,
         fit_gopc,
@@ -51,6 +59,8 @@ def test_public_names_are_importable_from_top_level() -> None:
     assert callable(fit_ebicglasso)
     assert callable(fit_pc_skeleton)
     assert callable(bootstrap_edge_stability)
+    assert callable(case_drop_bootstrap)
+    assert callable(cs_coefficient)
     assert callable(compute_centrality)
     assert callable(strength)
     assert callable(expected_influence)
@@ -60,6 +70,8 @@ def test_public_names_are_importable_from_top_level() -> None:
     assert EBICglassoResult is not None
     assert PCSkeletonResult is not None
     assert EdgeStabilityResult is not None
+    assert CaseDropResult is not None
+    assert CSCoefficientResult is not None
     assert CentralityResult is not None
 
 

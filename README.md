@@ -106,6 +106,45 @@ This works with `fit_ebicglasso` and `fit_pc_skeleton` directly too
 hyperparameters, since every one of their parameters already has a
 default).
 
+## Correlation-stability (CS) coefficient
+
+A different reliability question from edge stability above: how much
+of your sample could you lose before a statistic (usually a centrality
+measure) stops resembling the full-sample estimate at all? This is
+`bootnet`'s own signature diagnostic (Epskamp, Borsboom, & Fried, 2018)
+-- the number published network psychometrics papers report to argue
+whether a network's centrality is even worth interpreting
+(`CS(cor = 0.7) = 0.52`, meaning up to 52% of cases could be dropped
+before centrality stops correlating with the full sample at 0.7 or
+better, in 95% of resamples).
+
+```python
+from functools import partial
+import numpy as np
+from gopcnet import fit_gopc, strength, case_drop_bootstrap, cs_coefficient
+
+fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+case_drop = case_drop_bootstrap(
+    data, fit, lambda r: strength(r.weights),
+    bootstraps_per_proportion=1000, rng=np.random.default_rng(0),
+)
+result = cs_coefficient(case_drop)
+result.cs_coefficient                       # e.g. 0.4 -- up to 40% droppable
+result.pass_rate_by_proportion_retained      # per-level detail, not just the summary number
+```
+
+`case_drop_bootstrap` subsamples *without* replacement at shrinking
+sample sizes (unlike `bootstrap_edge_stability`, which resamples *with*
+replacement at the full size) -- pass any statistic function
+(`lambda r: strength(r.weights)`, `lambda r: r.weights[np.triu_indices_from(r.weights, k=1)]`
+for raw edge weights, or your own), and it works with any of the four
+fit functions, not just `fit_gopc`. `cs_coefficient` reduces that
+output to the coefficient, using Spearman correlation and the
+literature's own `0.7`/`0.95` thresholds by default (both overridable)
+-- see `docs/decision_log.md`'s D-056 for the exact convention,
+including the monotonic pass-rate rule and how an undefined (NaN)
+correlation is handled.
+
 ## Centrality
 
 `compute_centrality` takes any weight matrix of the shape `fit_gopc`,
@@ -138,8 +177,9 @@ shape works.
 
 `pip install`ing this package gives you `gopcnet.pipeline` (the two
 `fit_gopc*` functions), `gopcnet.comparators` (`fit_ebicglasso`,
-`fit_pc_skeleton`), `gopcnet.stability` (`bootstrap_edge_stability`),
-`gopcnet.metrics` (`compute_centrality`), and the `gopcnet.screening`,
+`fit_pc_skeleton`), `gopcnet.stability` (`bootstrap_edge_stability`,
+`case_drop_bootstrap`, `cs_coefficient`), `gopcnet.metrics`
+(`compute_centrality`), and the `gopcnet.screening`,
 `gopcnet.dpi`, and `gopcnet.mi` modules they're built from. It does
 **not** include `gopcnet.experiments`,
 `gopcnet.simulation`, or `gopcnet.bootstrap` -- this repository's own

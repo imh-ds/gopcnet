@@ -48,6 +48,23 @@ doesn't affect distance):
     >>> centrality = compute_centrality(result.weights)
     >>> centrality.strength, centrality.betweenness
 
+`case_drop_bootstrap`/`cs_coefficient` answer a different reliability
+question than `bootstrap_edge_stability`: not "how stable is this
+edge," but "how much of my sample could I lose before a statistic
+(usually a centrality measure) stops resembling the full-sample
+estimate at all" -- the correlation-stability (CS) coefficient
+(Epskamp, Borsboom, & Fried, 2018; see `docs/decision_log.md`'s D-056
+for the exact convention):
+
+    >>> from functools import partial
+    >>> from gopcnet import fit_gopc, strength, case_drop_bootstrap, cs_coefficient
+    >>> fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+    >>> case_drop = case_drop_bootstrap(
+    ...     data, fit, lambda r: strength(r.weights), bootstraps_per_proportion=1000,
+    ...     rng=np.random.default_rng(0),
+    ... )
+    >>> cs_coefficient(case_drop).cs_coefficient
+
 This package was previously named `mintnet`; see README.md's "A note
 on the package name" section if you find `mintnet.*` references in
 this repository's own historical charters or decision log.
@@ -76,7 +93,14 @@ from gopcnet.metrics import (
     strength,
 )
 from gopcnet.pipeline import GOPCResult, fit_gopc, fit_gopc_fixed_order
-from gopcnet.stability import EdgeStabilityResult, bootstrap_edge_stability
+from gopcnet.stability import (
+    CaseDropResult,
+    CSCoefficientResult,
+    EdgeStabilityResult,
+    bootstrap_edge_stability,
+    case_drop_bootstrap,
+    cs_coefficient,
+)
 
 __version__ = "0.1.0"
 __all__ = [
@@ -89,6 +113,10 @@ __all__ = [
     "PCSkeletonResult",
     "bootstrap_edge_stability",
     "EdgeStabilityResult",
+    "case_drop_bootstrap",
+    "CaseDropResult",
+    "cs_coefficient",
+    "CSCoefficientResult",
     "compute_centrality",
     "CentralityResult",
     "strength",

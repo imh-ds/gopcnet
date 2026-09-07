@@ -4538,3 +4538,88 @@ This is the foundation the next package-development steps (a
 generalized bootstrap edge-stability API across all four methods, then
 a centrality module) build on — both need edge weights, not just
 presence/absence.
+
+## D-056: Correlation-stability (CS) coefficient convention — Spearman correlation, 0.7/0.95 thresholds, monotonic pass-rate rule
+
+Date: 2026-09-07
+
+Stage: Package development (`gopcnet`'s public API), not a Stage 1-5h
+benchmark charter — this is a definitional/software decision about how
+to compute a standard reliability statistic, following the same
+pattern as D-055.
+
+Status: Definitional decision, no gate.
+
+Question: A user comparing `gopcnet` against R's `bootnet` will expect
+its signature reliability tool — the correlation-stability (CS)
+coefficient (Epskamp, Borsboom, & Fried, 2018) — which is different
+from anything `gopcnet.stability.bootstrap_edge_stability` (D-054's
+successor work) already provides. That function resamples *with*
+replacement at the full sample size to ask how stable one edge is.
+The CS-coefficient instead *subsamples without* replacement at
+shrinking sample sizes to ask how much of the sample could be lost
+before a statistic (typically a centrality measure) stops resembling
+the full-sample estimate — the number every published network
+psychometrics paper using `bootnet` reports (`CS(cor = 0.7) = 0.52`,
+etc.) to argue whether a network's centrality is even worth
+interpreting. What exactly counts as "resembling" and "worth
+interpreting," and what should `gopcnet`'s own implementation choose
+when the literature allows some latitude?
+
+Decision: Add `gopcnet.stability.case_drop_bootstrap` (subsamples
+without replacement at a set of retained-proportions, running any of
+the four fit functions plus a caller-supplied statistic function —
+same generic-callable pattern `bootstrap_edge_stability` already uses)
+and `gopcnet.stability.cs_coefficient` (reduces that output to a
+single coefficient). Conventions adopted, each a genuine choice rather
+than a neutral default:
+
+- **Spearman's rho**, not Pearson, between each replicate's statistic
+  vector and the full-sample statistic vector. Centrality orderings,
+  not linear agreement, are what the coefficient is actually meant to
+  certify — two networks whose strength rankings agree but whose exact
+  magnitudes differ by a scale factor should still count as stable.
+- **Correlation threshold 0.7, pass-rate threshold 0.95** — both
+  configurable, but these two numbers are the literature's own
+  standard convention (Epskamp et al., 2018) and are kept as this
+  implementation's defaults rather than picking different ones.
+- **Monotonic pass-rate rule**: the coefficient is the *largest* drop
+  proportion such that it, and every *smaller* drop proportion, meets
+  the pass-rate threshold — not simply the largest drop proportion
+  that happens to pass in isolation. A single noisy pass at a heavy
+  drop level (while a lighter drop level failed) must not inflate the
+  reported coefficient; stability should not appear to increase as
+  more data is removed.
+- **A `NaN` correlation counts as failing**, not as excluded or as
+  passing. A replicate whose statistic vector has zero variance (e.g.
+  every node pruned to the same degree) has no defined correlation
+  with the full-sample statistic, and "we can't tell if this
+  replicate resembles the original" is not evidence of stability.
+- **Default retained-proportions grid**: `(0.9, 0.8, ..., 0.1)`, our
+  own choice, not a reproduction of `bootnet`'s specific default grid
+  (`caseMin`/`caseMax`/`caseN`) — fully overridable via
+  `proportions_retained`.
+
+Non-claims: this is not a new validated performance quantity for GOPC
+itself — the CS-coefficient is a generic reliability diagnostic
+applicable to any of the four fit functions (via the same
+generic-callable design `bootstrap_edge_stability` established), not
+a claim about GOPC's own accuracy. No archived Stage 1-5h evidence is
+affected; `case_drop_bootstrap`/`cs_coefficient` consume the existing
+public `fit_*` functions exactly as a downstream user would, without
+touching any frozen pipeline internals.
+
+Evidence: `tests/unit/test_case_drop_stability.py` — deterministic
+tests pinning the monotonic pass-rate rule and the NaN-as-failing rule
+via constructed `CaseDropResult` inputs (not relying on real fit
+randomness for the algorithm's own correctness), plus integration
+tests running the real pipeline end-to-end with `fit_gopc` and with
+`fit_ebicglasso` (which has no `.weights`, exercising the
+generic-statistic design with a different quantity, node degree).
+
+Consequences: `case_drop_bootstrap`, `cs_coefficient`,
+`CaseDropResult`, and `CSCoefficientResult` are exported at the top
+level alongside `bootstrap_edge_stability`. `gopcnet.stability`'s
+module docstring documents both bootstrap flavors side by side so a
+reader doesn't confuse "edge-inclusion stability" with "sample-size
+reliability" — two different, both legitimate, senses of "stability."

@@ -69,6 +69,18 @@ validation history in full.
   algorithm, splitting tied shortest paths proportionally rather than
   picking one arbitrarily. Lives in the new
   `gopcnet.metrics.centrality` module.
+- `case_drop_bootstrap`/`cs_coefficient` (top-level, alongside their
+  `CaseDropResult`/`CSCoefficientResult` return types): the
+  correlation-stability (CS) coefficient (Epskamp, Borsboom, & Fried,
+  2018) -- `bootnet`'s own signature reliability diagnostic, and
+  distinct from `bootstrap_edge_stability`'s edge-inclusion stability.
+  `case_drop_bootstrap` subsamples without replacement at shrinking
+  sample sizes, running any of the four fit functions plus a
+  caller-supplied statistic function; `cs_coefficient` reduces that to
+  a single coefficient (Spearman correlation, the literature's own
+  0.7/0.95 thresholds by default, a monotonic pass-rate rule). See
+  README.md's "Correlation-stability (CS) coefficient" section and
+  `docs/decision_log.md`'s D-056 for the exact convention.
 
 ### Removed
 - `gopcnet.experiments`, `gopcnet.simulation`, and `gopcnet.bootstrap`
