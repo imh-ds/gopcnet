@@ -186,3 +186,6 @@ outline/
 # Local Codex worktrees and generated experiment evidence
 .worktrees/
 results/generated/
+
+# Manuscript drafts (not part of the tracked evidence/decision record)
+manuscript/
