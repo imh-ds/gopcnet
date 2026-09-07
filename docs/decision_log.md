@@ -4792,3 +4792,92 @@ D-055 through D-057. `gopcnet.comparators.ebicglasso`'s own
 already-tested internal lambda-selection mechanism, not refactored to
 reuse this new module, since the two serve different purposes (path
 selection vs. post-hoc reporting) despite sharing the same formula.
+
+## D-059: SEM-tradition fit indices (RMSEA, CFI, TLI, SRMR) — formulas, degrees-of-freedom convention, and no pass/fail cutoffs
+
+Date: 2026-09-07
+
+Stage: Package development (`gopcnet`'s public API), not a Stage 1-5h
+benchmark charter — same definitional-decision pattern as D-055
+through D-058.
+
+Status: Definitional decision, no gate.
+
+Question: D-058's `fit_gaussian_graphical_model` gives AIC/BIC/EBIC,
+but the SEM tradition's own fit indices (RMSEA, CFI, TLI, SRMR) — what
+`psychonetrics`/`lavaan` report for a GGM, and what many published
+network-psychometrics papers cite alongside or instead of an
+information criterion — were still missing. All four are reachable
+from three `fit_gaussian_graphical_model` calls (the given adjacency,
+the saturated/complete-graph model, and the null/independence model)
+without any new fitting algorithm, but their exact formulas admit
+several conventions in the literature, and their usual interpretive
+cutoffs were established for confirmatory factor models, not sparse
+structure-learning methods like GOPC or PC.
+
+Decision: Add `gopcnet.metrics.fit_indices`, composing three
+`fit_gaussian_graphical_model` calls. Conventions:
+
+- **Chi-square and df relative to the saturated model**:
+  `chi_square = 2 * (saturated.log_likelihood - target.log_likelihood)`
+  (clipped at 0 for floating-point noise), `df = C(p, 2) - n_edges`
+  (the number of independence constraints `adjacency` imposes relative
+  to the fully-connected model). A saturated `adjacency` itself has
+  `df = 0`; `p_value` is `nan` there (genuinely undefined, not a
+  missing value), and `rmsea` is defined as `0.0` by the same
+  saturated-model convention common SEM software uses.
+- **RMSEA denominator uses `n - 1`**, not `n`, matching Browne &
+  Cudeck's (1993) original formula and the convention `lavaan` and
+  other SEM software follow — chosen for consistency with that
+  established literature convention rather than this package's own
+  `n`-divisor MLE covariance (a deliberate, disclosed departure from
+  internal consistency in favor of matching what a reader familiar
+  with RMSEA already expects).
+- **CFI/TLI use the null (independence) model as baseline**, the
+  standard SEM convention (Bentler, 1990 for CFI; Tucker & Lewis, 1973
+  for TLI), with the usual degenerate-case handling: CFI is `1.0` when
+  both the target and null model already fit perfectly (avoids
+  dividing zero by zero); TLI is `nan` when `df_target = 0` (a
+  saturated model's TLI is genuinely undefined, since it appears as a
+  divisor) or when the null-to-target chi-square ratio is degenerate.
+- **SRMR compares standardized (correlation, not covariance) residuals**,
+  summed over the lower triangle *including* the diagonal (`p*(p+1)/2`
+  terms) and averaged, the same convention `lavaan`'s own default SRMR
+  uses. Diagonal residuals are exactly `0` (correlation self-values are
+  always `1` on both sides), so this dilutes the average slightly
+  relative to an off-diagonal-only version — deliberate, for
+  comparability with the widely-used convention rather than a
+  purpose-built alternative.
+- **No pass/fail flags against the conventional cutoffs**
+  (RMSEA < .05, CFI/TLI > .95, SRMR < .08, roughly, per the SEM
+  literature). Those thresholds were established for confirmatory
+  factor and structural equation models fit via maximum likelihood
+  search over a small number of candidate structures — not for a
+  structure chosen by growing-order or fixed-order conditional
+  independence testing, or PC's own skeleton search. Reporting the raw
+  numbers without implying a validated interpretation is the honest
+  choice; a user citing these values in their own work should cite the
+  formulas, not an unvalidated verdict this package would be
+  fabricating.
+
+Non-claims: like D-058, this is not a new validated claim about GOPC's
+own structure-selection accuracy — a generic diagnostic applicable to
+any adjacency from any of the four fit functions.
+
+Evidence: `tests/unit/test_fit_indices.py` — a saturated-adjacency
+sanity check (`df=0`, `chi_square≈0`, `rmsea=0.0`, `cfi≈1.0`,
+`tli` is `nan`), a null-adjacency sanity check (`target` and `null`
+models coincide, giving `cfi=0.0` by construction — the textbook
+"null model has CFI 0" degenerate case), manual formula
+reconstruction from the three underlying `GGMFitResult`s, and an
+integration test against a real `fit_gopc` structure confirming all
+four indices land in their mathematically valid ranges.
+
+Consequences: `fit_indices` and `FitIndicesResult` are exported at the
+top level alongside `fit_gaussian_graphical_model`. This is very
+likely the last addition to the fit/quality-metrics line of work
+(D-058-D-059) unless a further, specific gap is identified — between
+AIC/BIC/EBIC and these four SEM indices, `gopcnet` now covers the
+standard goodness-of-fit toolkit used across both the
+information-criterion and SEM traditions for Gaussian graphical
+models.

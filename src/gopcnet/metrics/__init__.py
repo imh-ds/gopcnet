@@ -8,7 +8,7 @@ from .centrality import (
     expected_influence,
     strength,
 )
-from .fit import GGMFitResult, fit_gaussian_graphical_model
+from .fit import FitIndicesResult, GGMFitResult, fit_gaussian_graphical_model, fit_indices
 from .topology import score_motif
 
 __all__ = [
@@ -21,4 +21,6 @@ __all__ = [
     "betweenness_centrality",
     "fit_gaussian_graphical_model",
     "GGMFitResult",
+    "fit_indices",
+    "FitIndicesResult",
 ]

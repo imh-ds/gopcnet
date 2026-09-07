@@ -98,6 +98,18 @@ across methods on the same data (see `docs/decision_log.md`'s D-058):
     >>> fit = fit_gaussian_graphical_model(data, result.adjacency)
     >>> fit.aic, fit.bic, fit.ebic
 
+`fit_indices` builds on the same three-model machinery to add the
+SEM-tradition fit indices -- RMSEA, CFI, TLI, and SRMR -- comparing
+`adjacency` against the saturated (every edge) and null (no edges)
+models. These come with conventional interpretive cutoffs in the SEM
+literature that have not been validated for a sparse structure-learning
+method like GOPC or PC, so only the raw values are reported, never a
+pass/fail judgment (see `docs/decision_log.md`'s D-059):
+
+    >>> from gopcnet import fit_indices
+    >>> indices = fit_indices(data, result.adjacency)
+    >>> indices.rmsea, indices.cfi, indices.tli, indices.srmr
+
 This package was previously named `mintnet`; see README.md's "A note
 on the package name" section if you find `mintnet.*` references in
 this repository's own historical charters or decision log.
@@ -119,12 +131,14 @@ own benchmarks, not a tool for analyzing a real fitted network.
 from gopcnet.comparators import EBICglassoResult, PCSkeletonResult, fit_ebicglasso, fit_pc_skeleton
 from gopcnet.metrics import (
     CentralityResult,
+    FitIndicesResult,
     GGMFitResult,
     betweenness_centrality,
     closeness_centrality,
     compute_centrality,
     expected_influence,
     fit_gaussian_graphical_model,
+    fit_indices,
     strength,
 )
 from gopcnet.pipeline import GOPCResult, fit_gopc, fit_gopc_fixed_order
@@ -170,5 +184,7 @@ __all__ = [
     "betweenness_centrality",
     "fit_gaussian_graphical_model",
     "GGMFitResult",
+    "fit_indices",
+    "FitIndicesResult",
     "__version__",
 ]

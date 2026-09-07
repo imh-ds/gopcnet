@@ -253,6 +253,28 @@ different count. `converged`/`n_iterations` report whether the fitting
 algorithm actually converged -- worth checking on a large or poorly
 conditioned network.
 
+`fit_indices` builds on the same three-model machinery (`adjacency`
+itself, the saturated/every-edge model, the null/no-edges model) to
+add the SEM tradition's own fit indices:
+
+```python
+from gopcnet import fit_indices
+
+indices = fit_indices(data, result.adjacency)
+indices.chi_square, indices.df, indices.p_value
+indices.rmsea, indices.cfi, indices.tli, indices.srmr
+```
+
+These come with conventional interpretive cutoffs in the SEM
+literature (RMSEA < .05, CFI/TLI > .95, SRMR < .08, roughly) --
+**not validated for a sparse structure-learning method like GOPC or
+PC**, so `fit_indices` reports only the raw numbers, never a pass/fail
+judgment against them. See `docs/decision_log.md`'s D-059 for the
+exact formulas (RMSEA's `n - 1` denominator, CFI/TLI's null-model
+baseline, SRMR's standardized-residual convention) and the degenerate
+cases (a saturated `adjacency` has `df = 0`, `rmsea = 0.0`, and an
+undefined -- `nan` -- `tli`).
+
 ## What's in the package
 
 `pip install`ing this package gives you `gopcnet.pipeline` (the two
@@ -260,8 +282,8 @@ conditioned network.
 `fit_pc_skeleton`), `gopcnet.stability` (`bootstrap_edge_stability`,
 `case_drop_bootstrap`, `cs_coefficient`, `bootstrap_replicates`,
 `difference_test`, `threshold_by_inclusion_probability`),
-`gopcnet.metrics` (`compute_centrality`, `fit_gaussian_graphical_model`),
-and the `gopcnet.screening`,
+`gopcnet.metrics` (`compute_centrality`, `fit_gaussian_graphical_model`,
+`fit_indices`), and the `gopcnet.screening`,
 `gopcnet.dpi`, and `gopcnet.mi` modules they're built from. It does
 **not** include `gopcnet.experiments`,
 `gopcnet.simulation`, or `gopcnet.bootstrap` -- this repository's own

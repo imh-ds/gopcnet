@@ -23,6 +23,19 @@ GOPC structure against `fit_ebicglasso`'s or `fit_pc_skeleton`'s on
 the same data. See `docs/decision_log.md`'s D-058 for why AIC/BIC and
 EBIC count free parameters differently (not an inconsistency -- it's
 what each statistic's own literature definition specifies).
+
+`fit_indices` adds the SEM-tradition fit indices (RMSEA, CFI, TLI,
+SRMR) on top of the same machinery: it calls `fit_gaussian_graphical_model`
+three times -- once for `adjacency` itself, once for the saturated
+model (every edge present, the best any structure on this many
+variables could possibly fit), and once for the null/independence
+model (no edges at all, `fit_gaussian_graphical_model`'s own
+empty-graph case) -- and combines their log-likelihoods into a
+model chi-square, degrees of freedom, and the four indices. See
+`docs/decision_log.md`'s D-059 for the exact formulas and the
+conventional cutoffs' own validation status (none, for a sparse
+structure-learning method like GOPC or PC -- these cutoffs come from
+the SEM literature, not this package's own benchmarks).
 """
 
 from __future__ import annotations
@@ -30,6 +43,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
+from scipy.stats import chi2 as _chi2_distribution
 
 
 def _fit_constrained_precision(
@@ -219,4 +233,143 @@ def fit_gaussian_graphical_model(
         ebic_gamma=ebic_gamma,
         converged=converged,
         n_iterations=iterations,
+    )
+
+
+def _correlation_matrix(covariance: np.ndarray) -> np.ndarray:
+    scale = np.sqrt(np.diag(covariance))
+    return covariance / np.outer(scale, scale)
+
+
+@dataclass(frozen=True)
+class FitIndicesResult:
+    """SEM-tradition fit indices for one adjacency matrix and dataset,
+    built from three `fit_gaussian_graphical_model` calls (`target`,
+    `saturated` -- every edge present, `null` -- no edges at all).
+
+    `chi_square`/`df`/`p_value` are the model chi-square test against
+    the saturated model (`p_value` is the probability of a chi-square
+    this large under the null hypothesis that `adjacency` is the true
+    structure -- a *small* `p_value` is evidence *against* the fitted
+    structure, the opposite direction from "the model fits"). `df` is
+    the number of non-edges (independence constraints imposed relative
+    to the saturated model); a saturated `adjacency` itself has `df=0`,
+    for which `p_value` is `nan` (undefined, not a missing value).
+
+    `rmsea`, `cfi`, `tli`, `srmr`: see `docs/decision_log.md`'s D-059
+    for the exact formulas. These come with conventional interpretive
+    cutoffs in the SEM literature (RMSEA < .05, CFI/TLI > .95,
+    SRMR < .08, roughly) that **have not been validated for a sparse
+    structure-learning method like GOPC or PC** -- this package
+    reports the raw values only, deliberately not a pass/fail
+    judgment against those cutoffs.
+    """
+
+    chi_square: float
+    df: int
+    p_value: float
+    rmsea: float
+    cfi: float
+    tli: float
+    srmr: float
+    target: GGMFitResult
+    saturated: GGMFitResult
+    null: GGMFitResult
+
+
+def fit_indices(
+    data: np.ndarray,
+    adjacency: np.ndarray,
+    *,
+    ebic_gamma: float = 0.5,
+    max_iter: int = 100,
+    tol: float = 1e-6,
+) -> FitIndicesResult:
+    """Compute RMSEA, CFI, TLI, and SRMR for `adjacency` against `data`.
+
+    Parameters match `fit_gaussian_graphical_model`'s own (they're
+    forwarded to all three internal fits). See that function's own
+    docstring for `data`/`adjacency`'s requirements, and
+    `docs/decision_log.md`'s D-059 for the formulas and this function's
+    explicit choice not to report pass/fail judgments against SEM's
+    conventional cutoffs.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from gopcnet import fit_gopc, fit_indices
+    >>> rng = np.random.default_rng(0)
+    >>> x1 = rng.normal(size=500)
+    >>> x2 = 0.6 * x1 + np.sqrt(1 - 0.6**2) * rng.normal(size=500)
+    >>> x3 = 0.6 * x2 + np.sqrt(1 - 0.6**2) * rng.normal(size=500)
+    >>> data = np.column_stack([x1, x2, x3])
+    >>> result = fit_gopc(data, screening_alpha=0.05, dpi_alpha=0.05)
+    >>> indices = fit_indices(data, result.adjacency)
+    >>> indices.rmsea, indices.cfi, indices.tli, indices.srmr  # doctest: +SKIP
+    """
+    values = np.asarray(data, dtype=float)
+    if values.ndim != 2:
+        raise ValueError("data must be a two-dimensional array")
+    n, p = values.shape
+
+    total_pairs = p * (p - 1) // 2
+
+    saturated_adjacency = np.ones((p, p), dtype=bool)
+    np.fill_diagonal(saturated_adjacency, False)
+    null_adjacency = np.zeros((p, p), dtype=bool)
+
+    target = fit_gaussian_graphical_model(values, adjacency, ebic_gamma=ebic_gamma, max_iter=max_iter, tol=tol)
+    saturated = fit_gaussian_graphical_model(
+        values, saturated_adjacency, ebic_gamma=ebic_gamma, max_iter=max_iter, tol=tol
+    )
+    null = fit_gaussian_graphical_model(
+        values, null_adjacency, ebic_gamma=ebic_gamma, max_iter=max_iter, tol=tol
+    )
+
+    df_target = total_pairs - target.n_edges
+    df_null = total_pairs
+
+    chi_square_target = max(0.0, 2.0 * (saturated.log_likelihood - target.log_likelihood))
+    chi_square_null = max(0.0, 2.0 * (saturated.log_likelihood - null.log_likelihood))
+
+    p_value = float(_chi2_distribution.sf(chi_square_target, df_target)) if df_target > 0 else float("nan")
+
+    if df_target > 0:
+        rmsea = float(np.sqrt(max(chi_square_target - df_target, 0.0) / (df_target * (n - 1))))
+    else:
+        rmsea = 0.0
+
+    d_target = max(chi_square_target - df_target, 0.0)
+    d_null = max(chi_square_null - df_null, 0.0)
+    denominator = max(d_target, d_null)
+    cfi = 1.0 - d_target / denominator if denominator > 0 else 1.0
+
+    if df_target > 0 and df_null > 0:
+        null_ratio = chi_square_null / df_null
+        tli_denominator = null_ratio - 1.0
+        if tli_denominator != 0:
+            tli = float((null_ratio - chi_square_target / df_target) / tli_denominator)
+        else:
+            tli = float("nan")
+    else:
+        tli = float("nan")
+
+    sample_covariance = np.cov(values, rowvar=False, ddof=0)
+    sample_correlation = _correlation_matrix(sample_covariance)
+    fitted_correlation = _correlation_matrix(target.covariance)
+    lower_indices = np.tril_indices(p)
+    residuals = sample_correlation[lower_indices] - fitted_correlation[lower_indices]
+    srmr = float(np.sqrt(np.mean(residuals**2)))
+
+    return FitIndicesResult(
+        chi_square=chi_square_target,
+        df=df_target,
+        p_value=p_value,
+        rmsea=rmsea,
+        cfi=cfi,
+        tli=tli,
+        srmr=srmr,
+        target=target,
+        saturated=saturated,
+        null=null,
     )

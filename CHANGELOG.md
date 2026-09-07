@@ -111,6 +111,20 @@ validation history in full.
   `docs/decision_log.md`'s D-058 for why AIC/BIC and EBIC count free
   parameters differently. Lives in the new `gopcnet.metrics.fit`
   module.
+- `fit_indices` (top-level, alongside its `FitIndicesResult` return
+  type): the SEM tradition's own fit indices -- chi-square/df/p-value,
+  RMSEA, CFI, TLI, and SRMR -- for any adjacency matrix, built from
+  three `fit_gaussian_graphical_model` calls (the given adjacency, the
+  saturated model, the null model) with no new fitting algorithm.
+  Reports raw values only, deliberately never a pass/fail judgment
+  against the SEM literature's conventional cutoffs (RMSEA < .05,
+  CFI/TLI > .95, SRMR < .08), since those were never validated for a
+  sparse structure-learning method like GOPC or PC. See README.md's
+  "Goodness-of-fit (AIC/BIC/EBIC)" section and `docs/decision_log.md`'s
+  D-059 for the exact formulas and degenerate-case handling (a
+  saturated adjacency has `df = 0`, `rmsea = 0.0`, and an undefined
+  `tli`). Lives in `gopcnet.metrics.fit` alongside
+  `fit_gaussian_graphical_model`.
 
 ### Removed
 - `gopcnet.experiments`, `gopcnet.simulation`, and `gopcnet.bootstrap`
