@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage4q_b import Stage4qBConfig
+from gopcnet.experiments.stage4q_b import Stage4qBConfig
 
 
 def _config() -> Stage4qBConfig:
@@ -33,7 +33,7 @@ def _row(n, alpha, replicate, *, composite_tpr=1.0, candidate=True, correct=True
 
 
 def test_evaluate_n_reveals_gap_between_composite_and_decomposed():
-    from mintnet.experiments.stage4q_b_reporting import evaluate_n
+    from gopcnet.experiments.stage4q_b_reporting import evaluate_n
 
     # composite TPR reads 1.0 (non-detection conflated with correctness),
     # but only half the pairs are genuine candidates.
@@ -50,7 +50,7 @@ def test_evaluate_n_reveals_gap_between_composite_and_decomposed():
 
 
 def test_evaluate_n_reports_no_candidates_status():
-    from mintnet.experiments.stage4q_b_reporting import evaluate_n
+    from gopcnet.experiments.stage4q_b_reporting import evaluate_n
 
     rows = [_row(400, 0.10, r + 2, candidate=False) for r in range(2)]
     raw = pd.DataFrame(rows)
@@ -62,7 +62,7 @@ def test_evaluate_n_reports_no_candidates_status():
 
 
 def test_report_writes_required_evidence(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4q_b_reporting import write_stage4q_b_report
+    from gopcnet.experiments.stage4q_b_reporting import write_stage4q_b_report
 
     config = _config()
     rows = [_row(400, 0.10, r, composite_tpr=1.0, candidate=True, correct=True) for r in range(4)]

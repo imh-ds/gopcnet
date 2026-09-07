@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage1h import load_stage1h_config, run_stage1h
+from gopcnet.experiments.stage1h import load_stage1h_config, run_stage1h
 
 
 def test_stage1h_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -30,7 +30,7 @@ def test_stage1h_smoke_runner_is_deterministic(tmp_path: Path) -> None:
 
 def test_stage1h_reuses_stage1e_data_for_shared_sample_sizes(tmp_path: Path) -> None:
     """Extending the N grid must not perturb seeds already used by R2e/R2f/R2g."""
-    from mintnet.experiments.stage1e import load_stage1e_config, run_stage1e
+    from gopcnet.experiments.stage1e import load_stage1e_config, run_stage1e
 
     stage1e_config = load_stage1e_config(Path("configs/stage1e_dpi_smoke.yaml"))
     stage1h_config = load_stage1h_config(Path("configs/stage1h_dpi_smoke.yaml"))

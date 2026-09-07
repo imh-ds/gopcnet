@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from mintnet.simulation import sample_overlapping_triangles
+from gopcnet.simulation import sample_overlapping_triangles
 
 WITHIN_PAIRS = ((0, 1), (0, 2), (1, 2), (2, 3), (2, 4), (3, 4))
 CROSS_PAIRS = ((0, 3), (0, 4), (1, 3), (1, 4))

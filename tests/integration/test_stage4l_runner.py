@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage4l import P, load_stage4l_config, run_stage4l
+from gopcnet.experiments.stage4l import P, load_stage4l_config, run_stage4l
 
 
 def test_stage4l_smoke_runner_is_deterministic(tmp_path: Path) -> None:

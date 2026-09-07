@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage4j import load_stage4j_config, run_stage4j
-from mintnet.experiments.stage4j_fit import COARSE_SAMPLE_SIZES, DENSE_SAMPLE_SIZES
+from gopcnet.experiments.stage4j import load_stage4j_config, run_stage4j
+from gopcnet.experiments.stage4j_fit import COARSE_SAMPLE_SIZES, DENSE_SAMPLE_SIZES
 
 
 def _bookend_stage4e_csv(tmp_path: Path) -> Path:
@@ -15,7 +15,7 @@ def _bookend_stage4e_csv(tmp_path: Path) -> Path:
     coarse/boundary N (including 750), per test_stage4i_runner.py's own
     precedent -- never depend on the real, git-ignored results/generated/
     files existing on disk."""
-    from mintnet.experiments.stage4g_fit import FITTING_ALPHAS
+    from gopcnet.experiments.stage4g_fit import FITTING_ALPHAS
 
     ordered_alphas = sorted(FITTING_ALPHAS, reverse=True)
     offset_by_n = {300: 0, 500: 1, 600: 1, 650: 2, 700: 2, 750: 3}
@@ -59,7 +59,7 @@ def test_stage4j_smoke_runner_is_deterministic(tmp_path: Path) -> None:
 
 
 def test_dense_fitting_simulation_covers_exactly_the_dense_n(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4j import run_dense_fitting_simulation
+    from gopcnet.experiments.stage4j import run_dense_fitting_simulation
 
     config = load_stage4j_config(Path("configs/stage4j_dense_refit_smoke.yaml"))
 

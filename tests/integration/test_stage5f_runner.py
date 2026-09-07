@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage5f import BUCKETS, DGPS, load_stage5f_config, run_stage5f
+from gopcnet.experiments.stage5f import BUCKETS, DGPS, load_stage5f_config, run_stage5f
 
 
 def test_stage5f_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -33,7 +33,7 @@ def test_stage5f_bucket_counts_sum_to_final_edge_count(tmp_path: Path) -> None:
 
 
 def test_stage5f_reuses_stage5a_seed_derivation() -> None:
-    from mintnet.experiments.stage5a import _condition_seed as stage5a_seed
-    from mintnet.experiments.stage5f import _condition_seed as stage5f_seed
+    from gopcnet.experiments.stage5a import _condition_seed as stage5a_seed
+    from gopcnet.experiments.stage5f import _condition_seed as stage5f_seed
 
     assert stage5f_seed is stage5a_seed

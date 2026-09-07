@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage2b import load_stage2b_config
-from mintnet.experiments.stage2f import run_stage2f
+from gopcnet.experiments.stage2b import load_stage2b_config
+from gopcnet.experiments.stage2f import run_stage2f
 
 
 def test_stage2f_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -26,7 +26,7 @@ def test_stage2f_smoke_runner_is_deterministic(tmp_path: Path) -> None:
 
 def test_stage2f_provenance_uses_its_own_charter_not_stage2bs(tmp_path: Path, monkeypatch) -> None:
     """The whole reason this module exists separately from
-    mintnet.experiments.stage2b: evidence must hash docs/stage2f_charter.md,
+    gopcnet.experiments.stage2b: evidence must hash docs/stage2f_charter.md,
     not docs/stage2b_charter.md."""
     repository_root = Path(__file__).resolve().parents[2]
     config = load_stage2b_config((repository_root / "configs/stage2f_composition_p30_smoke.yaml").resolve())
@@ -57,8 +57,8 @@ def test_stage2f_ground_truth_matches_p30(tmp_path: Path) -> None:
     assumed."""
     from itertools import combinations
 
-    from mintnet.experiments.stage2b import TRUE_DIRECT_EDGES
-    from mintnet.simulation import TRUE_PAIR_INDICES
+    from gopcnet.experiments.stage2b import TRUE_DIRECT_EDGES
+    from gopcnet.simulation import TRUE_PAIR_INDICES
 
     config = load_stage2b_config(Path("configs/stage2f_composition_p30_smoke.yaml"))
     p = 9 + config.noise_count

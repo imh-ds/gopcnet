@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage4e import load_stage4e_config, run_stage4e
+from gopcnet.experiments.stage4e import load_stage4e_config, run_stage4e
 
 
 def test_stage4e_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -28,8 +28,8 @@ def test_stage4e_shares_seed_derivation_with_stage4b_overlap(tmp_path: Path) -> 
     """Stage 4e must simulate the identical draws Stage 4d already analyzed
     -- reusing Stage 4b/4d's exact seed derivation for overlap's shape
     index, not an independent seeding scheme."""
-    from mintnet.experiments.stage4b import Stage4bConfig
-    from mintnet.experiments.stage4b import run_stage4b
+    from gopcnet.experiments.stage4b import Stage4bConfig
+    from gopcnet.experiments.stage4b import run_stage4b
 
     stage4b_config = Stage4bConfig(
         sample_sizes=(300,),

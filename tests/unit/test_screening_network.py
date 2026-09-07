@@ -2,7 +2,7 @@ from itertools import combinations
 
 import numpy as np
 
-from mintnet.simulation import TRUE_PAIR_INDICES, sample_screening_network
+from gopcnet.simulation import TRUE_PAIR_INDICES, sample_screening_network
 
 
 def test_sample_screening_network_has_expected_shape():

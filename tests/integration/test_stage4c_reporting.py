@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage4c import Stage4cConfig
+from gopcnet.experiments.stage4c import Stage4cConfig
 
 
 def _config() -> Stage4cConfig:
@@ -22,7 +22,7 @@ def _row(n, alpha, noise_count, replicate, *, seq_retained, cons_retained, noise
 
 
 def test_summarize_cell_computes_wrong_prune_rates():
-    from mintnet.experiments.stage4c_reporting import summarize_cell
+    from gopcnet.experiments.stage4c_reporting import summarize_cell
 
     rows = []
     for r in range(10):
@@ -36,7 +36,7 @@ def test_summarize_cell_computes_wrong_prune_rates():
 
 
 def test_q3_implication_rate_only_counts_wrongly_pruned_replicates():
-    from mintnet.experiments.stage4c_reporting import q3_noise_implication_rate
+    from gopcnet.experiments.stage4c_reporting import q3_noise_implication_rate
 
     rows = []
     # 2 wrongly-pruned replicates: one noise-implicated, one not. 8 correct.
@@ -52,7 +52,7 @@ def test_q3_implication_rate_only_counts_wrongly_pruned_replicates():
 
 
 def test_q3_returns_none_for_noise_free_condition():
-    from mintnet.experiments.stage4c_reporting import q3_noise_implication_rate
+    from gopcnet.experiments.stage4c_reporting import q3_noise_implication_rate
 
     rows = [_row(100, 0.10, 0, r, seq_retained=False, cons_retained=True) for r in range(4)]
     raw = pd.DataFrame(rows)
@@ -61,7 +61,7 @@ def test_q3_returns_none_for_noise_free_condition():
 
 
 def test_report_writes_required_evidence(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4c_reporting import write_stage4c_report
+    from gopcnet.experiments.stage4c_reporting import write_stage4c_report
 
     rows = []
     for noise_count in (0, 5):

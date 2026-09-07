@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from mintnet.metrics.topology import score_motif
+from gopcnet.metrics.topology import score_motif
 
 
 def test_triangle_score_counts_any_pruned_true_edge():

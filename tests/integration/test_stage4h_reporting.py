@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage4h import Stage4hConfig
+from gopcnet.experiments.stage4h import Stage4hConfig
 
 
 def _config(source_path: Path | None = None) -> Stage4hConfig:
@@ -40,7 +40,7 @@ def _row(n, alpha, replicate, *, chain_tpr=1.0, fork_tpr=1.0, overlap_tpr=1.0, t
 
 
 def test_evaluate_n_proceeds_with_clean_evidence():
-    from mintnet.experiments.stage4h_reporting import evaluate_n
+    from gopcnet.experiments.stage4h_reporting import evaluate_n
 
     rows = [_row(750, 0.05, r) for r in range(4)]
     raw = pd.DataFrame(rows)
@@ -54,7 +54,7 @@ def test_evaluate_n_proceeds_with_clean_evidence():
 
 
 def test_contamination_rate_flags_non_shared_neighbor():
-    from mintnet.experiments.stage4h_reporting import evaluate_n
+    from gopcnet.experiments.stage4h_reporting import evaluate_n
 
     rows = []
     for r in range(4):
@@ -74,7 +74,7 @@ def test_contamination_rate_flags_non_shared_neighbor():
 
 
 def test_evaluate_n_reassesses_on_low_overlap_tpr():
-    from mintnet.experiments.stage4h_reporting import evaluate_n
+    from gopcnet.experiments.stage4h_reporting import evaluate_n
 
     rows = [_row(750, 0.05, r, overlap_tpr=0.5) for r in range(4)]
     raw = pd.DataFrame(rows)
@@ -86,7 +86,7 @@ def test_evaluate_n_reassesses_on_low_overlap_tpr():
 
 
 def test_report_writes_required_evidence_and_skips_missing_baseline(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4h_reporting import write_stage4h_report
+    from gopcnet.experiments.stage4h_reporting import write_stage4h_report
 
     config = _config(source_path=(tmp_path / "configs" / "stage4h_composed_noise.yaml"))
     (tmp_path / "configs").mkdir()

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage4m import MOTIFS, Stage4mConfig, _DIRECT_EDGES, _pair_label
+from gopcnet.experiments.stage4m import MOTIFS, Stage4mConfig, _DIRECT_EDGES, _pair_label
 
 
 def _config() -> Stage4mConfig:
@@ -30,7 +30,7 @@ def _row(motif, n, alpha, noise_count, replicate, *, retained_by_edge, noise_use
 
 
 def test_summarize_cell_pools_across_both_direct_edges():
-    from mintnet.experiments.stage4m_reporting import summarize_cell
+    from gopcnet.experiments.stage4m_reporting import summarize_cell
 
     motif = "chain"
     edges = _DIRECT_EDGES[motif]
@@ -47,7 +47,7 @@ def test_summarize_cell_pools_across_both_direct_edges():
 
 
 def test_q3_implication_rate_pools_across_both_edges():
-    from mintnet.experiments.stage4m_reporting import q3_noise_implication_rate
+    from gopcnet.experiments.stage4m_reporting import q3_noise_implication_rate
 
     motif = "fork"
     edges = _DIRECT_EDGES[motif]
@@ -66,7 +66,7 @@ def test_q3_implication_rate_pools_across_both_edges():
 
 
 def test_q3_returns_none_for_noise_free_condition():
-    from mintnet.experiments.stage4m_reporting import q3_noise_implication_rate
+    from gopcnet.experiments.stage4m_reporting import q3_noise_implication_rate
 
     motif = "hub"
     edges = _DIRECT_EDGES[motif]
@@ -77,7 +77,7 @@ def test_q3_returns_none_for_noise_free_condition():
 
 
 def test_report_writes_required_evidence_for_all_motifs(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4m_reporting import write_stage4m_report
+    from gopcnet.experiments.stage4m_reporting import write_stage4m_report
 
     config = _config()
     rows = []

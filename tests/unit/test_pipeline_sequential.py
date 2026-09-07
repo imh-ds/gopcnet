@@ -1,11 +1,11 @@
 import numpy as np
 
-from mintnet.pipeline import sequential_screen_and_prune
-from mintnet.simulation import sample_chain, sample_measured_fork, sample_precision_triangle
+from gopcnet.pipeline import sequential_screen_and_prune
+from gopcnet.simulation import sample_chain, sample_measured_fork, sample_precision_triangle
 
 
 def test_sequential_prunes_the_indirect_chain_edge_at_a_large_n():
-    # N and alpha matched to mintnet.pipeline.compose_screen_then_prune's own
+    # N and alpha matched to gopcnet.pipeline.compose_screen_then_prune's own
     # equivalent test (test_pipeline_compose.py) -- alpha must shrink as N
     # grows (D-009's per-N table) or even a near-zero residual partial
     # correlation becomes "significant" purely from statistical power, which

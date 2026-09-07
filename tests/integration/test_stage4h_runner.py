@@ -6,14 +6,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage4h import load_stage4h_config, run_stage4h
+from gopcnet.experiments.stage4h import load_stage4h_config, run_stage4h
 
 
 def _bookend_stage4e_csv(tmp_path: Path) -> Path:
     """Hand-crafted synthetic Stage 4e-shaped evidence, per
     test_stage1i_runner.py's own precedent -- never depend on the real,
     git-ignored results/generated/ files existing on disk."""
-    from mintnet.experiments.stage4g_fit import FITTING_ALPHAS, FITTING_SAMPLE_SIZES
+    from gopcnet.experiments.stage4g_fit import FITTING_ALPHAS, FITTING_SAMPLE_SIZES
 
     ordered_alphas = sorted(FITTING_ALPHAS, reverse=True)
     offset_by_n = {300: 0, 500: 1, 600: 1, 650: 2, 700: 2, 750: 3}

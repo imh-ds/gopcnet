@@ -3,9 +3,9 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from mintnet.experiments.stage1j import Stage1jConfig
-from mintnet.experiments.stage1j_fit import FittedForm
-from mintnet.experiments.stage1j_reporting import evaluate_stage1j_gate, write_stage1j_report
+from gopcnet.experiments.stage1j import Stage1jConfig
+from gopcnet.experiments.stage1j_fit import FittedForm
+from gopcnet.experiments.stage1j_reporting import evaluate_stage1j_gate, write_stage1j_report
 
 
 def _config() -> Stage1jConfig:

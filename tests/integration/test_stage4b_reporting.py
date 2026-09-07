@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage4b import Stage4bConfig
+from gopcnet.experiments.stage4b import Stage4bConfig
 
 
 def _config(source_path: Path | None = None) -> Stage4bConfig:
@@ -38,7 +38,7 @@ def _row(shape, n, alpha, replicate, *, tpr, fpr):
 
 
 def test_select_alpha_picks_largest_eligible_not_smallest():
-    from mintnet.experiments.stage4b_reporting import select_alpha
+    from gopcnet.experiments.stage4b_reporting import select_alpha
 
     rows = []
     for replicate in range(2):  # development replicates 0-1
@@ -53,7 +53,7 @@ def test_select_alpha_picks_largest_eligible_not_smallest():
 
 
 def test_evaluate_cell_proceeds_when_validation_clears_margin():
-    from mintnet.experiments.stage4b_reporting import evaluate_cell
+    from gopcnet.experiments.stage4b_reporting import evaluate_cell
 
     rows = []
     for replicate in range(4):
@@ -68,7 +68,7 @@ def test_evaluate_cell_proceeds_when_validation_clears_margin():
 
 
 def test_evaluate_cell_reassesses_when_no_alpha_is_eligible():
-    from mintnet.experiments.stage4b_reporting import evaluate_cell
+    from gopcnet.experiments.stage4b_reporting import evaluate_cell
 
     rows = [_row("hub", 750, 0.05, r, tpr=0.5, fpr=0.4) for r in range(4)]
     raw = pd.DataFrame(rows)
@@ -81,7 +81,7 @@ def test_evaluate_cell_reassesses_when_no_alpha_is_eligible():
 
 
 def test_report_writes_required_evidence_and_skips_missing_baselines(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4b_reporting import write_stage4b_report
+    from gopcnet.experiments.stage4b_reporting import write_stage4b_report
 
     (tmp_path / "configs").mkdir()
     config_path = tmp_path / "configs" / "stage4b_hub_overlap.yaml"

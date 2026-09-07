@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage1l import TRUE_EDGES
-from mintnet.experiments.stage4n import Stage4nConfig, _pair_label
+from gopcnet.experiments.stage1l import TRUE_EDGES
+from gopcnet.experiments.stage4n import Stage4nConfig, _pair_label
 
 
 def _config() -> Stage4nConfig:
@@ -34,7 +34,7 @@ def _all_retained(value: bool) -> dict:
 
 
 def test_summarize_cell_pools_across_all_six_edges():
-    from mintnet.experiments.stage4n_reporting import summarize_cell
+    from gopcnet.experiments.stage4n_reporting import summarize_cell
 
     rows = []
     for r in range(10):
@@ -51,7 +51,7 @@ def test_summarize_cell_pools_across_all_six_edges():
 
 
 def test_q3_implication_rate_only_counts_wrongly_pruned_instances():
-    from mintnet.experiments.stage4n_reporting import q3_noise_implication_rate
+    from gopcnet.experiments.stage4n_reporting import q3_noise_implication_rate
 
     edge0, edge1 = TRUE_EDGES[0], TRUE_EDGES[1]
     rows = []
@@ -73,7 +73,7 @@ def test_q3_implication_rate_only_counts_wrongly_pruned_instances():
 
 
 def test_q4_returns_rate_even_without_noise():
-    from mintnet.experiments.stage4n_reporting import q4_opposite_branch_implication_rate
+    from gopcnet.experiments.stage4n_reporting import q4_opposite_branch_implication_rate
 
     edge0 = TRUE_EDGES[0]
     retained = _all_retained(True)
@@ -89,7 +89,7 @@ def test_q4_returns_rate_even_without_noise():
 
 
 def test_report_writes_required_evidence_and_skips_comparison_without_paths(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4n_reporting import write_stage4n_report
+    from gopcnet.experiments.stage4n_reporting import write_stage4n_report
 
     config = _config()
     rows = []
@@ -109,7 +109,7 @@ def test_report_writes_required_evidence_and_skips_comparison_without_paths(tmp_
 
 
 def test_report_includes_three_way_comparison_when_paths_given(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4n_reporting import write_stage4n_report
+    from gopcnet.experiments.stage4n_reporting import write_stage4n_report
 
     config = _config()
     rows = []

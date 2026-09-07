@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage4q_a import Stage4qAConfig
+from gopcnet.experiments.stage4q_a import Stage4qAConfig
 
 
 def _config() -> Stage4qAConfig:
@@ -31,7 +31,7 @@ def _row(n, alpha, replicate, *, overlap_tpr=1.0, chain_tpr=1.0, fork_tpr=1.0, t
 
 
 def test_evaluate_n_flags_comfortable_margin():
-    from mintnet.experiments.stage4q_a_reporting import evaluate_n
+    from gopcnet.experiments.stage4q_a_reporting import evaluate_n
 
     rows = [_row(1750, 0.10, r, overlap_tpr=0.90) for r in range(4)]
     raw = pd.DataFrame(rows)
@@ -44,7 +44,7 @@ def test_evaluate_n_flags_comfortable_margin():
 
 
 def test_evaluate_n_flags_thin_margin_as_not_comfortable():
-    from mintnet.experiments.stage4q_a_reporting import evaluate_n
+    from gopcnet.experiments.stage4q_a_reporting import evaluate_n
 
     rows = [_row(1750, 0.10, r, overlap_tpr=0.81) for r in range(4)]
     raw = pd.DataFrame(rows)
@@ -56,7 +56,7 @@ def test_evaluate_n_flags_thin_margin_as_not_comfortable():
 
 
 def test_report_writes_required_evidence_and_states_verdict(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4q_a_reporting import write_stage4q_a_report
+    from gopcnet.experiments.stage4q_a_reporting import write_stage4q_a_report
 
     config = _config()
     rows = []

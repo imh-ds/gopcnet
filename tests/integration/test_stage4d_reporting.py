@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage4b import Stage4bConfig
+from gopcnet.experiments.stage4b import Stage4bConfig
 
 
 def _config() -> Stage4bConfig:
@@ -35,7 +35,7 @@ def _row(shape, n, alpha, replicate, *, tpr, fpr):
 
 
 def test_early_stop_met_when_transition_matches_base_mechanism():
-    from mintnet.experiments.stage4d_reporting import write_stage4d_report
+    from gopcnet.experiments.stage4d_reporting import write_stage4d_report
 
     rows = []
     for n, tpr in ((300, 0.3), (600, 0.5), (650, 0.95), (700, 0.95), (750, 0.95)):
@@ -55,7 +55,7 @@ def test_early_stop_met_when_transition_matches_base_mechanism():
 
 
 def test_report_writes_required_evidence(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4d_reporting import write_stage4d_report
+    from gopcnet.experiments.stage4d_reporting import write_stage4d_report
 
     rows = []
     for n in (300, 600, 650, 700, 750):

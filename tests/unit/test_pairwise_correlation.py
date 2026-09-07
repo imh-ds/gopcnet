@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from scipy.stats import norm
 
-from mintnet.screening import (
+from gopcnet.screening import (
     ScreeningEvidence,
     benjamini_hochberg_threshold,
     compute_pairwise_screening_evidence,

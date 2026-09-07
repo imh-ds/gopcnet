@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage4q_a import load_stage4q_a_config, run_stage4q_a
+from gopcnet.experiments.stage4q_a import load_stage4q_a_config, run_stage4q_a
 
 
 def test_stage4q_a_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -48,7 +48,7 @@ def test_stage4q_a_seeds_are_new_never_used_in_stage4p(tmp_path: Path) -> None:
     """Part A tests N values (1750, 2000) never simulated before at this
     p; its own stream tag must not collide with Stage 4p's own dgp_index
     tags (0=overlap, 1=hub)."""
-    from mintnet.experiments.stage4q_a import _STREAM
+    from gopcnet.experiments.stage4q_a import _STREAM
 
     assert _STREAM not in (0, 1)
 

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage0 import load_stage0_config, run_stage0
+from gopcnet.experiments.stage0 import load_stage0_config, run_stage0
 
 
 def test_stage0_runner_is_reproducible_and_captures_evidence(tmp_path: Path) -> None:

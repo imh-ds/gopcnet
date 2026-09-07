@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage2b import Stage2bConfig
-from mintnet.experiments.stage2b_reporting import evaluate_stage2b_gate, write_stage2b_report
+from gopcnet.experiments.stage2b import Stage2bConfig
+from gopcnet.experiments.stage2b_reporting import evaluate_stage2b_gate, write_stage2b_report
 
 
 def _config() -> Stage2bConfig:

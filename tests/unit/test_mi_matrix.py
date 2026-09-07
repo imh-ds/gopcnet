@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from mintnet.mi.matrix import estimate_pairwise_mi
+from gopcnet.mi.matrix import estimate_pairwise_mi
 
 
 def test_pairwise_mi_is_symmetric_with_zero_diagonal():

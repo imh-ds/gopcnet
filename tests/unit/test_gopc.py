@@ -1,8 +1,8 @@
 import numpy as np
 
-from mintnet.pipeline import fit_gopc
-from mintnet.pipeline.growing_subset_dpi import growing_subset_dpi
-from mintnet.screening import compute_pairwise_screening_evidence, screen_uncorrected
+from gopcnet.pipeline import fit_gopc
+from gopcnet.pipeline.growing_subset_dpi import growing_subset_dpi
+from gopcnet.screening import compute_pairwise_screening_evidence, screen_uncorrected
 
 
 def test_fit_gopc_matches_manual_screen_then_growing_subset() -> None:

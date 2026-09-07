@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage5d import DGPS, METHODS, load_stage5d_config, run_stage5d
+from gopcnet.experiments.stage5d import DGPS, METHODS, load_stage5d_config, run_stage5d
 
 
 def test_stage5d_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -47,8 +47,8 @@ def test_stage5d_screening_alpha_matches_native_p_exactly(tmp_path: Path) -> Non
 
 
 def test_stage5d_seeds_are_disjoint_from_stage5c(tmp_path: Path) -> None:
-    from mintnet.experiments.stage5c import _condition_seed as stage5c_seed
-    from mintnet.experiments.stage5d import _condition_seed as stage5d_seed
+    from gopcnet.experiments.stage5c import _condition_seed as stage5c_seed
+    from gopcnet.experiments.stage5d import _condition_seed as stage5d_seed
 
     for dgp_index in range(2):
         for sample_index in range(2):
@@ -96,7 +96,7 @@ def test_stage5d_aggregate_shards_reproduces_unsharded_report(tmp_path: Path) ->
             )
 
     aggregated_dir = tmp_path / "aggregated"
-    aggregated = aggregate("mintnet.experiments.stage5d", config_path, shards_dir, aggregated_dir)
+    aggregated = aggregate("gopcnet.experiments.stage5d", config_path, shards_dir, aggregated_dir)
 
     key = ["dgp", "n", "strength", "method", "replicate"]
     unsharded_sorted = unsharded.sort_values(key).reset_index(drop=True)

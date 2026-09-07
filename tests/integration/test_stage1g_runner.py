@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage1g import load_stage1g_config, run_stage1g
+from gopcnet.experiments.stage1g import load_stage1g_config, run_stage1g
 
 
 def test_stage1g_reuses_source_raw_evidence_without_resimulating(tmp_path: Path) -> None:

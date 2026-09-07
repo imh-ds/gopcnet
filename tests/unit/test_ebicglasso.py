@@ -1,6 +1,6 @@
 import numpy as np
 
-from mintnet.comparators.ebicglasso import fit_ebicglasso
+from gopcnet.comparators.ebicglasso import fit_ebicglasso
 
 
 def test_fit_ebicglasso_recovers_sparse_structure_at_large_n() -> None:

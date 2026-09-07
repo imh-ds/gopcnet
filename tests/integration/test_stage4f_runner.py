@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage4f import load_stage4f_config, run_stage4f
+from gopcnet.experiments.stage4f import load_stage4f_config, run_stage4f
 
 
 def test_stage4f_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -26,7 +26,7 @@ def test_stage4f_smoke_runner_is_deterministic(tmp_path: Path) -> None:
 
 def test_stage4f_shares_seed_derivation_with_stage4e(tmp_path: Path) -> None:
     """Stage 4f must examine the identical draws Stage 4e already analyzed."""
-    from mintnet.experiments.stage4e import Stage4eConfig, run_stage4e
+    from gopcnet.experiments.stage4e import Stage4eConfig, run_stage4e
 
     stage4e_config = Stage4eConfig(
         sample_sizes=(300,),

@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pytest
 
-from mintnet.simulation.gaussian import gaussian_mi, sample_bivariate_gaussian
+from gopcnet.simulation.gaussian import gaussian_mi, sample_bivariate_gaussian
 
 
 def test_gaussian_mi_matches_known_analytic_values() -> None:

@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage5a import DGPS, _DGP_REGISTRY, _condition_seed as stage5a_seed
-from mintnet.experiments.stage5g import METHODS, load_stage5g_config, run_stage5g
+from gopcnet.experiments.stage5a import DGPS, _DGP_REGISTRY, _condition_seed as stage5a_seed
+from gopcnet.experiments.stage5g import METHODS, load_stage5g_config, run_stage5g
 
 
 def test_stage5g_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -52,7 +52,7 @@ def test_stage5g_seeds_are_bit_identical_to_stage5a() -> None:
     """Only a paired comparison against D-047/D-051 if this charter
     draws literally the same data -- docs/stage5g_charter.md's own
     paired-comparison design, load-bearing."""
-    from mintnet.experiments.stage5g import _condition_seed as stage5g_seed
+    from gopcnet.experiments.stage5g import _condition_seed as stage5g_seed
 
     assert stage5g_seed is stage5a_seed
     for dgp_index in range(3):
@@ -64,7 +64,7 @@ def test_stage5g_seeds_are_bit_identical_to_stage5a() -> None:
 
 
 def test_stage5g_dgp_registry_matches_stage5a() -> None:
-    from mintnet.experiments.stage5g import _DGP_REGISTRY as stage5g_registry
+    from gopcnet.experiments.stage5g import _DGP_REGISTRY as stage5g_registry
 
     assert stage5g_registry is _DGP_REGISTRY
 
@@ -102,7 +102,7 @@ def test_stage5g_aggregate_shards_reproduces_unsharded_report(tmp_path: Path) ->
         )
 
     aggregated_dir = tmp_path / "aggregated"
-    aggregated = aggregate("mintnet.experiments.stage5g", config_path, shards_dir, aggregated_dir)
+    aggregated = aggregate("gopcnet.experiments.stage5g", config_path, shards_dir, aggregated_dir)
 
     unsharded_sorted = unsharded.sort_values(["dgp", "n", "method", "replicate"]).reset_index(drop=True)
     aggregated_sorted = aggregated.sort_values(["dgp", "n", "method", "replicate"]).reset_index(drop=True)

@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage3b import Stage3bConfig
-from mintnet.experiments.stage3b_reporting import evaluate_stage3b_gate
+from gopcnet.experiments.stage3b import Stage3bConfig
+from gopcnet.experiments.stage3b_reporting import evaluate_stage3b_gate
 
 
 def _config(pi_min_candidates=(0.80, 0.90, 0.95, 0.98)) -> Stage3bConfig:
@@ -91,7 +91,7 @@ def test_this_p30_dgp_reuses_stage3bs_gate_logic_unmodified():
 
 
 def test_report_writes_required_evidence(tmp_path: Path) -> None:
-    from mintnet.experiments.stage3e_reporting import write_stage3e_report
+    from gopcnet.experiments.stage3e_reporting import write_stage3e_report
 
     rows = []
     for replicate in range(4):

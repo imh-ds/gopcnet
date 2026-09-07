@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from scipy.stats import norm
 
-from mintnet.dpi import compute_conditional_independence_evidence, prune_conditional_independence
+from gopcnet.dpi import compute_conditional_independence_evidence, prune_conditional_independence
 
 
 def _crafted_data() -> np.ndarray:

@@ -3,8 +3,8 @@ import warnings
 import numpy as np
 import pytest
 
-from mintnet.mi.ksg import estimate_ksg_mi
-from mintnet.simulation.gaussian import gaussian_mi, sample_bivariate_gaussian
+from gopcnet.mi.ksg import estimate_ksg_mi
+from gopcnet.simulation.gaussian import gaussian_mi, sample_bivariate_gaussian
 
 
 def test_ksg_is_symmetric_and_deterministic() -> None:

@@ -2,9 +2,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.reporting import evaluate_stage0_gate, write_stage0_report
-from mintnet.experiments.stage0 import load_stage0_config
-from mintnet.simulation.gaussian import gaussian_mi
+from gopcnet.experiments.reporting import evaluate_stage0_gate, write_stage0_report
+from gopcnet.experiments.stage0 import load_stage0_config
+from gopcnet.simulation.gaussian import gaussian_mi
 
 
 def _raw_rows(error: bool = False) -> pd.DataFrame:

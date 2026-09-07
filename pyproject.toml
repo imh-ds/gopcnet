@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mintnet"
+name = "gopcnet"
 version = "0.1.0"
-description = "Mutual-information network validation experiments"
+description = "Growing-Order Partial Correlation (GOPC) network estimation for network psychometrics"
 requires-python = ">=3.11,<3.12"
 dependencies = [
     "matplotlib>=3.8",

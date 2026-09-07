@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage4g_fit import FITTING_ALPHAS, FITTING_SAMPLE_SIZES, compute_fitting_points
+from gopcnet.experiments.stage4g_fit import FITTING_ALPHAS, FITTING_SAMPLE_SIZES, compute_fitting_points
 
 
 def _write_monotonic_tradeoff_csv(tmp_path: Path) -> Path:

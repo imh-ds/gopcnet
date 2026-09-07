@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage5a import DGPS, _DGP_REGISTRY, _condition_seed as stage5a_seed
-from mintnet.experiments.stage5e import METHODS, load_stage5e_config, run_stage5e
+from gopcnet.experiments.stage5a import DGPS, _DGP_REGISTRY, _condition_seed as stage5a_seed
+from gopcnet.experiments.stage5e import METHODS, load_stage5e_config, run_stage5e
 
 
 def test_stage5e_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -52,7 +52,7 @@ def test_stage5e_seeds_are_bit_identical_to_stage5a() -> None:
     """The whole comparison is only paired against D-047 if this
     charter draws literally the same data -- docs/stage5e_charter.md's
     own 'Data access' fair-comparison rule, load-bearing."""
-    from mintnet.experiments.stage5e import _condition_seed as stage5e_seed
+    from gopcnet.experiments.stage5e import _condition_seed as stage5e_seed
 
     assert stage5e_seed is stage5a_seed
     for dgp_index in range(3):
@@ -67,7 +67,7 @@ def test_stage5e_dgp_registry_matches_stage5a() -> None:
     """This charter reuses Stage 5a's own DGP registry unmodified -- a
     different registry object would silently break the pairing with
     D-047 even if the seeds matched."""
-    from mintnet.experiments.stage5e import _DGP_REGISTRY as stage5e_registry
+    from gopcnet.experiments.stage5e import _DGP_REGISTRY as stage5e_registry
 
     assert stage5e_registry is _DGP_REGISTRY
 
@@ -105,7 +105,7 @@ def test_stage5e_aggregate_shards_reproduces_unsharded_report(tmp_path: Path) ->
         )
 
     aggregated_dir = tmp_path / "aggregated"
-    aggregated = aggregate("mintnet.experiments.stage5e", config_path, shards_dir, aggregated_dir)
+    aggregated = aggregate("gopcnet.experiments.stage5e", config_path, shards_dir, aggregated_dir)
 
     unsharded_sorted = unsharded.sort_values(["dgp", "n", "method", "replicate"]).reset_index(drop=True)
     aggregated_sorted = aggregated.sort_values(["dgp", "n", "method", "replicate"]).reset_index(drop=True)

@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage1c import Stage1cConfig
-from mintnet.experiments.stage1c_reporting import (
+from gopcnet.experiments.stage1c import Stage1cConfig
+from gopcnet.experiments.stage1c_reporting import (
     compute_calibration,
     evaluate_stage1c_gate,
     write_stage1c_report,

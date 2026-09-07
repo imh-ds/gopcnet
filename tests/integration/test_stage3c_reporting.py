@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage3c import Stage3cConfig
-from mintnet.experiments.stage3c_reporting import evaluate_stage3c_gate, write_stage3c_report
+from gopcnet.experiments.stage3c import Stage3cConfig
+from gopcnet.experiments.stage3c_reporting import evaluate_stage3c_gate, write_stage3c_report
 
 
 def _config(pi_min_candidates=(0.70, 0.80, 0.90)) -> Stage3cConfig:

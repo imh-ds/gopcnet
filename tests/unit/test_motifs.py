@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from mintnet.simulation.motifs import (
+from gopcnet.simulation.motifs import (
     sample_chain,
     sample_measured_fork,
     sample_precision_triangle,

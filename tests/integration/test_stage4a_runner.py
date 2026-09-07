@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage4a import load_stage1b_config, run_stage4a
+from gopcnet.experiments.stage4a import load_stage1b_config, run_stage4a
 
 
 def test_stage4a_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -25,8 +25,8 @@ def test_stage4a_smoke_runner_is_deterministic(tmp_path: Path) -> None:
 
 def test_stage4a_and_stage1b_simulate_identical_data(tmp_path: Path) -> None:
     """Stage 4a must isolate the pruning mechanism by reusing Stage 1b's exact seeds."""
-    from mintnet.experiments.stage1b import load_stage1b_config as load_1b
-    from mintnet.experiments.stage1b import run_stage1b
+    from gopcnet.experiments.stage1b import load_stage1b_config as load_1b
+    from gopcnet.experiments.stage1b import run_stage1b
 
     stage1b_config = load_1b(Path("configs/stage1b_dpi_smoke.yaml"))
     stage4a_config = load_stage1b_config(Path("configs/stage4a_sequential_smoke.yaml"))

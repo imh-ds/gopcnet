@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage4p import DGPS, _condition_seed as stage4p_condition_seed
-from mintnet.experiments.stage4q_b import load_stage4q_b_config, run_stage4q_b
+from gopcnet.experiments.stage4p import DGPS, _condition_seed as stage4p_condition_seed
+from gopcnet.experiments.stage4q_b import load_stage4q_b_config, run_stage4q_b
 
 
 def test_stage4q_b_smoke_runner_is_deterministic(tmp_path: Path) -> None:

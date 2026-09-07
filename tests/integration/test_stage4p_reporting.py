@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage4p import DGPS, ENGINES, Stage4pConfig
+from gopcnet.experiments.stage4p import DGPS, ENGINES, Stage4pConfig
 
 
 def _config() -> Stage4pConfig:
@@ -30,7 +30,7 @@ def _row(dgp, engine, n, alpha, replicate, *, chain_tpr=1.0, fork_tpr=1.0, third
 
 
 def test_evaluate_cell_proceeds_with_clean_evidence():
-    from mintnet.experiments.stage4p_reporting import evaluate_cell
+    from gopcnet.experiments.stage4p_reporting import evaluate_cell
 
     rows = [_row("overlap", "sequential", 750, 0.10, r) for r in range(4)]
     raw = pd.DataFrame(rows)
@@ -42,7 +42,7 @@ def test_evaluate_cell_proceeds_with_clean_evidence():
 
 
 def test_evaluate_cell_reassesses_on_low_third_shape_tpr():
-    from mintnet.experiments.stage4p_reporting import evaluate_cell
+    from gopcnet.experiments.stage4p_reporting import evaluate_cell
 
     rows = [_row("overlap", "conservative", 750, 0.10, r, third_tpr=0.5) for r in range(4)]
     raw = pd.DataFrame(rows)
@@ -54,7 +54,7 @@ def test_evaluate_cell_reassesses_on_low_third_shape_tpr():
 
 
 def test_evaluate_stage4p_gate_covers_every_combination():
-    from mintnet.experiments.stage4p_reporting import evaluate_stage4p_gate
+    from gopcnet.experiments.stage4p_reporting import evaluate_stage4p_gate
 
     config = _config()
     rows = []
@@ -72,7 +72,7 @@ def test_evaluate_stage4p_gate_covers_every_combination():
 
 
 def test_report_writes_required_evidence_and_side_by_side_tables(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4p_reporting import write_stage4p_report
+    from gopcnet.experiments.stage4p_reporting import write_stage4p_report
 
     config = _config()
     rows = []

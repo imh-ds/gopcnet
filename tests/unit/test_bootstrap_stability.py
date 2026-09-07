@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from mintnet.bootstrap import compute_edge_stability
-from mintnet.simulation import sample_chain
+from gopcnet.bootstrap import compute_edge_stability
+from gopcnet.simulation import sample_chain
 
 
 def _chain_data(n: int, seed: int) -> np.ndarray:

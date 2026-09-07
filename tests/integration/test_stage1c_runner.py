@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage1c import load_stage1c_config, run_stage1c
+from gopcnet.experiments.stage1c import load_stage1c_config, run_stage1c
 
 
 def test_stage1c_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -30,7 +30,7 @@ def test_stage1c_smoke_runner_is_deterministic(tmp_path: Path) -> None:
 
 def test_stage1c_reuses_stage1b_seeds_for_previously_tested_sample_sizes(tmp_path: Path) -> None:
     """Appending new N values must not perturb seeds at N already tested by R2b."""
-    from mintnet.experiments.stage1b import load_stage1b_config, run_stage1b
+    from gopcnet.experiments.stage1b import load_stage1b_config, run_stage1b
 
     stage1b_config = load_stage1b_config(Path("configs/stage1b_dpi_smoke.yaml"))
     stage1c_config = load_stage1c_config(Path("configs/stage1c_dpi_smoke.yaml"))

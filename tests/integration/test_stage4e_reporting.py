@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage4e import Stage4eConfig
+from gopcnet.experiments.stage4e import Stage4eConfig
 
 
 def _config() -> Stage4eConfig:
@@ -36,7 +36,7 @@ def _row(n, alpha, replicate, *, candidates: dict[str, bool | None], fpr: float)
 
 
 def test_conditional_accuracy_ignores_non_candidates():
-    from mintnet.experiments.stage4e_reporting import _pooled_metrics
+    from gopcnet.experiments.stage4e_reporting import _pooled_metrics
 
     rows = []
     for replicate in range(4):
@@ -60,7 +60,7 @@ def test_conditional_accuracy_ignores_non_candidates():
 
 
 def test_below_gate_accuracy_leaves_no_eligible_development_alpha():
-    from mintnet.experiments.stage4e_reporting import evaluate_n
+    from gopcnet.experiments.stage4e_reporting import evaluate_n
 
     rows = []
     for replicate in range(4):
@@ -76,7 +76,7 @@ def test_below_gate_accuracy_leaves_no_eligible_development_alpha():
 
 
 def test_select_alpha_requires_at_least_one_candidate():
-    from mintnet.experiments.stage4e_reporting import select_alpha
+    from gopcnet.experiments.stage4e_reporting import select_alpha
 
     rows = []
     for replicate in range(4):
@@ -90,7 +90,7 @@ def test_select_alpha_requires_at_least_one_candidate():
 
 
 def test_report_writes_required_evidence(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4e_reporting import write_stage4e_report
+    from gopcnet.experiments.stage4e_reporting import write_stage4e_report
 
     rows = []
     for n in (500, 750):

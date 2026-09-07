@@ -3,9 +3,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage1j_fit import fit_candidate_forms, select_form
-from mintnet.experiments.stage4g_fit import FITTING_ALPHAS
-from mintnet.experiments.stage4i_fit import FITTING_SAMPLE_SIZES, compute_fitting_points, fitting_point_self_check
+from gopcnet.experiments.stage1j_fit import fit_candidate_forms, select_form
+from gopcnet.experiments.stage4g_fit import FITTING_ALPHAS
+from gopcnet.experiments.stage4i_fit import FITTING_SAMPLE_SIZES, compute_fitting_points, fitting_point_self_check
 
 
 def _write_monotonic_tradeoff_csv(tmp_path: Path) -> Path:
@@ -55,7 +55,7 @@ def test_compute_fitting_points_never_uses_n_750(tmp_path: Path) -> None:
 
 
 def test_fitting_point_self_check_flags_invalid_prediction() -> None:
-    from mintnet.experiments.stage1j_fit import FittedForm
+    from gopcnet.experiments.stage1j_fit import FittedForm
 
     # A form whose own prediction goes negative at one of its fitting
     # points -- reproduces D-037's failure mode directly against the

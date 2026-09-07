@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage4b import SHAPES
-from mintnet.experiments.stage4d import BOOKEND_N, load_stage4d_config, run_stage4d
+from gopcnet.experiments.stage4b import SHAPES
+from gopcnet.experiments.stage4d import BOOKEND_N, load_stage4d_config, run_stage4d
 
 
 def _bookend_csv(tmp_path: Path) -> Path:

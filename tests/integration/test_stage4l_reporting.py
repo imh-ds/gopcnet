@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage4l import Stage4lConfig
+from gopcnet.experiments.stage4l import Stage4lConfig
 
 
 def _config() -> Stage4lConfig:
@@ -42,7 +42,7 @@ def _row(
 
 
 def test_evaluate_cell_proceeds_with_clean_evidence():
-    from mintnet.experiments.stage4l_reporting import evaluate_cell
+    from gopcnet.experiments.stage4l_reporting import evaluate_cell
 
     rows = [_row(0.3, 750, 0.10, r) for r in range(4)]
     raw = pd.DataFrame(rows)
@@ -54,7 +54,7 @@ def test_evaluate_cell_proceeds_with_clean_evidence():
 
 
 def test_evaluate_cell_reassesses_on_low_chain_tpr():
-    from mintnet.experiments.stage4l_reporting import evaluate_cell
+    from gopcnet.experiments.stage4l_reporting import evaluate_cell
 
     rows = [_row(0.3, 750, 0.10, r, chain_tpr=0.5) for r in range(4)]
     raw = pd.DataFrame(rows)
@@ -66,7 +66,7 @@ def test_evaluate_cell_reassesses_on_low_chain_tpr():
 
 
 def test_evaluate_cell_reassesses_on_final_fer_exceeding_tolerance():
-    from mintnet.experiments.stage4l_reporting import evaluate_cell
+    from gopcnet.experiments.stage4l_reporting import evaluate_cell
 
     rows = [_row(0.3, 750, 0.10, r, screening_fer=0.05, final_fer=0.10) for r in range(4)]
     raw = pd.DataFrame(rows)
@@ -78,7 +78,7 @@ def test_evaluate_cell_reassesses_on_final_fer_exceeding_tolerance():
 
 
 def test_report_writes_required_evidence_and_skips_comparison_without_stage4k_path(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4l_reporting import write_stage4l_report
+    from gopcnet.experiments.stage4l_reporting import write_stage4l_report
 
     config = _config()
     rows = []
@@ -100,7 +100,7 @@ def test_report_writes_required_evidence_and_skips_comparison_without_stage4k_pa
 
 
 def test_report_includes_isolated_comparison_when_stage4k_path_given(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4l_reporting import write_stage4l_report
+    from gopcnet.experiments.stage4l_reporting import write_stage4l_report
 
     config = _config()
     rows = []

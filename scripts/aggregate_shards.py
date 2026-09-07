@@ -1,7 +1,7 @@
 """Generic aggregator for any sharded experiment run. See
 .github/workflows/sharded_benchmark.yml -- that workflow and this
 script work on any runner module that opts into the shard-aggregation
-contract, not just `mintnet.experiments.stage5a` (its first user).
+contract, not just `gopcnet.experiments.stage5a` (its first user).
 
 Contract a shardable module must expose (see stage5a.py's own "Generic
 shard-aggregation contract" comment for the reference implementation):
@@ -20,7 +20,7 @@ exactly once, no shard missing or duplicated), and only then calls the
 module's own report writer -- producing the same report an unsharded
 run would, since a well-behaved shardable runner derives its seeds from
 the *full* grid's index, not the shard's own subset (see
-`mintnet.experiments.stage5a.run_stage5a`'s own docstring, and its test
+`gopcnet.experiments.stage5a.run_stage5a`'s own docstring, and its test
 `test_stage5a_sharded_run_matches_unsharded_run`).
 """
 
@@ -79,7 +79,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--module", required=True,
-        help="import path of the shardable runner module, e.g. mintnet.experiments.stage5a",
+        help="import path of the shardable runner module, e.g. gopcnet.experiments.stage5a",
     )
     parser.add_argument("--config", required=True, type=Path)
     parser.add_argument(

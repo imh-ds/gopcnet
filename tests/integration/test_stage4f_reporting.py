@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage4f import Stage4fConfig
+from gopcnet.experiments.stage4f import Stage4fConfig
 
 
 def _config() -> Stage4fConfig:
@@ -21,7 +21,7 @@ def _row(n, alpha, replicate, i, j, *, candidate, r_marginal, r_partial=None, co
 
 
 def test_summarize_cell_only_uses_candidates():
-    from mintnet.experiments.stage4f_reporting import summarize_cell
+    from gopcnet.experiments.stage4f_reporting import summarize_cell
 
     rng = np.random.default_rng(0)
     rows = []
@@ -43,7 +43,7 @@ def test_summarize_cell_only_uses_candidates():
 
 
 def test_summarize_cell_handles_zero_candidates():
-    from mintnet.experiments.stage4f_reporting import summarize_cell
+    from gopcnet.experiments.stage4f_reporting import summarize_cell
 
     rows = [_row(300, 0.10, r, 0, 3, candidate=False, r_marginal=0.05) for r in range(10)]
     raw = pd.DataFrame(rows)
@@ -56,7 +56,7 @@ def test_summarize_cell_handles_zero_candidates():
 
 
 def test_report_writes_required_evidence(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4f_reporting import write_stage4f_report
+    from gopcnet.experiments.stage4f_reporting import write_stage4f_report
 
     rng = np.random.default_rng(1)
     rows = []

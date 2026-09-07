@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage4k import Stage4kConfig
+from gopcnet.experiments.stage4k import Stage4kConfig
 
 
 def _config() -> Stage4kConfig:
@@ -29,7 +29,7 @@ def _row(motif, strength, n, alpha, replicate, *, candidate: bool, correct: bool
 
 
 def test_evaluate_cell_proceeds_with_clean_evidence():
-    from mintnet.experiments.stage4k_reporting import evaluate_cell
+    from gopcnet.experiments.stage4k_reporting import evaluate_cell
 
     rows = [_row("chain", 0.3, 750, 0.10, r, candidate=True, correct=True) for r in range(4)]
     raw = pd.DataFrame(rows)
@@ -42,7 +42,7 @@ def test_evaluate_cell_proceeds_with_clean_evidence():
 
 
 def test_evaluate_cell_reassesses_on_low_accuracy():
-    from mintnet.experiments.stage4k_reporting import evaluate_cell
+    from gopcnet.experiments.stage4k_reporting import evaluate_cell
 
     rows = [_row("fork", 0.3, 750, 0.10, 0, candidate=True, correct=True)]
     rows.append(_row("fork", 0.3, 750, 0.10, 1, candidate=True, correct=True))
@@ -57,8 +57,8 @@ def test_evaluate_cell_reassesses_on_low_accuracy():
 
 
 def test_evaluate_stage4k_gate_overall_reassess_if_any_cell_fails():
-    from mintnet.experiments.stage4k import MOTIFS
-    from mintnet.experiments.stage4k_reporting import evaluate_stage4k_gate
+    from gopcnet.experiments.stage4k import MOTIFS
+    from gopcnet.experiments.stage4k_reporting import evaluate_stage4k_gate
 
     config = _config()
     rows = []
@@ -81,8 +81,8 @@ def test_evaluate_stage4k_gate_overall_reassess_if_any_cell_fails():
 
 
 def test_report_writes_required_evidence_and_per_motif_tables(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4k import MOTIFS
-    from mintnet.experiments.stage4k_reporting import write_stage4k_report
+    from gopcnet.experiments.stage4k import MOTIFS
+    from gopcnet.experiments.stage4k_reporting import write_stage4k_report
 
     config = _config()
     rows = []

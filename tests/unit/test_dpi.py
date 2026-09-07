@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from mintnet.dpi import prune_tolerant_dpi
+from gopcnet.dpi import prune_tolerant_dpi
 
 
 def test_dpi_prunes_only_when_weakest_edge_is_strictly_below_threshold():

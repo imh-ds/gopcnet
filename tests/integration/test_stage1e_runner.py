@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage1e import load_stage1e_config, run_stage1e
+from gopcnet.experiments.stage1e import load_stage1e_config, run_stage1e
 
 
 def test_stage1e_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -30,7 +30,7 @@ def test_stage1e_smoke_runner_is_deterministic(tmp_path: Path) -> None:
 
 def test_stage1e_reuses_stage1c_seeds_for_previously_tested_replicates(tmp_path: Path) -> None:
     """Extending the replicate count must not perturb seeds already used by R2c/R2d."""
-    from mintnet.experiments.stage1c import load_stage1c_config, run_stage1c
+    from gopcnet.experiments.stage1c import load_stage1c_config, run_stage1c
 
     stage1c_config = load_stage1c_config(Path("configs/stage1c_dpi_smoke.yaml"))
     stage1e_config = load_stage1e_config(Path("configs/stage1e_dpi_smoke.yaml"))

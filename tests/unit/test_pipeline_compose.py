@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from mintnet.pipeline import compose_screen_then_prune, connected_components
-from mintnet.simulation import sample_chain, sample_hub, sample_overlapping_triangles
+from gopcnet.pipeline import compose_screen_then_prune, connected_components
+from gopcnet.simulation import sample_chain, sample_hub, sample_overlapping_triangles
 
 
 def test_connected_components_groups_a_triangle_and_an_isolated_edge():

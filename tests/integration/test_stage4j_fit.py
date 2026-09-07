@@ -3,9 +3,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage1j_fit import FittedForm, fit_candidate_forms, select_form
-from mintnet.experiments.stage4g_fit import FITTING_ALPHAS
-from mintnet.experiments.stage4j_fit import (
+from gopcnet.experiments.stage1j_fit import FittedForm, fit_candidate_forms, select_form
+from gopcnet.experiments.stage4g_fit import FITTING_ALPHAS
+from gopcnet.experiments.stage4j_fit import (
     COARSE_SAMPLE_SIZES,
     DENSE_SAMPLE_SIZES,
     FITTING_SAMPLE_SIZES,

@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from mintnet.experiments.stage5c import (
+from gopcnet.experiments.stage5c import (
     DGPS,
     METHODS,
     _screening_alpha_for_p,
@@ -80,8 +80,8 @@ def test_stage5c_three_dimensions_are_independently_shardable(tmp_path: Path) ->
 
 
 def test_stage5c_seeds_are_disjoint_from_stage5b(tmp_path: Path) -> None:
-    from mintnet.experiments.stage5b import _condition_seed as stage5b_seed
-    from mintnet.experiments.stage5c import _condition_seed as stage5c_seed
+    from gopcnet.experiments.stage5b import _condition_seed as stage5b_seed
+    from gopcnet.experiments.stage5c import _condition_seed as stage5c_seed
 
     for dgp_index in range(2):
         for sample_index in range(2):
@@ -112,7 +112,7 @@ def test_stage5c_aggregate_shards_reproduces_unsharded_report(tmp_path: Path) ->
             )
 
     aggregated_dir = tmp_path / "aggregated"
-    aggregated = aggregate("mintnet.experiments.stage5c", config_path, shards_dir, aggregated_dir)
+    aggregated = aggregate("gopcnet.experiments.stage5c", config_path, shards_dir, aggregated_dir)
 
     key = ["dgp", "n", "noise_multiplier", "method", "replicate"]
     unsharded_sorted = unsharded.sort_values(key).reset_index(drop=True)

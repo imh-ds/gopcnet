@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage1j import load_stage1j_config, run_stage1j
-from mintnet.experiments.stage1j_fit import fit_candidate_forms, select_form
+from gopcnet.experiments.stage1j import load_stage1j_config, run_stage1j
+from gopcnet.experiments.stage1j_fit import fit_candidate_forms, select_form
 
 
 def test_stage1j_smoke_runner_is_deterministic(tmp_path: Path) -> None:

@@ -2,9 +2,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage1j_fit import fit_candidate_forms, select_form
-from mintnet.experiments.stage4i import Stage4iConfig
-from mintnet.experiments.stage4i_fit import fitting_point_self_check
+from gopcnet.experiments.stage1j_fit import fit_candidate_forms, select_form
+from gopcnet.experiments.stage4i import Stage4iConfig
+from gopcnet.experiments.stage4i_fit import fitting_point_self_check
 
 
 def _config() -> Stage4iConfig:
@@ -32,7 +32,7 @@ def _row(n, alpha, replicate, *, candidate: bool, correct: bool | None, fpr=0.0,
 
 
 def test_evaluate_n_proceeds_with_comfortable_margin():
-    from mintnet.experiments.stage4i_reporting import evaluate_n
+    from gopcnet.experiments.stage4i_reporting import evaluate_n
 
     rows = [_row(400, 0.10, r, candidate=True, correct=True) for r in range(4)]
     raw = pd.DataFrame(rows)
@@ -45,7 +45,7 @@ def test_evaluate_n_proceeds_with_comfortable_margin():
 
 
 def test_evaluate_n_reassesses_on_thin_margin():
-    from mintnet.experiments.stage4i_reporting import evaluate_n
+    from gopcnet.experiments.stage4i_reporting import evaluate_n
 
     rows = [_row(400, 0.10, 0, candidate=True, correct=True)]
     rows.append(_row(400, 0.10, 1, candidate=True, correct=True))
@@ -60,7 +60,7 @@ def test_evaluate_n_reassesses_on_thin_margin():
 
 
 def test_evaluate_n_reassesses_on_invalid_negative_alpha():
-    from mintnet.experiments.stage4i_reporting import evaluate_n
+    from gopcnet.experiments.stage4i_reporting import evaluate_n
 
     # Reproduces D-037's exact failure mode: a formula-predicted alpha
     # outside (0, 1) must be caught explicitly, not silently treated as a
@@ -75,7 +75,7 @@ def test_evaluate_n_reassesses_on_invalid_negative_alpha():
 
 
 def test_report_writes_required_evidence(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4i_reporting import write_stage4i_report
+    from gopcnet.experiments.stage4i_reporting import write_stage4i_report
 
     fitting_points = ((300.0, 0.2), (500.0, 0.05), (700.0, 0.01))
     forms = fit_candidate_forms(fitting_points)

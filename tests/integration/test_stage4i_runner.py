@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage4i import load_stage4i_config, run_stage4i
+from gopcnet.experiments.stage4i import load_stage4i_config, run_stage4i
 
 
 def _bookend_stage4e_csv(tmp_path: Path) -> Path:
@@ -18,8 +18,8 @@ def _bookend_stage4e_csv(tmp_path: Path) -> Path:
     identical (an all-identical fitting curve makes R^2 divide by zero)
     and the .80 candidacy floor genuinely selects different alphas.
     """
-    from mintnet.experiments.stage4g_fit import FITTING_ALPHAS
-    from mintnet.experiments.stage4i_fit import FITTING_SAMPLE_SIZES
+    from gopcnet.experiments.stage4g_fit import FITTING_ALPHAS
+    from gopcnet.experiments.stage4i_fit import FITTING_SAMPLE_SIZES
 
     ordered_alphas = sorted(FITTING_ALPHAS, reverse=True)
     offset_by_n = {300: 0, 500: 1, 600: 1, 650: 2, 700: 2, 750: 3}
@@ -63,7 +63,7 @@ def test_stage4i_smoke_runner_is_deterministic(tmp_path: Path) -> None:
 
 
 def test_stage4i_fitting_set_excludes_n_750(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4i_fit import FITTING_SAMPLE_SIZES
+    from gopcnet.experiments.stage4i_fit import FITTING_SAMPLE_SIZES
 
     assert 750 not in FITTING_SAMPLE_SIZES
 

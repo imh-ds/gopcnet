@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage1l import TRUE_EDGES
-from mintnet.experiments.stage4n import OPPOSITE_NODES, _pair_label, load_stage4n_config, run_stage4n
+from gopcnet.experiments.stage1l import TRUE_EDGES
+from gopcnet.experiments.stage4n import OPPOSITE_NODES, _pair_label, load_stage4n_config, run_stage4n
 
 
 def test_stage4n_smoke_runner_is_deterministic(tmp_path: Path) -> None:

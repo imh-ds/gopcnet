@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage2j import P5, P10, Stage2jConfig
+from gopcnet.experiments.stage2j import P5, P10, Stage2jConfig
 
 
 def _config() -> Stage2jConfig:
@@ -40,7 +40,7 @@ def _selection_row(n, replicate, alpha, *, true_positives, false_positives, true
 
 
 def test_select_alpha_p10_picks_smallest_eligible_and_confirms_on_validation():
-    from mintnet.experiments.stage2j_reporting import evaluate_selection
+    from gopcnet.experiments.stage2j_reporting import evaluate_selection
 
     rows = []
     for replicate in range(4):
@@ -59,7 +59,7 @@ def test_select_alpha_p10_picks_smallest_eligible_and_confirms_on_validation():
 
 
 def test_select_alpha_p10_reassesses_when_nothing_eligible():
-    from mintnet.experiments.stage2j_reporting import evaluate_selection
+    from gopcnet.experiments.stage2j_reporting import evaluate_selection
 
     rows = [_selection_row(750, replicate, 0.05, true_positives=13, false_positives=10) for replicate in range(4)]
     selection_raw = pd.DataFrame(rows)
@@ -90,7 +90,7 @@ def _composition_row(p, n, replicate, *, chain_tpr, overlap_tpr, screening_fer, 
 
 
 def test_p10_cell_proceeds_when_all_criteria_pass():
-    from mintnet.experiments.stage2j_reporting import evaluate_cell
+    from gopcnet.experiments.stage2j_reporting import evaluate_cell
 
     rows = [
         _composition_row(P10, 1500, r, chain_tpr=1.0, overlap_tpr=0.9, screening_fer=0.0, final_fer=0.0)
@@ -106,7 +106,7 @@ def test_p10_cell_proceeds_when_all_criteria_pass():
 
 
 def test_p5_cell_has_no_chain_or_false_edge_metrics_and_can_still_reassess():
-    from mintnet.experiments.stage2j_reporting import evaluate_cell
+    from gopcnet.experiments.stage2j_reporting import evaluate_cell
 
     rows = [
         {
@@ -139,7 +139,7 @@ def test_p5_cell_has_no_chain_or_false_edge_metrics_and_can_still_reassess():
 
 
 def test_report_writes_required_evidence(tmp_path: Path) -> None:
-    from mintnet.experiments.stage2j_reporting import write_stage2j_report
+    from gopcnet.experiments.stage2j_reporting import write_stage2j_report
 
     selection_rows = []
     for replicate in range(4):

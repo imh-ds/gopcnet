@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage1f import load_stage1f_config, run_stage1f
+from gopcnet.experiments.stage1f import load_stage1f_config, run_stage1f
 
 
 def test_stage1f_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -30,7 +30,7 @@ def test_stage1f_smoke_runner_is_deterministic(tmp_path: Path) -> None:
 
 def test_stage1f_reuses_stage1e_data_since_alpha_does_not_affect_simulation(tmp_path: Path) -> None:
     """A narrower alpha grid must not perturb the underlying simulated data or seeds."""
-    from mintnet.experiments.stage1e import load_stage1e_config, run_stage1e
+    from gopcnet.experiments.stage1e import load_stage1e_config, run_stage1e
 
     stage1e_config = load_stage1e_config(Path("configs/stage1e_dpi_smoke.yaml"))
     stage1f_config = load_stage1f_config(Path("configs/stage1f_dpi_smoke.yaml"))

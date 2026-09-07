@@ -1,6 +1,6 @@
 import pytest
 
-from mintnet.experiments.stage1j_fit import FittedForm, fit_candidate_forms, select_form
+from gopcnet.experiments.stage1j_fit import FittedForm, fit_candidate_forms, select_form
 
 
 def test_fit_candidate_forms_returns_all_four_named_forms():

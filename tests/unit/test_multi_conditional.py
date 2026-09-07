@@ -1,18 +1,18 @@
 import numpy as np
 import pytest
 
-from mintnet.dpi import (
+from gopcnet.dpi import (
     compute_conditional_independence_evidence,
     compute_partial_correlation_evidence,
     prune_pair,
 )
-from mintnet.simulation import sample_chain, sample_hub
+from gopcnet.simulation import sample_chain, sample_hub
 
 
 def test_single_variable_conditioning_matches_the_original_closed_form_exactly():
     """The general mechanism, given one conditioning variable, must reproduce
     Stage 1's original three-column closed-form exactly -- this is what
-    justifies replacing the triad-only special case in mintnet.pipeline.compose
+    justifies replacing the triad-only special case in gopcnet.pipeline.compose
     with one general rule (see docs/stage2c_charter.md)."""
     rng = np.random.default_rng(0)
     data = sample_chain(500, 0.6, rng)

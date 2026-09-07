@@ -1,7 +1,7 @@
 import numpy as np
 
-from mintnet.pipeline.growing_subset_dpi import growing_subset_dpi
-from mintnet.simulation.motifs import sample_hub, sample_overlapping_triangles
+from gopcnet.pipeline.growing_subset_dpi import growing_subset_dpi
+from gopcnet.simulation.motifs import sample_hub, sample_overlapping_triangles
 
 
 def test_growing_subset_dpi_isolated_edge_passes_through_unconditioned() -> None:

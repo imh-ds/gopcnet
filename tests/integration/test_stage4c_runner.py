@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage4c import load_stage4c_config, run_stage4c
+from gopcnet.experiments.stage4c import load_stage4c_config, run_stage4c
 
 
 def test_stage4c_smoke_runner_is_deterministic(tmp_path: Path) -> None:

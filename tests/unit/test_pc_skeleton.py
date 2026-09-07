@@ -1,6 +1,6 @@
 import numpy as np
 
-from mintnet.comparators.pc_skeleton import fit_pc_skeleton
+from gopcnet.comparators.pc_skeleton import fit_pc_skeleton
 
 
 def test_fit_pc_skeleton_recovers_chain_and_removes_marginal_edge() -> None:

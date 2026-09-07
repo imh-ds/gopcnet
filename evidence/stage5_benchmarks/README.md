@@ -25,9 +25,11 @@ directly from the local worktree that fed the original decision-log
 entries.
 
 `stage5g_growing_subset` is this repo's own D-053, produced after
-`growing_subset_dpi.py` was ported into this repo
-(`src/mintnet/pipeline/growing_subset_dpi.py`) and run under this
-repo's own GitHub Actions workflow, not a copy of mintnet's separate,
+`growing_subset_dpi.py` was ported into this repo (at the time,
+`src/mintnet/pipeline/growing_subset_dpi.py`; the package was renamed
+to `gopcnet` shortly after -- see `src/gopcnet/pipeline/growing_subset_dpi.py`
+for the current path) and run under this repo's own GitHub Actions
+workflow, not a copy of mintnet's separate,
 differently-numbered D-053 on its `mi-native` branch (an unrelated
 result, from an unrelated codebase, about the same underlying
 mechanism -- see `docs/decision_log.md`'s own D-053 entry here for the

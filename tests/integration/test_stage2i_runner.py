@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage2i import BOOKEND_N, load_stage2i_config, run_stage2i
+from gopcnet.experiments.stage2i import BOOKEND_N, load_stage2i_config, run_stage2i
 
 
 def _bookend_csv(tmp_path: Path) -> Path:

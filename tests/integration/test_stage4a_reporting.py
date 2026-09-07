@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage1b import Stage1bConfig
+from gopcnet.experiments.stage1b import Stage1bConfig
 
 
 def _config(source_path: Path | None = None) -> Stage1bConfig:
@@ -53,7 +53,7 @@ def _raw_rows() -> pd.DataFrame:
 
 
 def test_report_writes_required_evidence_and_skips_missing_baseline(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4a_reporting import write_stage4a_report
+    from gopcnet.experiments.stage4a_reporting import write_stage4a_report
 
     # No results/generated/stage1b_dpi under this isolated repository root, so
     # the cross-engine comparison must degrade gracefully rather than error.
@@ -74,7 +74,7 @@ def test_report_writes_required_evidence_and_skips_missing_baseline(tmp_path: Pa
 
 
 def test_report_compares_against_stage1b_baseline_when_present(tmp_path: Path) -> None:
-    from mintnet.experiments.stage4a_reporting import write_stage4a_report
+    from gopcnet.experiments.stage4a_reporting import write_stage4a_report
 
     repository_root = tmp_path
     (repository_root / "configs").mkdir()

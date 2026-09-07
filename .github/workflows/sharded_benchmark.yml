@@ -42,7 +42,7 @@ on:
       runner_module:
         description: "Import path of the shardable runner module"
         required: false
-        default: "mintnet.experiments.stage5a"
+        default: "gopcnet.experiments.stage5a"
       config:
         description: "Config YAML path"
         required: false

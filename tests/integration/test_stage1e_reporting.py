@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage1e import Stage1eConfig
-from mintnet.experiments.stage1e_reporting import select_alpha_pair, write_stage1e_report
+from gopcnet.experiments.stage1e import Stage1eConfig
+from gopcnet.experiments.stage1e_reporting import select_alpha_pair, write_stage1e_report
 
 
 def _config() -> Stage1eConfig:

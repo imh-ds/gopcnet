@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage5a import DGPS, METHODS, load_stage5a_config, run_stage5a
+from gopcnet.experiments.stage5a import DGPS, METHODS, load_stage5a_config, run_stage5a
 
 
 def test_stage5a_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -65,8 +65,8 @@ def test_stage5a_seeds_are_disjoint_from_stage4p(tmp_path: Path) -> None:
     """Stage 5a's own seed derivation adds a stage tag disjoint from
     every prior charter's own SeedSequence entropy (docs/stage5a_charter.md's
     own seed requirement)."""
-    from mintnet.experiments.stage4p import _condition_seed as stage4p_seed
-    from mintnet.experiments.stage5a import _condition_seed as stage5a_seed
+    from gopcnet.experiments.stage4p import _condition_seed as stage4p_seed
+    from gopcnet.experiments.stage5a import _condition_seed as stage5a_seed
 
     for dgp_index in range(2):
         for sample_index in range(2):
@@ -118,7 +118,7 @@ def test_stage5a_aggregate_shards_reproduces_unsharded_report(tmp_path: Path) ->
         )
 
     aggregated_dir = tmp_path / "aggregated"
-    aggregated = aggregate("mintnet.experiments.stage5a", config_path, shards_dir, aggregated_dir)
+    aggregated = aggregate("gopcnet.experiments.stage5a", config_path, shards_dir, aggregated_dir)
 
     unsharded_sorted = unsharded.sort_values(["dgp", "n", "method", "replicate"]).reset_index(drop=True)
     aggregated_sorted = aggregated.sort_values(["dgp", "n", "method", "replicate"]).reset_index(drop=True)

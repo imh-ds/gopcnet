@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mintnet.experiments.stage2c import TRUE_CANDIDATE_PAIRS, load_stage2c_config
-from mintnet.experiments.stage2g import NOISE_COUNT, P, run_stage2g
+from gopcnet.experiments.stage2c import TRUE_CANDIDATE_PAIRS, load_stage2c_config
+from gopcnet.experiments.stage2g import NOISE_COUNT, P, run_stage2g
 
 
 def test_stage2g_smoke_runner_is_deterministic(tmp_path: Path) -> None:
@@ -27,7 +27,7 @@ def test_stage2g_smoke_runner_is_deterministic(tmp_path: Path) -> None:
 
 def test_stage2g_provenance_uses_its_own_charter_not_stage2cs(tmp_path: Path, monkeypatch) -> None:
     """The whole reason this module exists separately from
-    mintnet.experiments.stage2c: evidence must hash docs/stage2g_charter.md,
+    gopcnet.experiments.stage2c: evidence must hash docs/stage2g_charter.md,
     not docs/stage2c_charter.md."""
     repository_root = Path(__file__).resolve().parents[2]
     config = load_stage2c_config((repository_root / "configs/stage2g_hub_composition_p30_smoke.yaml").resolve())

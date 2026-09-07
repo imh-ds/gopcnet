@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from mintnet.experiments.stage4g import load_stage4g_config, run_stage4g
+from gopcnet.experiments.stage4g import load_stage4g_config, run_stage4g
 
 
 def _bookend_stage4e_csv(tmp_path: Path) -> Path:
@@ -18,7 +18,7 @@ def _bookend_stage4e_csv(tmp_path: Path) -> Path:
     all identical (an all-identical fitting curve makes R^2 divide by
     zero) and the .80 candidacy floor genuinely selects different alphas.
     """
-    from mintnet.experiments.stage4g_fit import FITTING_ALPHAS, FITTING_SAMPLE_SIZES
+    from gopcnet.experiments.stage4g_fit import FITTING_ALPHAS, FITTING_SAMPLE_SIZES
 
     # Rank 0 = largest alpha (0.5) = full candidacy; each smaller alpha
     # loses 12% candidacy and gains 6% accuracy, so the .80 candidacy floor
