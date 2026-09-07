@@ -4364,3 +4364,90 @@ gap is not chased further by this charter — whether it is worth a
 hybrid GOPC/PC method (`docs/future_directions.md`) or is an acceptable
 remaining tradeoff to report as-is is a separate decision, deliberately
 not made here.
+
+## D-054: Four-way signal-strength sweep replicates D-050 and adds new information PC and growing-order GOPC were never tested under — EBICglasso collapses, GOPC mildly declines, PC actually improves
+
+Date: 2026-09-06
+
+Stage: Stage 5h (extension of D-050 to all four methods and the
+manuscript's own validated N grid)
+
+Status: Descriptive result, no gate — same standing as D-050 itself
+(`docs/stage5h_charter.md`'s own decision structure).
+
+Decision timing: Predeclared reporting requirements (precision-trend
+classification per (dgp, method, N), explicit recall check for all four
+methods, replication check against D-050) fixed in
+`docs/stage5h_charter.md` before this repo's own GitHub Actions run was
+dispatched.
+
+Question: Does D-050's own EBICglasso-vs-GOPC-original finding
+(EBICglasso's precision collapses with signal strength, GOPC-original's
+does not) replicate under a fresh seed stream, and how do PC and
+growing-order GOPC — never tested under this manipulation before —
+behave under the same signal-strength sweep, now on the manuscript's
+own validated N grid?
+
+Prior specification: `docs/stage5h_charter.md`. Same two shapes as
+D-050 (`chain_fork_hub`, `overlap`), same three strengths (`.3`, `.5`,
+`.7`), `N = [750, 1000, 1500, 1750]` (replacing D-050's `{500, 1500}` —
+`N=500` falls outside GOPC's own pruning `alpha(N)`'s validated
+interpolation range, D-011). All four methods' own configurations
+carried forward unchanged from the charters that validated them
+(D-047, D-049, D-051, D-053). A fresh, disjoint seed stream (stage tag
+`505`), not a reuse of D-050's own archived draws — see the charter's
+own "Seeding" section for why reusing D-050's tag with an expanded
+sample-size list would silently change what data `N=1500` draws.
+
+Evidence: GitHub Actions run
+[34072202687](https://github.com/imh-ds/gopcnet/actions/runs/34072202687)
+(24 shards + plan + aggregate, all succeeded), `2,000` replicates per
+`(dgp, N, strength)` cell, `0` errors. `raw_metrics.csv`, `report.json`,
+`stage5h_report.md`.
+
+**Recall check: passes cleanly.** Recall stayed at `1.0` for all four
+methods, every `(dgp, N, strength)` cell — this manipulation's own
+precision patterns, described below, are not purchased anywhere by
+missing true edges.
+
+**Replication check against D-050: confirmed.** Largest `|precision
+difference|` between this charter's own fresh `N=1500` draw and D-050's
+own archived `N=1500` rows, across both shared methods (`mint`,
+`ebicglasso`) and all three strengths: `.0096` — well within what a
+different seed stream should produce, and the qualitative pattern
+(EBICglasso declining, GOPC-original close to flat) replicates exactly.
+
+**New information, not available to D-050 (which only tested `mint`
+and `ebicglasso`):**
+
+| Method | Pattern as strength increases (both shapes, all `N`) |
+|---|---|
+| EBICglasso | Sharply **decreasing** precision — `overlap` `N=1500`: `.86` → `.79` → `.67`; `chain_fork_hub` `N=1500`: `.90` → `.74` → `.51`. Confirms D-050's own finding, now on both shapes. |
+| GOPC-original (`mint`) | Mildly **declining** at most `N`, not literally flat as D-050's own text characterized it — `overlap` `N=1500`: `.92` → `.91` → `.92`; `chain_fork_hub` `N=1500`: `.96` → `.93` → `.94`. Far shallower than EBICglasso's collapse, but a real (if small) decline, not a flat line. |
+| PC | **Increasing or flat** — the opposite direction from both other methods. `chain_fork_hub`: increasing at every tested `N` (e.g. `N=1500`: `.93` → `.95` → `.96`). `overlap`: increasing at the two extreme `N` (`750`, `1750`), flat at `1000`/`1500`. PC was never tested under this manipulation before this charter. |
+| GOPC growing-order | Mildly declining or flat, generally tracking GOPC-original but at higher absolute precision (consistent with D-053) — e.g. `overlap` `N=1500`: `.97` → `.96` → `.96`. |
+
+Rationale: D-050's own headline claim survives a genuine replication
+check under a fresh seed stream, and now extends to `chain_fork_hub`
+(D-050 itself reported only `overlap`'s own trend as the clean version
+of the claim). The new PC and growing-order-GOPC evidence sharpens
+D-051/D-053's own tradeoff story: PC's precision advantage over both
+GOPC variants on these composed networks does not merely persist as
+signal strengthens — it *grows*, since PC's own precision moves in the
+opposite direction from EBICglasso's collapse and GOPC's mild decline.
+This does not change D-051/D-053's own recall side of the tradeoff
+(PC's real recall cost on weak, asymmetric edges, see the
+`triangle_strong` evidence elsewhere) — recall was untouched by this
+manipulation, perfect for every method throughout.
+
+Consequences: `manuscript/paper.qmd`'s Figure 3 (previously restricted
+to two methods and a single validated `N` per
+`docs/stage5h_charter.md`'s own "Background and objective" motivation)
+is rebuilt from this charter's own archived evidence — a four-way,
+four-`N` comparison rather than the two-method, single-`N` placeholder.
+D-050 itself remains valid, archived, and cited as the original,
+narrower finding it always was;
+`evidence/stage5_benchmarks/stage5d_strength_sweep/` is not modified.
+The "GOPC-original stays essentially flat" phrasing used in earlier
+manuscript drafts is corrected here to "mildly declining" — a real,
+if minor, overstatement this charter's own evidence caught.

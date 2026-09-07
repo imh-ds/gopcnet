@@ -15,6 +15,7 @@ permanent regardless of that clock).
 | `stage5e_pc_skeleton` | D-051 (corrected) | GitHub Actions run `33589193320` (2026-09-02) |
 | `stage5f_diagnostic` | D-052 | Local copy, contemporaneous with the above |
 | `stage5g_growing_subset` | D-053 (this repo's own, 2026-09-05) | GitHub Actions run [33952536740](https://github.com/imh-ds/gopcnet/actions/runs/33952536740) |
+| `stage5h_strength_sweep_four_way` | D-054 (2026-09-06) | GitHub Actions run [34072202687](https://github.com/imh-ds/gopcnet/actions/runs/34072202687) |
 
 Each directory contains the same `raw_metrics.csv` / `report.json` /
 `resolved_config.yaml` / `metadata.json` / `*_report.md` (plus figures
