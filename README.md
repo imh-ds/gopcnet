@@ -216,6 +216,43 @@ available on its own (`strength`, `expected_influence`,
 all four. Not GOPC-specific -- any weighted adjacency matrix of this
 shape works.
 
+## Goodness-of-fit (AIC/BIC/EBIC)
+
+Everything above answers "how reliable is this estimate." A different
+question -- does this structure fit the data well *at all* --
+`fit_gaussian_graphical_model` answers, given any adjacency matrix
+(from any of the four fit functions, or your own) plus the data it was
+estimated from:
+
+```python
+from gopcnet import fit_gaussian_graphical_model
+
+fit = fit_gaussian_graphical_model(data, result.adjacency)
+fit.log_likelihood
+fit.aic, fit.bic, fit.ebic  # ebic_gamma defaults to 0.5, matching fit_ebicglasso's own default
+fit.precision, fit.covariance  # the fitted, exactly-constrained-to-adjacency MLE
+```
+
+It fits the exact maximum-likelihood Gaussian graphical model
+constrained to `adjacency`'s zero pattern -- covariance selection
+(Speed & Kiiveri, 1986; Whittaker, 1990), an unpenalized relative of
+the graphical lasso's own coordinate-descent algorithm, run against a
+support that's already fixed rather than searched for. Because
+`fit_ebicglasso` only exposes EBIC internally (to pick its own best
+lambda, never as a general tool), this is the only way to get a fit
+statistic for `fit_gopc`/`fit_gopc_fixed_order`/`fit_pc_skeleton` at
+all -- and it gives every method's structure a common, comparable
+number on the same data.
+
+`aic`/`bic` count `n_variables + n_edges` as free parameters (the
+generic, textbook BIC definition); `ebic` counts `n_edges` alone,
+matching `fit_ebicglasso`'s own formula exactly (Foygel & Drton, 2010)
+-- not an inconsistency between the three; see `docs/decision_log.md`'s
+D-058 for why each statistic's own literature definition specifies a
+different count. `converged`/`n_iterations` report whether the fitting
+algorithm actually converged -- worth checking on a large or poorly
+conditioned network.
+
 ## What's in the package
 
 `pip install`ing this package gives you `gopcnet.pipeline` (the two
@@ -223,7 +260,8 @@ shape works.
 `fit_pc_skeleton`), `gopcnet.stability` (`bootstrap_edge_stability`,
 `case_drop_bootstrap`, `cs_coefficient`, `bootstrap_replicates`,
 `difference_test`, `threshold_by_inclusion_probability`),
-`gopcnet.metrics` (`compute_centrality`), and the `gopcnet.screening`,
+`gopcnet.metrics` (`compute_centrality`, `fit_gaussian_graphical_model`),
+and the `gopcnet.screening`,
 `gopcnet.dpi`, and `gopcnet.mi` modules they're built from. It does
 **not** include `gopcnet.experiments`,
 `gopcnet.simulation`, or `gopcnet.bootstrap` -- this repository's own

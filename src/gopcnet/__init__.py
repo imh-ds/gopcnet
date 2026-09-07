@@ -85,6 +85,19 @@ convenience: turn `EdgeStabilityResult.inclusion_probability` into a
 frequency survive), matching the idea behind `bootnet`'s own
 `bootInclude()`.
 
+Everything above answers "how reliable is this estimate." A different
+question -- "does this structure fit the data well at all" --
+`fit_gaussian_graphical_model` answers, given any adjacency (from any
+of the four fit functions) plus the data: it fits the exact
+maximum-likelihood Gaussian graphical model constrained to that
+adjacency's zero pattern and reports `log_likelihood`, `aic`, `bic`,
+and `ebic` (Foygel & Drton, 2010) -- a single, comparable number
+across methods on the same data (see `docs/decision_log.md`'s D-058):
+
+    >>> from gopcnet import fit_gaussian_graphical_model
+    >>> fit = fit_gaussian_graphical_model(data, result.adjacency)
+    >>> fit.aic, fit.bic, fit.ebic
+
 This package was previously named `mintnet`; see README.md's "A note
 on the package name" section if you find `mintnet.*` references in
 this repository's own historical charters or decision log.
@@ -106,10 +119,12 @@ own benchmarks, not a tool for analyzing a real fitted network.
 from gopcnet.comparators import EBICglassoResult, PCSkeletonResult, fit_ebicglasso, fit_pc_skeleton
 from gopcnet.metrics import (
     CentralityResult,
+    GGMFitResult,
     betweenness_centrality,
     closeness_centrality,
     compute_centrality,
     expected_influence,
+    fit_gaussian_graphical_model,
     strength,
 )
 from gopcnet.pipeline import GOPCResult, fit_gopc, fit_gopc_fixed_order
@@ -153,5 +168,7 @@ __all__ = [
     "expected_influence",
     "closeness_centrality",
     "betweenness_centrality",
+    "fit_gaussian_graphical_model",
+    "GGMFitResult",
     "__version__",
 ]

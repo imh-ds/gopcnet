@@ -96,6 +96,21 @@ validation history in full.
   `EdgeStabilityResult.inclusion_probability` matrix directly into a
   "safe" adjacency matrix (only edges above some inclusion frequency
   survive) -- matches the idea behind `bootnet`'s `bootInclude()`.
+- `fit_gaussian_graphical_model` (top-level, alongside its
+  `GGMFitResult` return type): absolute goodness-of-fit for any
+  adjacency matrix (from any of the four fit functions, or your own)
+  -- fits the exact maximum-likelihood Gaussian graphical model
+  constrained to that adjacency's zero pattern (covariance selection;
+  Speed & Kiiveri, 1986) and reports `log_likelihood`, `aic`, `bic`,
+  and `ebic` (Foygel & Drton, 2010). Unlike `fit_ebicglasso`'s own
+  internal EBIC (used only to pick its best lambda), this is a
+  general-purpose tool: the only way to get a fit statistic at all for
+  `fit_gopc`/`fit_gopc_fixed_order`/`fit_pc_skeleton`, and a common
+  number to compare any two methods' structures on the same data. See
+  README.md's "Goodness-of-fit (AIC/BIC/EBIC)" section and
+  `docs/decision_log.md`'s D-058 for why AIC/BIC and EBIC count free
+  parameters differently. Lives in the new `gopcnet.metrics.fit`
+  module.
 
 ### Removed
 - `gopcnet.experiments`, `gopcnet.simulation`, and `gopcnet.bootstrap`

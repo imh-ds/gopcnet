@@ -32,6 +32,8 @@ def test_public_api_matches_all() -> None:
         "expected_influence",
         "closeness_centrality",
         "betweenness_centrality",
+        "fit_gaussian_graphical_model",
+        "GGMFitResult",
         "__version__",
     }
 
@@ -45,6 +47,7 @@ def test_public_names_are_importable_from_top_level() -> None:
         DifferenceTestResult,
         EBICglassoResult,
         EdgeStabilityResult,
+        GGMFitResult,
         GOPCResult,
         PCSkeletonResult,
         betweenness_centrality,
@@ -57,6 +60,7 @@ def test_public_names_are_importable_from_top_level() -> None:
         difference_test,
         expected_influence,
         fit_ebicglasso,
+        fit_gaussian_graphical_model,
         fit_gopc,
         fit_gopc_fixed_order,
         fit_pc_skeleton,
@@ -79,6 +83,7 @@ def test_public_names_are_importable_from_top_level() -> None:
     assert callable(expected_influence)
     assert callable(closeness_centrality)
     assert callable(betweenness_centrality)
+    assert callable(fit_gaussian_graphical_model)
     assert GOPCResult is not None
     assert EBICglassoResult is not None
     assert PCSkeletonResult is not None
@@ -88,6 +93,7 @@ def test_public_names_are_importable_from_top_level() -> None:
     assert BootstrapReplicates is not None
     assert DifferenceTestResult is not None
     assert CentralityResult is not None
+    assert GGMFitResult is not None
 
 
 def test_internal_research_scaffolding_is_not_part_of_the_public_api() -> None:

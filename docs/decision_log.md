@@ -4699,3 +4699,96 @@ D-057 — `gopcnet` now has an edge-weight convention, generalized
 bootstrap edge-stability, centrality, a CS-coefficient, and bootstrap
 difference testing, covering the reliability/interpretation tooling a
 real network-psychometrics analysis needs beyond a bare fit function.
+
+## D-058: Absolute goodness-of-fit (AIC/BIC/EBIC) via constrained Gaussian graphical model MLE — parameter-count convention
+
+Date: 2026-09-07
+
+Stage: Package development (`gopcnet`'s public API), not a Stage 1-5h
+benchmark charter — same definitional-decision pattern as D-055
+through D-057, but for a different kind of question than any of those:
+not reliability ("how stable is this estimate"), but absolute fit
+("does this structure fit the data well at all").
+
+Status: Definitional decision, no gate.
+
+Question: `fit_ebicglasso` computes EBIC internally, but only to pick
+the best lambda along its own regularization path — that number was
+never exposed as a general tool, and `fit_gopc`, `fit_gopc_fixed_order`,
+and `fit_pc_skeleton` select structure via sequences of hypothesis
+tests rather than penalized-likelihood optimization, so none of them
+produce anything like a log-likelihood at all. There was no way to
+report a single fit statistic for a GOPC result, and no common
+yardstick to compare structures from different methods on the same
+data.
+
+Decision: Add `gopcnet.metrics.fit_gaussian_graphical_model`: given any
+adjacency matrix (from any of the four fit functions, or the caller's
+own) plus the data, fit the exact maximum-likelihood Gaussian
+graphical model constrained to that adjacency's zero pattern —
+covariance selection (Speed & Kiiveri, 1986; Whittaker, 1990) via
+iterative proportional scaling, a block-coordinate-descent algorithm
+closely related to the graphical lasso's own (Friedman, Hastie, &
+Tibshirani, 2008) but without an L1 penalty, since the support is
+already fixed rather than searched for. From the resulting precision
+matrix, `log_likelihood`, `aic`, `bic`, and `ebic` (Foygel & Drton,
+2010) all fall out directly. Two conventions worth recording:
+
+- **AIC/BIC count `n_parameters = n_variables + n_edges`** (every
+  diagonal precision entry, plus every edge) as free parameters —
+  the standard, generic Schwarz (1978) BIC definition: total model
+  dimensionality. **EBIC counts `n_edges` alone** — not an
+  inconsistency with AIC/BIC, but what Foygel & Drton's own EBIC
+  derivation specifies: their formula is stated in terms of edge count
+  only, since EBIC's own extended penalty is specifically about the
+  combinatorial search over which of `C(p, 2)` possible edges to
+  include, atop a baseline model that already includes the diagonal
+  variances regardless of which edges are chosen. Both counts are
+  correct for the statistic each is attached to; using `n_edges` for
+  AIC/BIC or `n_parameters` for EBIC would each be a real error, not a
+  harmless variant.
+- **This EBIC formula matches `gopcnet.comparators.ebicglasso`'s own
+  internal `_extended_bic` exactly** (`gamma` default `0.5`, `4 *
+  gamma * n_edges * log(p)` penalty term) so a GOPC structure's EBIC
+  and an EBICglasso structure's EBIC are directly comparable numbers.
+  One caveat: `_extended_bic`'s own internal log-likelihood (used only
+  to rank candidate lambdas against each other, never exposed) omits
+  the Gaussian normalizing constant `-p * log(2*pi)` per observation,
+  since it's a constant that cancels across every point on the same
+  regularization path and doesn't affect which lambda wins. This
+  module's own `log_likelihood` includes that constant, since it's
+  meant to be reported as a genuine absolute statistic — so directly
+  diffing this module's `log_likelihood` against `_extended_bic`'s
+  internal one (rather than against a value recomputed the same way on
+  both sides) would be comparing two different, if closely related,
+  quantities.
+
+Non-claims: not a new validated performance quantity for GOPC's own
+structure-selection accuracy — this evaluates *any* given structure's
+fit to the data, independent of how that structure was chosen, and is
+applicable to a structure from any of the four fit functions or a
+user's own.
+
+Evidence: `tests/unit/test_ggm_fit.py` — a complete-graph sanity check
+(the constrained MLE must reduce exactly to the unconstrained MLE,
+`inv(sample_covariance)`), an empty-graph check (must reduce to the
+diagonal/independence model, `diag(1 / diag(sample_covariance))`), the
+covariance-selection defining property itself (fitted covariance
+exactly matches the sample covariance on the diagonal and at every
+edge, for a real `fit_gopc` chain structure), manual AIC/BIC/EBIC
+formula reconstruction from the returned fields, and a cross-check
+against `fit_ebicglasso`: the exact MLE refit of glasso's own selected
+support must have log-likelihood at least as high as glasso's own
+(necessarily shrunk/penalized) fit at that identical support — a real
+mathematical property (the unconstrained MLE for a fixed support
+maximizes likelihood over every matrix with that support, so it cannot
+score lower than a penalized estimate sharing the same support), not
+an approximate or tuned expectation.
+
+Consequences: `fit_gaussian_graphical_model` and `GGMFitResult` are
+exported at the top level, alongside the reliability tooling from
+D-055 through D-057. `gopcnet.comparators.ebicglasso`'s own
+`_extended_bic` is untouched — it remains `fit_ebicglasso`'s frozen,
+already-tested internal lambda-selection mechanism, not refactored to
+reuse this new module, since the two serve different purposes (path
+selection vs. post-hoc reporting) despite sharing the same formula.
