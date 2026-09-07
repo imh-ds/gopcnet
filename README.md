@@ -48,6 +48,34 @@ ordinal/categorical psychometric data is out of scope and has not been
 validated. See each function's own docstring for full parameter and
 return-value documentation, and `CHANGELOG.md` for release history.
 
+Two comparator methods used throughout this project's own benchmarks
+are also available, for benchmarking GOPC against them on your own
+data: `fit_ebicglasso` (graphical lasso, EBIC-selected penalty) and
+`fit_pc_skeleton` (the PC algorithm's skeleton phase only, no
+orientation). Both return a small result object rather than a bare
+array -- `result.adjacency`, not `result` itself:
+
+```python
+from gopcnet import fit_ebicglasso, fit_pc_skeleton
+
+ebic_result = fit_ebicglasso(data)
+pc_result = fit_pc_skeleton(data, alpha=0.01)
+```
+
+## What's in the package
+
+`pip install`ing this package gives you `gopcnet.pipeline` (the two
+`fit_gopc*` functions), `gopcnet.comparators` (`fit_ebicglasso`,
+`fit_pc_skeleton`), and the `gopcnet.screening`, `gopcnet.dpi`, and
+`gopcnet.mi` modules they're built from. It does **not** include
+`gopcnet.experiments`, `gopcnet.simulation`, or `gopcnet.bootstrap` --
+this repository's own internal scaffolding for running and validating
+the Stage 1-5h benchmarks behind `docs/decision_log.md`. That code is
+still in this repository and still tested; it's simply not part of
+what an installed copy of the package ships. If you want to reproduce
+or extend those benchmarks, work from a checkout of this repository
+rather than an installed `gopcnet`.
+
 ## A note on the package name
 
 This package was briefly named `mintnet` (inherited from the repository

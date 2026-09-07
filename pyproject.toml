@@ -33,6 +33,7 @@ test = ["pytest>=8.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+exclude = ["gopcnet.experiments*", "gopcnet.simulation*", "gopcnet.bootstrap*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

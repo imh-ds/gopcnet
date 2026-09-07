@@ -27,6 +27,20 @@ validation history in full.
 - Package-level docstring and `__version__`.
 - Installation instructions in README.md (GitHub install; not yet
   published to PyPI).
+- `fit_ebicglasso` and `fit_pc_skeleton` (with their `EBICglassoResult`
+  and `PCSkeletonResult` result types) are now importable from the
+  top-level package, alongside `gopcnet.comparators` where they already
+  lived, so users can benchmark GOPC against them without reaching
+  into a submodule.
+
+### Removed
+- `gopcnet.experiments`, `gopcnet.simulation`, and `gopcnet.bootstrap`
+  -- this repository's own internal benchmark-running and validation
+  scaffolding -- are no longer included in the built/installed
+  package (`pyproject.toml`'s `packages.find` now excludes them). They
+  remain in this repository and remain tested; only what `pip install`
+  ships has changed. Nothing in `gopcnet.pipeline` or
+  `gopcnet.comparators` ever depended on them.
 
 ## 0.1.0
 
