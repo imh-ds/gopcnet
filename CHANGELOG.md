@@ -139,6 +139,22 @@ validation history in full.
   (`in_sample`) and the held-out rows (`out_of_sample`). See
   `docs/decision_log.md`'s D-060. Lives in `gopcnet.metrics.fit`
   alongside `fit_gaussian_graphical_model` and `fit_indices`.
+- `compute_global_metrics` (top-level, alongside its
+  `GlobalMetricsResult` return type, and the four individual measures
+  it bundles -- `density`, `global_strength`,
+  `global_clustering_coefficient`, `average_shortest_path_length`):
+  whole-network summary statistics, as distinct from every other
+  metric in the package, which describes an individual edge or node.
+  `global_strength` matches bootnet's own definition (sum of `|weight|`
+  over every edge) so a future network comparison test can reuse it
+  directly; `global_clustering_coefficient` uses the binary adjacency,
+  not a weighted variant (no consensus convention exists for folding
+  signed weights into one); `average_shortest_path_length` reuses
+  `compute_centrality`'s own `1 / |weight|` distance convention. See
+  README.md's "Whole-network summary statistics" section and
+  `docs/decision_log.md`'s D-061 for why small-worldness was
+  deliberately left out of this pass. Lives in the new
+  `gopcnet.metrics.global_metrics` module.
 
 ### Removed
 - `gopcnet.experiments`, `gopcnet.simulation`, and `gopcnet.bootstrap`

@@ -309,6 +309,37 @@ cross-validation -- call it repeatedly with different `rng` seeds and
 average if you want a lower-variance estimate. See
 `docs/decision_log.md`'s D-060.
 
+## Whole-network summary statistics
+
+Everything above describes an individual edge or node. `compute_global_metrics`
+summarizes the network as a whole:
+
+```python
+from gopcnet import compute_global_metrics
+
+summary = compute_global_metrics(result.adjacency, result.weights)
+summary.density                        # proportion of possible edges present
+summary.global_strength                # sum of |weight| over every edge
+summary.clustering_coefficient         # transitivity, from the binary adjacency
+summary.average_shortest_path_length   # mean geodesic distance, 1/|weight| convention
+```
+
+`global_strength` matches bootnet's own definition exactly -- it's the
+statistic bootnet's network comparison test (NCT) checks for
+invariance between two networks' overall connectivity level.
+`global_clustering_coefficient` deliberately uses the *binary*
+adjacency rather than a weighted variant, since weighted clustering
+coefficients (Zhang & Horvath, 2005; Onnela et al., 2005) disagree with
+each other on how to combine signed weights, unlike `1 / |weight|`
+distance's single established convention for closeness/betweenness.
+`average_shortest_path_length` reuses that same distance convention,
+counting only reachable pairs (matching `closeness_centrality`'s own
+convention for disconnected nodes). See `docs/decision_log.md`'s D-061
+for the exact formulas, including why small-worldness (a common
+qgraph/bootnet extension) was deliberately left out of this pass --
+it needs a random-graph null-model convention with no established
+single choice, unlike everything else here.
+
 ## What's in the package
 
 `pip install`ing this package gives you `gopcnet.pipeline` (the two
@@ -317,7 +348,8 @@ average if you want a lower-variance estimate. See
 `case_drop_bootstrap`, `cs_coefficient`, `bootstrap_replicates`,
 `difference_test`, `threshold_by_inclusion_probability`),
 `gopcnet.metrics` (`compute_centrality`, `fit_gaussian_graphical_model`,
-`fit_indices`, `train_test_fit_indices`), and the `gopcnet.screening`,
+`fit_indices`, `train_test_fit_indices`, `compute_global_metrics`), and
+the `gopcnet.screening`,
 `gopcnet.dpi`, and `gopcnet.mi` modules they're built from. It does
 **not** include `gopcnet.experiments`,
 `gopcnet.simulation`, or `gopcnet.bootstrap` -- this repository's own

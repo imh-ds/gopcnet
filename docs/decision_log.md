@@ -4969,3 +4969,101 @@ about `fit_indices`'s in-sample-by-default usage pattern being
 optimistic for a searched (rather than theory-specified) structure; it
 does not change any recommendation about which structure-learning
 method to prefer, only how to report that method's own fit honestly.
+
+## D-061: Whole-network summary statistics (`compute_global_metrics`) — density, global strength, clustering coefficient, average shortest path length; small-worldness deliberately deferred
+
+Date: 2026-09-07
+
+Stage: Package development (`gopcnet`'s public API) — first item of a
+broader "additional metrics" build sequence (global descriptives →
+network comparison test → bridge centrality) proposed after a review
+of what `bootnet`/`qgraph`/`networktools` offer that this package
+still lacked.
+
+Status: Definitional decision, no gate.
+
+Question: Every metric in the package so far describes an individual
+edge (`fit_gopc`'s weights, `bootstrap_edge_stability`'s inclusion
+probabilities) or an individual node (`compute_centrality`,
+`fit_indices`' per-model log-likelihoods notwithstanding). There was no
+way to summarize a network as a single set of numbers — the kind of
+descriptive statistics normally reported alongside per-node results in
+a network psychometrics write-up (density, overall connectivity,
+clustering, typical path length).
+
+Decision: Add `gopcnet.metrics.global_metrics` with four independently
+exported functions, bundled by `compute_global_metrics(adjacency,
+weights) -> GlobalMetricsResult`:
+
+- **`density`**: `n_edges / (p * (p - 1) / 2)` from the boolean
+  `adjacency`. `nan` for a single-node network (no possible edges).
+- **`global_strength`**: `sum(|weight|)` over the edges (upper
+  triangle only, each edge counted once) — this is deliberately
+  bootnet's own "global strength" definition, chosen because it is the
+  exact statistic bootnet's network comparison test (NCT, the next
+  item in this build sequence) checks for invariance between two
+  networks' overall connectivity level. Matching that definition now
+  means NCT can consume it directly later without a redefinition.
+- **`global_clustering_coefficient`**: transitivity, `3 * n_triangles /
+  n_connected_triples`, computed from the **binary** `adjacency`, not
+  a weighted variant. Weighted clustering coefficients exist (Zhang &
+  Horvath, 2005; Onnela et al., 2005) but disagree with each other on
+  how to fold signed edge weights into one per-triple magnitude, with
+  no equivalent to `1 / |weight|` distance's single established
+  convention — using the plain binary definition avoids silently
+  picking one of several disputed weighted formulas. Implemented via
+  the standard identity `trace(A^3) / 2` (numerator) over
+  `sum_v C(deg(v), 2)` (denominator), verified by hand against a
+  single triangle (`1.0`), an open path (`0.0`), and two triangles
+  sharing one node (`0.6`, worked out by hand in the test itself).
+- **`average_shortest_path_length`**: mean geodesic distance over
+  every *reachable* pair, using the same `1 / |weight|` distance
+  `gopcnet.metrics.centrality`'s `closeness_centrality`/
+  `betweenness_centrality` already use. Unreachable pairs are excluded
+  from both the sum and the count (reachability-only, matching
+  `closeness_centrality`'s own convention for a disconnected node
+  rather than treating infinite distance as some large finite number).
+  `nan` if no pair is reachable at all.
+
+`adjacency` and `weights` are taken as independent arguments (not one
+derived from the other) — the same design already used by
+`fit_gaussian_graphical_model`'s separate `data`/`adjacency` — since a
+weight matrix like `EdgeStabilityResult.weight_mean` isn't guaranteed
+to be exactly zero everywhere a *specific* adjacency (e.g. the
+point-estimate one) says an edge is absent.
+
+**Deliberately deferred: small-worldness** (Humphries & Gurney, 2008:
+the ratio of clustering-to-path-length against a random-graph null
+model's own average). This requires generating an ensemble of random
+graphs matched to the real network's node/edge count, a `rng`
+parameter, a choice of how many random graphs to average over, and a
+decision about whether the null model should also match the real
+weight distribution or only the binary topology — none of which has an
+established single convention the way `1 / |weight|` distance does.
+Rather than pick one silently the way the clustering-coefficient
+question above was resolved by falling back to the plain binary
+definition, this is left out of the first pass; it can be added later
+as its own decision if there's a specific need for it.
+
+Non-claims: This is not a new validated claim about GOPC's own
+structure-selection accuracy — a generic descriptive layer applicable
+to any adjacency/weight pair from any of the four fit functions, the
+same as every other metric added since D-055.
+
+Evidence: `tests/unit/test_global_metrics.py` — each of the four
+functions checked against a hand-computable triangle graph, an open
+3-node path, and (for the clustering coefficient) two triangles
+sharing one node with the connected-triple count worked out by hand;
+degenerate cases (`nan` for a single node / no connected triples / no
+reachable pairs, `0.0` for an edgeless network); adjacency-validation
+errors (non-square, asymmetric, nonzero diagonal); and
+`compute_global_metrics`'s own shape-mismatch check between `adjacency`
+and `weights`.
+
+Consequences: `compute_global_metrics`, `GlobalMetricsResult`,
+`density`, `global_strength`, `global_clustering_coefficient`, and
+`average_shortest_path_length` are exported at the top level. This is
+the first of the three-item "additional metrics" sequence agreed in
+conversation; the network comparison test (NCT) is next, and can now
+reuse `global_strength`'s exact definition directly rather than
+redefining it.

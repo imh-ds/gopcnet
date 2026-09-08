@@ -127,6 +127,19 @@ statistic (see `docs/decision_log.md`'s D-060):
     >>> result = train_test_fit_indices(data, fit, rng=np.random.default_rng(0))
     >>> result.in_sample.rmsea, result.out_of_sample.rmsea
 
+`compute_global_metrics` summarizes a network as a single set of
+numbers rather than per-edge or per-node values: `density`,
+`global_strength` (sum of `|weight|` over every edge -- what bootnet's
+own network comparison test checks for invariance between two
+networks), `global_clustering_coefficient` (transitivity, from the
+binary adjacency), and `average_shortest_path_length` (mean geodesic
+distance, same `1 / |weight|` convention as `compute_centrality`'s
+closeness/betweenness). See `docs/decision_log.md`'s D-061:
+
+    >>> from gopcnet import compute_global_metrics
+    >>> summary = compute_global_metrics(result.adjacency, result.weights)
+    >>> summary.density, summary.global_strength, summary.clustering_coefficient
+
 This package was previously named `mintnet`; see README.md's "A note
 on the package name" section if you find `mintnet.*` references in
 this repository's own historical charters or decision log.
@@ -150,13 +163,19 @@ from gopcnet.metrics import (
     CentralityResult,
     FitIndicesResult,
     GGMFitResult,
+    GlobalMetricsResult,
     TrainTestFitResult,
+    average_shortest_path_length,
     betweenness_centrality,
     closeness_centrality,
     compute_centrality,
+    compute_global_metrics,
+    density,
     expected_influence,
     fit_gaussian_graphical_model,
     fit_indices,
+    global_clustering_coefficient,
+    global_strength,
     strength,
     train_test_fit_indices,
 )
@@ -207,5 +226,11 @@ __all__ = [
     "FitIndicesResult",
     "train_test_fit_indices",
     "TrainTestFitResult",
+    "compute_global_metrics",
+    "GlobalMetricsResult",
+    "density",
+    "global_strength",
+    "global_clustering_coefficient",
+    "average_shortest_path_length",
     "__version__",
 ]

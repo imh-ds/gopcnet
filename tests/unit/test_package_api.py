@@ -38,6 +38,12 @@ def test_public_api_matches_all() -> None:
         "FitIndicesResult",
         "train_test_fit_indices",
         "TrainTestFitResult",
+        "compute_global_metrics",
+        "GlobalMetricsResult",
+        "density",
+        "global_strength",
+        "global_clustering_coefficient",
+        "average_shortest_path_length",
         "__version__",
     }
 
@@ -53,16 +59,20 @@ def test_public_names_are_importable_from_top_level() -> None:
         EdgeStabilityResult,
         FitIndicesResult,
         GGMFitResult,
+        GlobalMetricsResult,
         GOPCResult,
         PCSkeletonResult,
         TrainTestFitResult,
+        average_shortest_path_length,
         betweenness_centrality,
         bootstrap_edge_stability,
         bootstrap_replicates,
         case_drop_bootstrap,
         closeness_centrality,
         compute_centrality,
+        compute_global_metrics,
         cs_coefficient,
+        density,
         difference_test,
         expected_influence,
         fit_ebicglasso,
@@ -71,6 +81,8 @@ def test_public_names_are_importable_from_top_level() -> None:
         fit_gopc_fixed_order,
         fit_indices,
         fit_pc_skeleton,
+        global_clustering_coefficient,
+        global_strength,
         strength,
         threshold_by_inclusion_probability,
         train_test_fit_indices,
@@ -94,6 +106,11 @@ def test_public_names_are_importable_from_top_level() -> None:
     assert callable(fit_gaussian_graphical_model)
     assert callable(fit_indices)
     assert callable(train_test_fit_indices)
+    assert callable(compute_global_metrics)
+    assert callable(density)
+    assert callable(global_strength)
+    assert callable(global_clustering_coefficient)
+    assert callable(average_shortest_path_length)
     assert GOPCResult is not None
     assert EBICglassoResult is not None
     assert PCSkeletonResult is not None
@@ -106,6 +123,7 @@ def test_public_names_are_importable_from_top_level() -> None:
     assert GGMFitResult is not None
     assert FitIndicesResult is not None
     assert TrainTestFitResult is not None
+    assert GlobalMetricsResult is not None
 
 
 def test_internal_research_scaffolding_is_not_part_of_the_public_api() -> None:
