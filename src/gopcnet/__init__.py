@@ -110,6 +110,23 @@ pass/fail judgment (see `docs/decision_log.md`'s D-059):
     >>> indices = fit_indices(data, result.adjacency)
     >>> indices.rmsea, indices.cfi, indices.tli, indices.srmr
 
+Both `fit_gaussian_graphical_model` and `fit_indices` are optimistic
+when `adjacency` was *discovered* from the same data being evaluated
+(the usual case) -- the structure search already picked the sparsity
+pattern that best explains this sample's own noise, not just its
+population structure. `train_test_fit_indices` removes that bias: it
+splits `data`, runs a fit function (bound with `functools.partial`,
+the same convention as `bootstrap_edge_stability`) on the training
+rows only, and reports `fit_indices` for the resulting structure
+against both splits, so `out_of_sample` is a fair, non-circular fit
+statistic (see `docs/decision_log.md`'s D-060):
+
+    >>> from functools import partial
+    >>> from gopcnet import fit_gopc, train_test_fit_indices
+    >>> fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+    >>> result = train_test_fit_indices(data, fit, rng=np.random.default_rng(0))
+    >>> result.in_sample.rmsea, result.out_of_sample.rmsea
+
 This package was previously named `mintnet`; see README.md's "A note
 on the package name" section if you find `mintnet.*` references in
 this repository's own historical charters or decision log.
@@ -133,6 +150,7 @@ from gopcnet.metrics import (
     CentralityResult,
     FitIndicesResult,
     GGMFitResult,
+    TrainTestFitResult,
     betweenness_centrality,
     closeness_centrality,
     compute_centrality,
@@ -140,6 +158,7 @@ from gopcnet.metrics import (
     fit_gaussian_graphical_model,
     fit_indices,
     strength,
+    train_test_fit_indices,
 )
 from gopcnet.pipeline import GOPCResult, fit_gopc, fit_gopc_fixed_order
 from gopcnet.stability import (
@@ -186,5 +205,7 @@ __all__ = [
     "GGMFitResult",
     "fit_indices",
     "FitIndicesResult",
+    "train_test_fit_indices",
+    "TrainTestFitResult",
     "__version__",
 ]

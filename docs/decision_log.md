@@ -4881,3 +4881,91 @@ AIC/BIC/EBIC and these four SEM indices, `gopcnet` now covers the
 standard goodness-of-fit toolkit used across both the
 information-criterion and SEM traditions for Gaussian graphical
 models.
+
+## D-060: `train_test_fit_indices` — out-of-sample goodness-of-fit, to remove the structure-search's own optimism bias
+
+Date: 2026-09-07
+
+Stage: Package development (`gopcnet`'s public API), extending the
+D-058/D-059 fit-metrics line with a use-pattern fix rather than a new
+statistic.
+
+Status: Definitional decision, no gate.
+
+Question: `fit_gaussian_graphical_model` and `fit_indices` both take
+`data` and `adjacency` as independent arguments, and their own
+docstrings already note that evaluating an adjacency against different
+data than it was fit on is a valid call — but the overwhelmingly
+default usage pattern (used throughout this package's own README and
+demo material) is `result = fit_gopc(data, ...); fit_indices(data,
+result.adjacency)`: fitting the structure and evaluating its fit on
+the *same* rows. Unlike a CFA/SEM measurement model, whose factor
+structure is normally specified from theory or a different sample
+before the data at hand is ever examined, `fit_gopc`/`fit_gopc_fixed_order`/
+`fit_pc_skeleton`/`fit_ebicglasso` all *search this exact sample* for
+its own conditional-independence pattern. Evaluating fit on the same
+sample the structure was searched from is the same statistical problem
+as judging a model on the data it was selected on: some of the
+resulting "good fit" is genuine population signal, but some is the
+search process finding and exploiting this sample's own idiosyncratic
+noise. AIC/BIC/EBIC and the SEM indices all penalize the *number* of
+free parameters in the final structure, which is a much weaker
+correction than what would actually be needed to account for having
+searched a large space of possible structures to arrive at it. Nothing
+in the package made the honest, non-circular alternative (fit on one
+part of the data, evaluate on another) easy to do.
+
+Decision: Add `gopcnet.metrics.train_test_fit_indices(data, fit, *,
+test_proportion=0.5, ebic_gamma=0.5, max_iter=100, tol=1e-6, rng)`:
+
+- Splits `data` by row into disjoint train/test partitions via
+  `rng.permutation`, sized by `test_proportion` (rounded; must leave
+  at least one row on each side).
+- Calls `fit` — any of the four fit functions, with its own
+  hyperparameters already bound via `functools.partial`, the same
+  calling convention `bootstrap_edge_stability`/`case_drop_bootstrap`/
+  `bootstrap_replicates` already use — on the training rows only.
+- Reports `fit_indices` twice against the resulting adjacency: once
+  against the training rows (`in_sample` — the same optimistic number
+  a direct `fit_indices(data, adjacency)` call would give, included
+  for comparison) and once against the held-out test rows
+  (`out_of_sample` — the honest number, since those rows played no
+  part in selecting the structure).
+- Returns `TrainTestFitResult(adjacency, n_train, n_test, in_sample,
+  out_of_sample)`.
+
+This is a thin composition, not a new fitting algorithm — it calls
+`fit` once and `fit_indices` twice, both already-validated. No change
+to `fit_gaussian_graphical_model`, `fit_indices`, or any of the four
+fit functions' own decision logic.
+
+Non-claims: This does not make `fit_indices`'s own conventional-cutoff
+caveat (D-059) moot — a good out-of-sample fit is still being read
+against cutoffs never validated for a sparse structure-learning
+method. It also does not claim a 50/50 (or any particular) split is
+optimal; `test_proportion` is left to the caller, the same way
+`case_drop_bootstrap`'s `proportions_retained` is. It is not a
+cross-validation procedure (a single split, not k-fold) — a caller
+wanting a lower-variance out-of-sample estimate can call this
+repeatedly with different `rng` seeds and average, but that composition
+is left to the caller rather than built in, consistent with this
+package's general preference for small composable primitives over
+built-in aggregation choices.
+
+Evidence: `tests/unit/test_train_test_fit_indices.py` — split sizes
+sum to the original row count and match `test_proportion`; the
+returned adjacency is verified to equal `fit_gopc` called directly on
+the same training-row subset (same `rng` seed replayed independently);
+default `test_proportion=0.5`; rejection of `test_proportion` outside
+`(0, 1)` and of splits too small to leave rows on both sides; and a
+sanity check that `in_sample`/`out_of_sample` are computed from
+disjoint row sets (their null-model fitted variances generally
+differ), not accidentally the same data twice.
+
+Consequences: `train_test_fit_indices` and `TrainTestFitResult` are
+exported at the top level alongside `fit_gaussian_graphical_model` and
+`fit_indices`. This closes the specific gap raised in conversation
+about `fit_indices`'s in-sample-by-default usage pattern being
+optimistic for a searched (rather than theory-specified) structure; it
+does not change any recommendation about which structure-learning
+method to prefer, only how to report that method's own fit honestly.

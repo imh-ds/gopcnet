@@ -36,11 +36,23 @@ model chi-square, degrees of freedom, and the four indices. See
 conventional cutoffs' own validation status (none, for a sparse
 structure-learning method like GOPC or PC -- these cutoffs come from
 the SEM literature, not this package's own benchmarks).
+
+`train_test_fit_indices` addresses a specific bias in the two
+functions above when they're called the obvious way (fit the
+structure on a dataset, then evaluate its own fit against that same
+dataset): the structure wasn't fixed in advance, it was *searched for*
+on this exact sample by whichever fit function produced it, so part of
+how well it then appears to fit is the search finding and exploiting
+this sample's own noise, not just recovering genuine population
+structure. Splitting the data, fitting the structure on one part and
+evaluating `fit_indices` on the other, removes that optimism. See
+`docs/decision_log.md`'s D-060.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Callable, Protocol
 
 import numpy as np
 from scipy.stats import chi2 as _chi2_distribution
@@ -372,4 +384,116 @@ def fit_indices(
         target=target,
         saturated=saturated,
         null=null,
+    )
+
+
+class _FitResult(Protocol):
+    adjacency: np.ndarray
+
+
+@dataclass(frozen=True)
+class TrainTestFitResult:
+    """Out-of-sample goodness-of-fit for a structure that was itself
+    *discovered* on this data, not specified in advance.
+
+    `adjacency` is the structure `fit` produced from the training
+    split only; `in_sample` is `fit_indices(train_data, adjacency)`
+    (the same optimistic number a direct `fit_indices(data, adjacency)`
+    call would give, for comparison) and `out_of_sample` is
+    `fit_indices(test_data, adjacency)` -- the honest number, since the
+    test rows played no part in selecting `adjacency`. A large gap
+    between the two (out-of-sample fit noticeably worse) is evidence
+    that some of the in-sample fit was the structure search fitting
+    this particular sample's noise rather than genuine population
+    structure; see `docs/decision_log.md`'s D-060.
+    """
+
+    adjacency: np.ndarray
+    n_train: int
+    n_test: int
+    in_sample: FitIndicesResult
+    out_of_sample: FitIndicesResult
+
+
+def train_test_fit_indices(
+    data: np.ndarray,
+    fit: Callable[[np.ndarray], _FitResult],
+    *,
+    test_proportion: float = 0.5,
+    ebic_gamma: float = 0.5,
+    max_iter: int = 100,
+    tol: float = 1e-6,
+    rng: np.random.Generator,
+) -> TrainTestFitResult:
+    """Split `data` by row into a train/test partition, run `fit` on
+    the training split only, and report `fit_indices` for the
+    resulting structure against both splits.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        ``(n_samples, n_variables)`` array of continuous, approximately
+        Gaussian observations.
+    fit : Callable[[np.ndarray], _FitResult]
+        Any of this package's four fit functions, with its own
+        hyperparameters already bound (`functools.partial` or a
+        lambda) -- the same convention `bootstrap_edge_stability` and
+        friends use. Called once, on the training split.
+    test_proportion : float, default 0.5
+        Fraction of rows (rounded) held out for the test split; the
+        remainder is the training split. Must leave at least one row
+        on each side, and both splits must have more rows than
+        `data` has columns for `fit_gaussian_graphical_model`'s
+        sample covariance to be invertible.
+    ebic_gamma, max_iter, tol : forwarded to `fit_indices` for both
+        splits.
+    rng : np.random.Generator
+        Controls the train/test row assignment.
+
+    Returns
+    -------
+    TrainTestFitResult
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from gopcnet import fit_gopc, train_test_fit_indices
+    >>> from functools import partial
+    >>> rng = np.random.default_rng(0)
+    >>> x1 = rng.normal(size=1000)
+    >>> x2 = 0.6 * x1 + np.sqrt(1 - 0.6**2) * rng.normal(size=1000)
+    >>> x3 = 0.6 * x2 + np.sqrt(1 - 0.6**2) * rng.normal(size=1000)
+    >>> data = np.column_stack([x1, x2, x3])
+    >>> fit = partial(fit_gopc, screening_alpha=0.05, dpi_alpha=0.05)
+    >>> result = train_test_fit_indices(data, fit, rng=np.random.default_rng(1))
+    >>> result.in_sample.rmsea, result.out_of_sample.rmsea  # doctest: +SKIP
+    """
+    values = np.asarray(data, dtype=float)
+    if values.ndim != 2:
+        raise ValueError("data must be a two-dimensional array")
+    n = values.shape[0]
+    if not (0.0 < test_proportion < 1.0):
+        raise ValueError("test_proportion must be in (0, 1)")
+
+    n_test = round(test_proportion * n)
+    n_train = n - n_test
+    if n_test < 1 or n_train < 1:
+        raise ValueError("test_proportion leaves no rows on one side of the split")
+
+    permutation = rng.permutation(n)
+    test_rows = values[permutation[:n_test]]
+    train_rows = values[permutation[n_test:]]
+
+    fitted = fit(train_rows)
+    adjacency = np.asarray(fitted.adjacency)
+
+    in_sample = fit_indices(train_rows, adjacency, ebic_gamma=ebic_gamma, max_iter=max_iter, tol=tol)
+    out_of_sample = fit_indices(test_rows, adjacency, ebic_gamma=ebic_gamma, max_iter=max_iter, tol=tol)
+
+    return TrainTestFitResult(
+        adjacency=adjacency,
+        n_train=n_train,
+        n_test=n_test,
+        in_sample=in_sample,
+        out_of_sample=out_of_sample,
     )

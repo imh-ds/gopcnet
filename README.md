@@ -275,6 +275,40 @@ baseline, SRMR's standardized-residual convention) and the degenerate
 cases (a saturated `adjacency` has `df = 0`, `rmsea = 0.0`, and an
 undefined -- `nan` -- `tli`).
 
+Both `fit_gaussian_graphical_model` and `fit_indices` are optimistic
+when `adjacency` was *discovered* from the same `data` being evaluated
+-- the usual pattern above. Unlike a CFA/SEM measurement model
+(normally specified from theory before the data at hand is examined),
+`fit_gopc`/`fit_gopc_fixed_order`/`fit_pc_skeleton`/`fit_ebicglasso`
+all search this exact sample for its own structure, so part of how
+well that structure then appears to fit is the search exploiting this
+sample's own noise, not just recovering genuine population structure.
+`train_test_fit_indices` gives the honest version: split the data,
+fit the structure on the training rows only, and evaluate `fit_indices`
+against both splits.
+
+```python
+from functools import partial
+from gopcnet import fit_gopc, train_test_fit_indices
+import numpy as np
+
+fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+result = train_test_fit_indices(data, fit, rng=np.random.default_rng(0))
+
+result.adjacency          # the structure, fit on the training rows only
+result.in_sample.rmsea    # optimistic -- evaluated on the same rows it was fit on
+result.out_of_sample.rmsea  # honest -- evaluated on rows the structure never saw
+```
+
+A large gap between `in_sample` and `out_of_sample` is itself
+diagnostic: it means a meaningful part of the in-sample fit was the
+structure search fitting this particular sample rather than
+population-level signal. `test_proportion` (default `0.5`) controls
+the split; this runs a single train/test split, not k-fold
+cross-validation -- call it repeatedly with different `rng` seeds and
+average if you want a lower-variance estimate. See
+`docs/decision_log.md`'s D-060.
+
 ## What's in the package
 
 `pip install`ing this package gives you `gopcnet.pipeline` (the two
@@ -283,7 +317,7 @@ undefined -- `nan` -- `tli`).
 `case_drop_bootstrap`, `cs_coefficient`, `bootstrap_replicates`,
 `difference_test`, `threshold_by_inclusion_probability`),
 `gopcnet.metrics` (`compute_centrality`, `fit_gaussian_graphical_model`,
-`fit_indices`), and the `gopcnet.screening`,
+`fit_indices`, `train_test_fit_indices`), and the `gopcnet.screening`,
 `gopcnet.dpi`, and `gopcnet.mi` modules they're built from. It does
 **not** include `gopcnet.experiments`,
 `gopcnet.simulation`, or `gopcnet.bootstrap` -- this repository's own

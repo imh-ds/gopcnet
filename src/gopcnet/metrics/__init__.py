@@ -8,7 +8,14 @@ from .centrality import (
     expected_influence,
     strength,
 )
-from .fit import FitIndicesResult, GGMFitResult, fit_gaussian_graphical_model, fit_indices
+from .fit import (
+    FitIndicesResult,
+    GGMFitResult,
+    TrainTestFitResult,
+    fit_gaussian_graphical_model,
+    fit_indices,
+    train_test_fit_indices,
+)
 from .topology import score_motif
 
 __all__ = [
@@ -23,4 +30,6 @@ __all__ = [
     "GGMFitResult",
     "fit_indices",
     "FitIndicesResult",
+    "train_test_fit_indices",
+    "TrainTestFitResult",
 ]

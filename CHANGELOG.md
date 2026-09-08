@@ -125,6 +125,20 @@ validation history in full.
   saturated adjacency has `df = 0`, `rmsea = 0.0`, and an undefined
   `tli`). Lives in `gopcnet.metrics.fit` alongside
   `fit_gaussian_graphical_model`.
+- `train_test_fit_indices` (top-level, alongside its
+  `TrainTestFitResult` return type): out-of-sample goodness-of-fit,
+  for when `adjacency` was *discovered* from the same data being
+  evaluated (the default usage pattern for `fit_indices`) rather than
+  specified in advance the way a CFA/SEM measurement model normally
+  is -- evaluating fit on the same sample a structure was searched
+  from is optimistic, since some of the apparent fit is the search
+  exploiting that sample's own noise. Splits `data` by row, runs any
+  of the four fit functions (bound with `functools.partial`, the same
+  convention as `bootstrap_edge_stability`) on the training rows only,
+  and reports `fit_indices` against both the training rows
+  (`in_sample`) and the held-out rows (`out_of_sample`). See
+  `docs/decision_log.md`'s D-060. Lives in `gopcnet.metrics.fit`
+  alongside `fit_gaussian_graphical_model` and `fit_indices`.
 
 ### Removed
 - `gopcnet.experiments`, `gopcnet.simulation`, and `gopcnet.bootstrap`
