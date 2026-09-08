@@ -44,6 +44,8 @@ def test_public_api_matches_all() -> None:
         "global_strength",
         "global_clustering_coefficient",
         "average_shortest_path_length",
+        "network_comparison_test",
+        "NetworkComparisonResult",
         "__version__",
     }
 
@@ -61,6 +63,7 @@ def test_public_names_are_importable_from_top_level() -> None:
         GGMFitResult,
         GlobalMetricsResult,
         GOPCResult,
+        NetworkComparisonResult,
         PCSkeletonResult,
         TrainTestFitResult,
         average_shortest_path_length,
@@ -83,6 +86,7 @@ def test_public_names_are_importable_from_top_level() -> None:
         fit_pc_skeleton,
         global_clustering_coefficient,
         global_strength,
+        network_comparison_test,
         strength,
         threshold_by_inclusion_probability,
         train_test_fit_indices,
@@ -111,6 +115,7 @@ def test_public_names_are_importable_from_top_level() -> None:
     assert callable(global_strength)
     assert callable(global_clustering_coefficient)
     assert callable(average_shortest_path_length)
+    assert callable(network_comparison_test)
     assert GOPCResult is not None
     assert EBICglassoResult is not None
     assert PCSkeletonResult is not None
@@ -124,6 +129,7 @@ def test_public_names_are_importable_from_top_level() -> None:
     assert FitIndicesResult is not None
     assert TrainTestFitResult is not None
     assert GlobalMetricsResult is not None
+    assert NetworkComparisonResult is not None
 
 
 def test_internal_research_scaffolding_is_not_part_of_the_public_api() -> None:

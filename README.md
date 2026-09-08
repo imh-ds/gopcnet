@@ -340,6 +340,41 @@ qgraph/bootnet extension) was deliberately left out of this pass --
 it needs a random-graph null-model convention with no established
 single choice, unlike everything else here.
 
+## Network comparison test (NCT)
+
+Everything above describes one network from one sample. `network_comparison_test`
+answers a different question -- do *two independent samples'* networks
+differ more than sampling error alone would predict -- bootnet's own
+network comparison test (van Borkulo et al., 2017):
+
+```python
+from functools import partial
+from gopcnet import fit_gopc, network_comparison_test
+import numpy as np
+
+fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+result = network_comparison_test(
+    data_group_a, data_group_b, fit, permutations=1000, rng=np.random.default_rng(0),
+)
+
+result.observed_global_strength_difference, result.global_strength_p_value
+result.observed_max_edge_weight_difference, result.max_edge_weight_difference_p_value
+```
+
+It pools the two samples, repeatedly re-splits the pooled sample at
+random into two groups of the same sizes as the real two (permuting
+group membership -- not a bootstrap resample with replacement), refits
+under every re-split, and reports how often a random re-split produces
+a difference at least as large as the one actually observed --
+`global_strength_difference` reuses `global_strength`'s exact
+definition from the section above; `max_edge_weight_difference` is the
+largest absolute difference between any one corresponding edge weight.
+A p-value is never reported as exactly `0.0` (add-one smoothing, Phipson
+& Smyth, 2010). `data_a`/`data_b` must be over the same variables in
+the same column order (not verified -- on the caller), and `fit` must
+be `fit_gopc` or `fit_gopc_fixed_order` (the comparators don't define
+edge weights, and will raise). See `docs/decision_log.md`'s D-062.
+
 ## What's in the package
 
 `pip install`ing this package gives you `gopcnet.pipeline` (the two
@@ -348,8 +383,9 @@ single choice, unlike everything else here.
 `case_drop_bootstrap`, `cs_coefficient`, `bootstrap_replicates`,
 `difference_test`, `threshold_by_inclusion_probability`),
 `gopcnet.metrics` (`compute_centrality`, `fit_gaussian_graphical_model`,
-`fit_indices`, `train_test_fit_indices`, `compute_global_metrics`), and
-the `gopcnet.screening`,
+`fit_indices`, `train_test_fit_indices`, `compute_global_metrics`),
+`gopcnet.network_comparison` (`network_comparison_test`), and the
+`gopcnet.screening`,
 `gopcnet.dpi`, and `gopcnet.mi` modules they're built from. It does
 **not** include `gopcnet.experiments`,
 `gopcnet.simulation`, or `gopcnet.bootstrap` -- this repository's own

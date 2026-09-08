@@ -5067,3 +5067,96 @@ the first of the three-item "additional metrics" sequence agreed in
 conversation; the network comparison test (NCT) is next, and can now
 reuse `global_strength`'s exact definition directly rather than
 redefining it.
+
+## D-062: Network comparison test (NCT) — permutation test for whether two independent samples' networks differ, reusing D-061's `global_strength` directly
+
+Date: 2026-09-07
+
+Stage: Package development (`gopcnet`'s public API) — second item of
+the three-item "additional metrics" sequence (global descriptives →
+network comparison test → bridge centrality) agreed in conversation.
+
+Status: Definitional decision, no gate.
+
+Question: Every reliability and fit tool built so far (D-055-D-061)
+describes *one* network estimated from *one* sample. A very common
+real use case in network psychometrics is comparing two groups — does
+a clinical group's network differ from controls', does pre-treatment
+differ from post-treatment — and nothing in the package supported
+that. `bootnet`'s `NCT()` is one of its most-used functions for
+exactly this.
+
+Decision: Add `gopcnet.network_comparison.network_comparison_test(data_a,
+data_b, fit, *, permutations, rng) -> NetworkComparisonResult`, a new
+top-level module (not `gopcnet.metrics`, since this describes a
+*relationship between two samples*, not one network, and not
+`gopcnet.stability`, since its resampling scheme — permuting group
+membership across the pooled sample — is a genuinely different
+procedure from every bootstrap already there):
+
+- **Two test statistics**, both from the NCT literature (van Borkulo
+  et al., 2017): `global_strength_difference` (the absolute difference
+  in `gopcnet.metrics.global_metrics.global_strength` between the two
+  networks — reusing D-061's own definition directly, exactly the
+  reuse anticipated when `global_strength` was added) and
+  `max_edge_weight_difference` (the largest absolute difference
+  between any one corresponding edge weight across the two networks).
+- **Permutation procedure**: pool `data_a` and `data_b`, repeatedly
+  re-split the pooled sample at random into two groups of the same
+  sizes as the real groups (`rng.permutation` over row indices — a
+  *permutation without replacement of group membership*, not a
+  bootstrap resample with replacement), refit both groups under each
+  re-split, and record both statistics. A permutation on which `fit`
+  raises `ValueError` is excluded from both groups' tallies, the same
+  convention `bootstrap_edge_stability`/`case_drop_bootstrap`/
+  `bootstrap_replicates` all use.
+- **Add-one p-value smoothing** (Phipson & Smyth, 2010: "Permutation
+  p-values should never be zero"): `p = (n_permutations_at_least_as_extreme
+  + 1) / (n_successful_permutations + 1)`, never letting a p-value be
+  reported as exactly `0.0` even when every permutation falls short of
+  the observed statistic — the observed statistic is itself one draw
+  from the same permutation-null-consistent generating process being
+  tested, so treating it as literally impossible under the null is
+  never justified by a finite number of permutations.
+- **Only `fit_gopc`/`fit_gopc_fixed_order` work with this function** —
+  both statistics need edge weights, and `fit_ebicglasso`/
+  `fit_pc_skeleton` don't define one (D-055 established weights only
+  for the two GOPC variants). `_extract_weights` raises a clear
+  `ValueError` naming this restriction rather than silently failing or
+  falling back to some derived weight.
+- **Same variables, same column order, across `data_a`/`data_b` is on
+  the caller** — nothing in the function can verify that column `i` in
+  `data_a` means the same thing as column `i` in `data_b`; this
+  matches how every other multi-argument function in this package
+  (`fit_gaussian_graphical_model`'s `data`/`adjacency`, `difference_test`'s
+  `index_a`/`index_b`) leaves index/column correspondence to the
+  caller.
+
+Non-claims: This is not a new validated claim about GOPC's own
+structure-selection accuracy, nor a claim that this permutation
+procedure's Type-I/Type-II error properties have been benchmarked
+within this package's own validation framework (`docs/stage*_charter.md`)
+— it implements a well-established external procedure (van Borkulo et
+al., 2017) directly, the same way `fit_indices` implements
+established SEM formulas without re-deriving or re-validating them
+from scratch.
+
+Evidence: `tests/unit/test_network_comparison.py` — a deterministic
+synthetic `fit` (weight = mean of each column pair's product, no
+dependency on `fit_gopc`'s own statistical behavior) used to test the
+permutation machinery itself: valid statistic/p-value ranges, add-one
+smoothing verified against an exact expected fraction (`1/21` with 20
+permutations and a maximally extreme observed statistic), zero
+observed difference for identical networks, rejection of mismatched
+column counts and non-positive `permutations`, the `.weights is None`
+error message, and the "every permutation degenerate" `RuntimeError`.
+Also an end-to-end run against real `fit_gopc` on two independently
+drawn samples from the same generating process.
+
+Consequences: `network_comparison_test` and `NetworkComparisonResult`
+are exported at the top level from the new `gopcnet.network_comparison`
+module (added to the list of modules `pip install` ships in the
+package's own top-level docstring and README.md's "What's in the
+package"). This is the second of the three-item "additional metrics"
+sequence; bridge centrality (caller-supplied community assignment) is
+next.

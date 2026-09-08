@@ -155,6 +155,20 @@ validation history in full.
   `docs/decision_log.md`'s D-061 for why small-worldness was
   deliberately left out of this pass. Lives in the new
   `gopcnet.metrics.global_metrics` module.
+- `network_comparison_test` (top-level, alongside its
+  `NetworkComparisonResult` return type): bootnet's network comparison
+  test (NCT; van Borkulo et al., 2017) -- tests whether two
+  *independent samples'* networks differ more than sampling error
+  alone would predict, via `global_strength_difference` (reusing
+  D-061's `global_strength` directly) and `max_edge_weight_difference`,
+  each tested by permuting group membership across the pooled sample
+  and refitting under each re-split (add-one p-value smoothing per
+  Phipson & Smyth, 2010, so a p-value is never reported as exactly
+  `0.0`). Requires a weighted fit method (`fit_gopc`/
+  `fit_gopc_fixed_order`); raises a clear error for `fit_ebicglasso`/
+  `fit_pc_skeleton`, which don't define edge weights. See README.md's
+  "Network comparison test (NCT)" section and `docs/decision_log.md`'s
+  D-062. Lives in the new `gopcnet.network_comparison` module.
 
 ### Removed
 - `gopcnet.experiments`, `gopcnet.simulation`, and `gopcnet.bootstrap`

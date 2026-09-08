@@ -140,14 +140,35 @@ closeness/betweenness). See `docs/decision_log.md`'s D-061:
     >>> summary = compute_global_metrics(result.adjacency, result.weights)
     >>> summary.density, summary.global_strength, summary.clustering_coefficient
 
+`network_comparison_test` answers a different question than any of the
+above: do *two independent samples'* networks differ, not just how
+reliable is one network's own estimate? It's bootnet's network
+comparison test (NCT; van Borkulo et al., 2017) -- pool the two
+samples, repeatedly re-split the pooled sample at random into groups
+of the same sizes as the real two, refit under each re-split, and see
+how often a random re-split produces a global-strength or maximum-edge-weight
+difference at least as large as the one actually observed:
+
+    >>> from functools import partial
+    >>> from gopcnet import fit_gopc, network_comparison_test
+    >>> fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+    >>> result = network_comparison_test(
+    ...     data_group_a, data_group_b, fit, permutations=1000, rng=np.random.default_rng(0),
+    ... )
+    >>> result.global_strength_p_value, result.max_edge_weight_difference_p_value
+
+See `docs/decision_log.md`'s D-062 for the exact conventions (add-one
+p-value smoothing, and why only `fit_gopc`/`fit_gopc_fixed_order` --
+the two weighted fit methods -- work with this function).
+
 This package was previously named `mintnet`; see README.md's "A note
 on the package name" section if you find `mintnet.*` references in
 this repository's own historical charters or decision log.
 
 Only the modules re-exported here, plus `gopcnet.pipeline`,
 `gopcnet.comparators`, `gopcnet.stability`, `gopcnet.metrics`,
-`gopcnet.screening`, `gopcnet.dpi`, and `gopcnet.mi`, are distributed
-with `pip install`; `gopcnet.experiments`, `gopcnet.simulation`, and
+`gopcnet.network_comparison`, `gopcnet.screening`, `gopcnet.dpi`, and
+`gopcnet.mi`, are distributed with `pip install`; `gopcnet.experiments`, `gopcnet.simulation`, and
 `gopcnet.bootstrap` (the older, `compose_screen_then_prune`-specific
 bootstrap tool `docs/stage3_charter.md`'s own evidence was validated
 against) are this repository's own internal validation scaffolding and
@@ -179,6 +200,7 @@ from gopcnet.metrics import (
     strength,
     train_test_fit_indices,
 )
+from gopcnet.network_comparison import NetworkComparisonResult, network_comparison_test
 from gopcnet.pipeline import GOPCResult, fit_gopc, fit_gopc_fixed_order
 from gopcnet.stability import (
     BootstrapReplicates,
@@ -232,5 +254,7 @@ __all__ = [
     "global_strength",
     "global_clustering_coefficient",
     "average_shortest_path_length",
+    "network_comparison_test",
+    "NetworkComparisonResult",
     "__version__",
 ]
