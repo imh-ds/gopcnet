@@ -169,6 +169,19 @@ validation history in full.
   `fit_pc_skeleton`, which don't define edge weights. See README.md's
   "Network comparison test (NCT)" section and `docs/decision_log.md`'s
   D-062. Lives in the new `gopcnet.network_comparison` module.
+- `compute_bridge_centrality` (top-level, alongside its
+  `BridgeCentralityResult` return type, and the four individual
+  measures it bundles -- `bridge_strength`, `bridge_expected_influence`,
+  `bridge_closeness_centrality`, `bridge_betweenness_centrality`):
+  bridge centrality (Jones, Ma, & McNally, 2021) -- how much a node
+  connects *across* community boundaries, restricting each of
+  `compute_centrality`'s own four measures to cross-community
+  relationships. `communities` (one label per node) is always
+  caller-supplied; `gopcnet` has no community-detection algorithm of
+  its own. See README.md's "Bridge centrality" section and
+  `docs/decision_log.md`'s D-063 for that scope decision and the exact
+  formulas. Lives in the new `gopcnet.metrics.bridge_centrality`
+  module.
 
 ### Removed
 - `gopcnet.experiments`, `gopcnet.simulation`, and `gopcnet.bootstrap`

@@ -161,6 +161,19 @@ See `docs/decision_log.md`'s D-062 for the exact conventions (add-one
 p-value smoothing, and why only `fit_gopc`/`fit_gopc_fixed_order` --
 the two weighted fit methods -- work with this function).
 
+`compute_bridge_centrality` restricts `compute_centrality`'s own four
+measures to *cross-community* relationships (Jones, Ma, & McNally,
+2021) -- how much a node connects two different communities, rather
+than how central it is overall. `communities` (one label per node) is
+always caller-supplied; `gopcnet` has no community-detection algorithm
+of its own (see `docs/decision_log.md`'s D-063 for that scope
+decision):
+
+    >>> from gopcnet import compute_bridge_centrality
+    >>> communities = np.array([0, 0, 1, 1])  # your own theory or clustering
+    >>> bridges = compute_bridge_centrality(result.weights, communities)
+    >>> bridges.strength, bridges.betweenness
+
 This package was previously named `mintnet`; see README.md's "A note
 on the package name" section if you find `mintnet.*` references in
 this repository's own historical charters or decision log.
@@ -181,6 +194,7 @@ own benchmarks, not a tool for analyzing a real fitted network.
 
 from gopcnet.comparators import EBICglassoResult, PCSkeletonResult, fit_ebicglasso, fit_pc_skeleton
 from gopcnet.metrics import (
+    BridgeCentralityResult,
     CentralityResult,
     FitIndicesResult,
     GGMFitResult,
@@ -188,7 +202,12 @@ from gopcnet.metrics import (
     TrainTestFitResult,
     average_shortest_path_length,
     betweenness_centrality,
+    bridge_betweenness_centrality,
+    bridge_closeness_centrality,
+    bridge_expected_influence,
+    bridge_strength,
     closeness_centrality,
+    compute_bridge_centrality,
     compute_centrality,
     compute_global_metrics,
     density,
@@ -256,5 +275,11 @@ __all__ = [
     "average_shortest_path_length",
     "network_comparison_test",
     "NetworkComparisonResult",
+    "compute_bridge_centrality",
+    "BridgeCentralityResult",
+    "bridge_strength",
+    "bridge_expected_influence",
+    "bridge_closeness_centrality",
+    "bridge_betweenness_centrality",
     "__version__",
 ]

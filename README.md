@@ -375,6 +375,38 @@ the same column order (not verified -- on the caller), and `fit` must
 be `fit_gopc` or `fit_gopc_fixed_order` (the comparators don't define
 edge weights, and will raise). See `docs/decision_log.md`'s D-062.
 
+## Bridge centrality
+
+`compute_bridge_centrality` (Jones, Ma, & McNally, 2021) restricts
+`compute_centrality`'s own four measures to *cross-community*
+relationships -- how much a node connects two different communities,
+rather than how central it is overall. Common in psychopathology
+network research (e.g. comorbidity networks between diagnostic
+categories), where a node can have low overall centrality but still be
+the critical link between two clusters.
+
+```python
+from gopcnet import compute_bridge_centrality
+import numpy as np
+
+communities = np.array([0, 0, 0, 1, 1])  # your own theory or clustering -- not computed by gopcnet
+bridges = compute_bridge_centrality(result.weights, communities)
+
+bridges.strength            # sum of |weight| to different-community nodes only
+bridges.expected_influence  # signed sum of weight to different-community nodes only
+bridges.closeness           # reciprocal distance-sum to reachable different-community nodes only
+bridges.betweenness         # betweenness restricted to cross-community node pairs
+```
+
+`communities` is always **caller-supplied** -- `gopcnet` has no
+community-detection algorithm of its own (no `networkx`/`igraph`
+dependency, and community detection is a disputed-methodology problem
+with no single settled convention, unlike this package's other design
+choices). A strong sanity check: with every node in its own unique
+community, every bridge measure equals its ordinary `compute_centrality`
+counterpart exactly; with every node sharing one community, every
+bridge measure is exactly `0.0`. See `docs/decision_log.md`'s D-063.
+
 ## What's in the package
 
 `pip install`ing this package gives you `gopcnet.pipeline` (the two
@@ -383,9 +415,9 @@ edge weights, and will raise). See `docs/decision_log.md`'s D-062.
 `case_drop_bootstrap`, `cs_coefficient`, `bootstrap_replicates`,
 `difference_test`, `threshold_by_inclusion_probability`),
 `gopcnet.metrics` (`compute_centrality`, `fit_gaussian_graphical_model`,
-`fit_indices`, `train_test_fit_indices`, `compute_global_metrics`),
-`gopcnet.network_comparison` (`network_comparison_test`), and the
-`gopcnet.screening`,
+`fit_indices`, `train_test_fit_indices`, `compute_global_metrics`,
+`compute_bridge_centrality`), `gopcnet.network_comparison`
+(`network_comparison_test`), and the `gopcnet.screening`,
 `gopcnet.dpi`, and `gopcnet.mi` modules they're built from. It does
 **not** include `gopcnet.experiments`,
 `gopcnet.simulation`, or `gopcnet.bootstrap` -- this repository's own

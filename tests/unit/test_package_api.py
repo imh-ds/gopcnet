@@ -46,6 +46,12 @@ def test_public_api_matches_all() -> None:
         "average_shortest_path_length",
         "network_comparison_test",
         "NetworkComparisonResult",
+        "compute_bridge_centrality",
+        "BridgeCentralityResult",
+        "bridge_strength",
+        "bridge_expected_influence",
+        "bridge_closeness_centrality",
+        "bridge_betweenness_centrality",
         "__version__",
     }
 
@@ -53,6 +59,7 @@ def test_public_api_matches_all() -> None:
 def test_public_names_are_importable_from_top_level() -> None:
     from gopcnet import (
         BootstrapReplicates,
+        BridgeCentralityResult,
         CaseDropResult,
         CentralityResult,
         CSCoefficientResult,
@@ -70,8 +77,13 @@ def test_public_names_are_importable_from_top_level() -> None:
         betweenness_centrality,
         bootstrap_edge_stability,
         bootstrap_replicates,
+        bridge_betweenness_centrality,
+        bridge_closeness_centrality,
+        bridge_expected_influence,
+        bridge_strength,
         case_drop_bootstrap,
         closeness_centrality,
+        compute_bridge_centrality,
         compute_centrality,
         compute_global_metrics,
         cs_coefficient,
@@ -116,6 +128,11 @@ def test_public_names_are_importable_from_top_level() -> None:
     assert callable(global_clustering_coefficient)
     assert callable(average_shortest_path_length)
     assert callable(network_comparison_test)
+    assert callable(compute_bridge_centrality)
+    assert callable(bridge_strength)
+    assert callable(bridge_expected_influence)
+    assert callable(bridge_closeness_centrality)
+    assert callable(bridge_betweenness_centrality)
     assert GOPCResult is not None
     assert EBICglassoResult is not None
     assert PCSkeletonResult is not None
@@ -130,6 +147,7 @@ def test_public_names_are_importable_from_top_level() -> None:
     assert TrainTestFitResult is not None
     assert GlobalMetricsResult is not None
     assert NetworkComparisonResult is not None
+    assert BridgeCentralityResult is not None
 
 
 def test_internal_research_scaffolding_is_not_part_of_the_public_api() -> None:

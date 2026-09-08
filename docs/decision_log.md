@@ -5160,3 +5160,93 @@ package's own top-level docstring and README.md's "What's in the
 package"). This is the second of the three-item "additional metrics"
 sequence; bridge centrality (caller-supplied community assignment) is
 next.
+
+## D-063: Bridge centrality (`compute_bridge_centrality`) — caller-supplied community assignment, no community-detection algorithm added
+
+Date: 2026-09-07
+
+Stage: Package development (`gopcnet`'s public API) — third and final
+item of the "additional metrics" sequence (global descriptives →
+network comparison test → bridge centrality) agreed in conversation.
+
+Status: Definitional decision, no gate.
+
+Question: `networktools`' bridge centrality (Jones, Ma, & McNally,
+2021) is widely used in psychopathology network research (e.g.
+comorbidity networks between diagnostic categories) to identify which
+nodes connect two otherwise-separate communities, and is a natural
+extension of `gopcnet.metrics.centrality`'s own four measures. But
+computing it requires a community assignment as input, and `gopcnet`
+has no community-detection algorithm and no graph-library dependency
+(`networkx`/`igraph`) to borrow one from.
+
+Decision: Implement only the four bridge-centrality **calculations**,
+each restricting its `gopcnet.metrics.centrality` counterpart to
+cross-community relationships, taking `communities` (one label per
+node, any hashable type) as a **caller-supplied array**, not something
+`compute_bridge_centrality` computes itself:
+
+- **`bridge_strength`**: sum of `|weight|` to different-community
+  nodes only.
+- **`bridge_expected_influence`**: signed sum of weight to
+  different-community nodes only.
+- **`bridge_closeness_centrality`**: reciprocal of the sum of
+  shortest-path distances to *reachable different-community* nodes
+  only (the path itself may cross same-community nodes; only each
+  target's own community matters).
+- **`bridge_betweenness_centrality`**: for every pair of nodes that
+  are themselves in *different* communities from each other
+  (independent of the bridge node's own community), the fraction of
+  their shortest paths through this node, summed over all such pairs.
+  Implemented as a one-line change to `betweenness_centrality`'s own
+  Brandes accumulation: the base "target reached" term a node
+  contributes to its predecessor's dependency is `1` only when that
+  node and the current source are in different communities, `0`
+  otherwise — everything else (proportional tie-splitting, the
+  recursive intermediate-node propagation) is untouched.
+
+**No community-detection algorithm was added** — deliberately, for two
+reasons: (1) it would require a new dependency or a from-scratch
+implementation of a genuinely different, actively disputed
+methodology (modularity maximization, Louvain, spinglass, etc. all
+give different answers on the same network, with no equivalent to
+`1 / |weight|` distance's single settled convention), and (2)
+`gopcnet` is a network-*estimation* package, not a network-*analysis*
+suite — community assignment is much more often driven by domain
+theory (diagnostic categories, questionnaire subscales) than by
+running a generic clustering algorithm on the estimated network
+itself, so requiring it as an argument doesn't cost users the common
+case and avoids this package taking a silent stance on a disputed
+question it has no comparative advantage in adjudicating.
+
+A strong, non-tunable correctness check falls directly out of the
+definitions and is used throughout this decision's own tests: if every
+node is assigned its own unique community, every bridge measure
+reduces *exactly* to its ordinary `gopcnet.metrics.centrality`
+counterpart (every neighbor is, trivially, in a different community);
+if every node shares one community, every bridge measure is exactly
+`0.0` (no cross-community relationship exists at all, by construction).
+
+Non-claims: Like D-055 and D-058, this is not a new validated claim
+about GOPC's own structure-selection accuracy — a generic layer over
+any weight matrix from any of the four fit functions (or the user's
+own), applicable given a community assignment from wherever the user
+gets one.
+
+Evidence: `tests/unit/test_bridge_centrality.py` — the singleton- and
+shared-community invariant checks above (against `gopcnet.metrics.centrality`'s
+own already-validated functions, on the same path-graph/4-cycle
+fixtures `test_centrality.py` uses), a hand-computed two-community
+example (a triangle with a path tail into a second community; every
+cross-community pair's shortest path and intermediate-node count
+worked out by hand, cross-checked via the identity that summed
+node-betweenness equals summed `(path length - 1)` over all
+cross-community pairs), and `communities`-shape validation errors.
+
+Consequences: `compute_bridge_centrality`, `BridgeCentralityResult`,
+`bridge_strength`, `bridge_expected_influence`,
+`bridge_closeness_centrality`, and `bridge_betweenness_centrality` are
+exported at the top level from the new `gopcnet.metrics.bridge_centrality`
+module. This closes the three-item "additional metrics" sequence
+(D-061-D-063) agreed in conversation; no further item in that sequence
+remains unless a new, specific gap is identified.

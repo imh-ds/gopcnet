@@ -1,5 +1,13 @@
 """Topology metrics."""
 
+from .bridge_centrality import (
+    BridgeCentralityResult,
+    bridge_betweenness_centrality,
+    bridge_closeness_centrality,
+    bridge_expected_influence,
+    bridge_strength,
+    compute_bridge_centrality,
+)
 from .centrality import (
     CentralityResult,
     betweenness_centrality,
@@ -34,6 +42,12 @@ __all__ = [
     "expected_influence",
     "closeness_centrality",
     "betweenness_centrality",
+    "compute_bridge_centrality",
+    "BridgeCentralityResult",
+    "bridge_strength",
+    "bridge_expected_influence",
+    "bridge_closeness_centrality",
+    "bridge_betweenness_centrality",
     "fit_gaussian_graphical_model",
     "GGMFitResult",
     "fit_indices",
