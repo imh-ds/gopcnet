@@ -5250,3 +5250,98 @@ exported at the top level from the new `gopcnet.metrics.bridge_centrality`
 module. This closes the three-item "additional metrics" sequence
 (D-061-D-063) agreed in conversation; no further item in that sequence
 remains unless a new, specific gap is identified.
+
+## D-064: Example tutorial (`examples/tutorial.py`/`tutorial.ipynb`) — messy simulated data, single script as the source of truth, no plotting/community-detection dependency
+
+Date: 2026-09-07
+
+Stage: Package development (documentation/onboarding), not a Stage
+1-5h benchmark charter — closes the "example scripts and notebooks"
+item deferred multiple times earlier in this package's own development
+(explicitly deferred at the user's own direction until the reliability,
+fit, and additional-metrics API work — D-055 through D-063 — was done).
+
+Status: Definitional decision, no gate.
+
+Question: Nothing in the repository demonstrated `gopcnet`'s full API
+end to end on realistic data, or showed how to visualize a fitted
+network — every existing example (this package's own tests, the
+one-off scratch demo used earlier in this same conversation to show
+the package live) either used clean multivariate-normal data chosen so
+the underlying math is easy to hand-verify, or wasn't committed to the
+repository at all.
+
+Decision:
+
+- **A single simulated dataset, deliberately messier than the test
+  suite's own fixtures**: an 8-symptom depression/anxiety network
+  (two correlated latent severity factors driving the observed
+  symptoms) with one right-skewed symptom (an unstandardized power
+  transform), one coarse Likert-style ordinal symptom (rounded to 5
+  levels), one symptom with injected outliers, one near-isolated
+  (mostly-noise) symptom, and two "bridge" symptoms that are
+  conventionally categorized under one diagnostic label but
+  empirically load on both latent factors — chosen specifically so the
+  bridge-centrality step (D-063) has a genuine, non-trivial example to
+  surface, not just a contrived toy case.
+- **`tutorial.py` (a plain, "percent"-cell-format script) is the single
+  source of truth; `tutorial.ipynb` is mechanically generated from it**
+  by splitting on `# %%`/`# %% [markdown]` markers into notebook JSON
+  cells, rather than authoring the two independently. A `.ipynb` file
+  is just JSON (`nbformat` v4) — no new dependency (`jupytext`,
+  `nbformat`) was needed to write the small one-off converter. This
+  guarantees the script and notebook can never drift apart in content,
+  at the cost of the notebook needing manual regeneration (documented
+  in `examples/README.md`) whenever the script changes, since nothing
+  currently watches for that automatically.
+- **Dual-mode figure handling**: `matplotlib.use("Agg")` (headless, no
+  GUI window) is applied only when `get_ipython()` raises `NameError`
+  (i.e. running as a plain script, not inside a Jupyter kernel); every
+  figure is both saved to `examples/tutorial_output/` and passed to
+  `plt.show()` (a documented no-op under Agg, the reliable way to
+  trigger Jupyter's own inline display without depending on
+  IPython's post-cell-execution auto-display behavior, which isn't
+  guaranteed identical across every Jupyter setup) — the same
+  underlying script code works correctly in both environments.
+- **No new plotting or community-detection dependency.** The
+  `plot_network` helper (a plain circular node layout, edges colored by
+  sign and scaled by `|weight|`) is hand-written with `matplotlib`
+  alone — already a `gopcnet` dependency — rather than adding
+  `networkx`/`igraph` for a single demonstration script. This mirrors
+  D-063's own reasoning for not adding a community-detection algorithm:
+  the tutorial's community labels for bridge centrality are assigned by
+  the same kind of domain theory (DSM-style diagnostic categories) a
+  real user would apply, not computed by a clustering algorithm.
+- **`examples/` is not part of the installed package.** It sits at the
+  repository root alongside `docs/`, not under `src/gopcnet` — nothing
+  in `pyproject.toml`'s `packages.find` needed to change, since a
+  top-level, non-package directory was never a candidate for inclusion
+  in the first place (unlike `gopcnet.experiments`/`simulation`/
+  `bootstrap`, which needed an explicit `exclude`, D-054's own
+  concern).
+
+Non-claims: This is not a claim that GOPC or any comparator method
+performs well on this specific simulated dataset in any generalizable
+sense — the data was constructed to exercise every part of the public
+API and to give bridge centrality something genuine to find, not as a
+benchmark. Numbers reported when the tutorial runs (edge counts,
+p-values, CS-coefficients) will vary somewhat by `numpy` version even
+with the same seeds, and are illustrative, not asserted as
+reproducible ground truth the way `docs/stage*_charter.md`'s own
+benchmark evidence is.
+
+Evidence: `examples/tutorial.py` executed end to end (both before and
+after the `plt.show()` addition) with exit code `0`, producing all 7
+expected figures in `examples/tutorial_output/` and printed output
+confirming every API call succeeds and produces sensible values
+(e.g. the two symptoms simulated to cross-load on both latent factors,
+`fatigue` and `insomnia`, do in fact surface as the two
+highest-bridge-strength nodes among the `depression`-labeled symptoms).
+`examples/tutorial.ipynb` verified to parse as valid `nbformat` v4 JSON
+with the expected cell count and markdown/code split.
+
+Consequences: `examples/tutorial.py`, `examples/tutorial.ipynb`, and
+`examples/README.md` are added to the repository (not the installed
+package). This closes the longest-standing deferred item from this
+package's own development sequence. No change to any installed
+module, dependency list, or public API.

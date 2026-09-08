@@ -78,6 +78,9 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# gopcnet tutorial output (figures saved when examples/tutorial.py is run)
+examples/tutorial_output/
+
 # IPython
 profile_default/
 ipython_config.py

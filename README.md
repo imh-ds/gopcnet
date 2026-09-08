@@ -16,6 +16,12 @@ pip install git+https://github.com/imh-ds/gopcnet.git
 
 Not yet published to PyPI -- install directly from this repository.
 
+For a full walkthrough of the API on a realistic (deliberately messy)
+simulated dataset, with network visualizations at each step, see
+[`examples/tutorial.py`](examples/tutorial.py) (a plain script) or
+[`examples/tutorial.ipynb`](examples/tutorial.ipynb) (the same content
+as a Jupyter notebook).
+
 ## Usage
 
 ```python

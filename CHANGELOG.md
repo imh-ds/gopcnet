@@ -182,6 +182,14 @@ validation history in full.
   `docs/decision_log.md`'s D-063 for that scope decision and the exact
   formulas. Lives in the new `gopcnet.metrics.bridge_centrality`
   module.
+- `examples/tutorial.py`/`examples/tutorial.ipynb`: a full walkthrough
+  of the public API (fitting, comparator benchmarking, bootstrap edge
+  stability, the CS-coefficient, centrality, bridge centrality,
+  goodness of fit, whole-network descriptives, the network comparison
+  test) on a simulated, deliberately messy 8-symptom dataset, with
+  network visualizations at each step. Not part of the installed
+  package -- repository-only example material. See
+  `docs/decision_log.md`'s D-064.
 
 ### Removed
 - `gopcnet.experiments`, `gopcnet.simulation`, and `gopcnet.bootstrap`
