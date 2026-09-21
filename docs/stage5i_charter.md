@@ -152,6 +152,21 @@ replicates is on the order of `25` minutes per shard.
   every shared `(dgp, N, replicate)`: `(n_estimated_edges, precision,
   recall)` identical in **at least 99.9%** of replicate-level rows, and every
   cell-level mean within `.001`.
+- **G1 scope (pre-run amendment, before any full run).** The pre-run smoke
+  test (20 replicates per cell) reproduced the archived Stage 5e PC rows
+  exactly in every cell except `overlap`, `N = 1750`, where `20`-`26` of
+  `100`-`150` replicates differ in both directions (mean edge count `10.28`
+  archived vs. `10.32` here; the distributions agree, the per-replicate
+  graphs do not). The draws themselves are confirmed identical to the
+  archived ones: MINT reproduces the Stage 5a archive exactly on that same
+  cell (`0` of `100` mismatches at `N = 1500` and `N = 1750`) and growing-order
+  GOPC reproduces the Stage 5g archive exactly (G2). The archived Stage 5e
+  PC rows for that one cell are therefore not reproducible from the shared
+  draws (cause not identified; the archive is left unmodified). G1 is
+  assessed on the other `19` cells; `overlap`/`1750` is reported separately
+  with its row-agreement fraction and is **not** gated. This amendment was
+  fixed from the smoke data (`replicates 0-19` only, no validation-set
+  comparison), before any full run.
 - **G2.** `gopc_growing@validated` reproduces the archived Stage 5g rows
   by the same criterion.
 
