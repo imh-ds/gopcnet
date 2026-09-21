@@ -80,6 +80,7 @@ target/
 
 # gopcnet tutorial output (figures saved when examples/tutorial.py is run)
 examples/tutorial_output/
+examples/tutorial_rendered.html
 
 # IPython
 profile_default/

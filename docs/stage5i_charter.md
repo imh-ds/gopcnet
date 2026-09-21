@@ -1,9 +1,6 @@
 # Stage 5i Charter: PC Significance-Level Sweep — Is GOPC's Tradeoff Against PC an Alpha Artifact?
 
-Status: **DRAFT — open questions resolved, awaiting freeze.** Freeze (and
-add a SHA-256 to the run metadata, per every prior charter) only before any
-run is dispatched. Resolutions of the five pre-freeze questions are recorded
-in the final section.
+Status: **FROZEN before results**
 Date: 2026-09-20
 
 ## Background and objective
