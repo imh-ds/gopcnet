@@ -86,9 +86,13 @@ dataset D-047, D-051, and D-053 used. `2,000` replicates per cell.
    largest feasible cap, disclose it, and restrict the mechanism claim
    accordingly — an implementation-time decision, not an analysis choice.
 
-5. `pc@1.25x.01` and `pc@1.25xmatched`: PC at `1.25 x` the `.01` and
-   matched alphas (`.0125` and `1.25 x alpha(N)`), used only to set the
-   Q4 noise floor (a trivially different PC setting).
+5. `pc@.0125` and `pc@.125`: PC at `1.25 x` the two Q4 alphas (`.01` and
+   `.10`), used only to set the Q4 noise floor (a trivially different PC
+   setting).
+
+*Pre-run amendment (before any run was dispatched; the frozen text named
+`pc@1.25xmatched`, which would not correspond to Q4's `.10` level, so the
+noise-floor methods were re-pointed at the Q4 alphas themselves).*
 
 EBICglasso is not re-run: this charter's question concerns PC and GOPC
 only, and D-047's archived numbers remain the reference for it.
