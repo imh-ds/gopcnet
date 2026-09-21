@@ -90,6 +90,17 @@ dataset D-047, D-051, and D-053 used. `2,000` replicates per cell.
    `.10`), used only to set the Q4 noise floor (a trivially different PC
    setting).
 
+*Implementation-time decision, made before any run (the charter's own
+feasibility clause): uncapped `gopc_matched` (`max_conditioning_size = p -
+2 = 13`) is infeasible at `p = 15`. With `screening_alpha = dpi_alpha =
+.10` the candidate graph is nearly complete, and a single fit at cap `4`
+took `6`-`25` s on the composed shapes at `N = 1750` (cap `6`: `26` s; cap
+`3`: `2`-`7` s; cap `2`: `0.5`-`1.7` s; cap `1`: `<= 0.3` s). Both
+`gopc_matched` methods therefore use `max_conditioning_size = 2` in every
+cell. **Consequence for Q4:** the mechanism check compares GOPC and PC
+only through conditional tests of order `<= 2`; any finding of agreement
+is restricted to that, and PC runs uncapped.*
+
 *Pre-run amendment (before any run was dispatched; the frozen text named
 `pc@1.25xmatched`, which would not correspond to Q4's `.10` level, so the
 noise-floor methods were re-pointed at the Q4 alphas themselves).*

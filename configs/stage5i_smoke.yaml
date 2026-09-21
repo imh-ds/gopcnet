@@ -1,0 +1,9 @@
+sample_sizes: [750, 1000, 1500, 1750]
+strength: 0.5
+screening_alpha: 0.001
+max_conditioning_size: 4
+gopc_matched_max_conditioning_size: 2  # implementation-time cap; see charter (uncapped p - 2 infeasible)
+replicates: 20
+master_seed: 20260830
+development_replicates: [0, 9]
+validation_replicates: [10, 19]
