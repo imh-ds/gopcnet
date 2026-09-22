@@ -247,10 +247,30 @@ def plot_network(
 #
 # `fit_gopc` is the recommended default (growing-order GOPC). Nothing
 # here is told the true generative structure -- the screening and
-# pruning thresholds are the only inputs.
+# pruning thresholds are the only inputs, and called as
+# `fit_gopc(data)` both come from `gopcnet.defaults`: the settings this
+# project's own benchmarks were run with (`docs/decision_log.md`'s
+# D-068).
+#
+# This dataset has `N = 600` respondents, below the `N >= 750` floor
+# the default pruning threshold was validated at (D-011, D-012), so
+# `fit_gopc` emits an `OutsideValidatedRangeWarning` saying the
+# threshold is extrapolated. That is the caveat system working as
+# intended, not an error: the fit is still usable, but at this sample
+# size treat individual edges as evidence to weigh rather than settled
+# facts (see `docs/validated_operating_ranges.md`, "Practical
+# translation for smaller-N datasets"), and lean on the stability
+# checks in section 5. Both thresholds actually used are recorded on
+# the result.
 
 # %%
-result = gopcnet.fit_gopc(data, screening_alpha=0.05, dpi_alpha=0.05)
+with warnings.catch_warnings(record=True) as caught:
+    warnings.simplefilter("always")
+    result = gopcnet.fit_gopc(data)
+for warning in caught:
+    print(f"{warning.category.__name__}: {warning.message}")
+print(f"screening_alpha = {result.screening_alpha:g}, dpi_alpha = {result.dpi_alpha:.4f}")
+
 n_edges = int(np.triu(result.adjacency, k=1).sum())
 print(f"GOPC found {n_edges} edges out of {len(LABELS) * (len(LABELS) - 1) // 2} possible")
 for i, row_label in enumerate(LABELS):
@@ -295,8 +315,17 @@ for method_result, method_name, filename in (
 # of the sample could be dropped before a centrality ordering stops
 # resembling the full-sample one.
 
+#
+# Every resample below is refit with the *full-sample* thresholds,
+# passed explicitly. Left to the defaults, a smaller resample (the
+# case-drop bootstrap drops up to 75% of rows) would get a different
+# `dpi_alpha`, and "stability" would then partly measure threshold
+# drift rather than sampling variability. The network comparison test
+# in section 11 reuses the same `fit`, so both groups are also fit with
+# one shared set of thresholds.
+
 # %%
-fit = partial(gopcnet.fit_gopc, screening_alpha=0.05, dpi_alpha=0.05)
+fit = partial(gopcnet.fit_gopc, screening_alpha=result.screening_alpha, dpi_alpha=result.dpi_alpha)
 
 stability = gopcnet.bootstrap_edge_stability(data, fit, bootstraps=150, rng=np.random.default_rng(1))
 print(f"Bootstrap edge stability: {stability.successful_bootstraps} succeeded, "
@@ -416,9 +445,12 @@ print(f"density={summary.density:.2f}  global_strength={summary.global_strength:
 #
 # Using the DSM-style category labels assigned above (which do *not*
 # reflect `fatigue`/`insomnia`'s real cross-loading), bridge centrality
-# should flag them as the symptoms doing the most work connecting the
-# two labeled communities -- exactly the situation this measure exists
-# to surface (Jones, Ma, & McNally, 2021).
+# should rank them near the top among the depression-labeled symptoms
+# -- exactly the situation this measure exists to surface (Jones, Ma, &
+# McNally, 2021). Note that bridge strength is symmetric: every
+# cross-community edge counts for *both* of its endpoints, so the
+# anxiety-side symptom those two bridges attach to (here `worry`) can
+# score as high as, or higher than, the bridge symptoms themselves.
 
 # %%
 bridges = gopcnet.compute_bridge_centrality(result.weights, COMMUNITIES)

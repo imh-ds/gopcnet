@@ -43,4 +43,9 @@ than editing the notebook directly (the notebook has no content of its
 own beyond what's in the script). There's no `jupytext` dependency
 needed for this -- a notebook's `.ipynb` format is just JSON, so
 regenerating it is a matter of re-splitting the script on its `# %%`
-markers into notebook cells.
+markers into notebook cells. `scripts/tutorial_to_notebook.py` does
+exactly that:
+
+```bash
+python scripts/tutorial_to_notebook.py examples/tutorial.py examples/tutorial.ipynb
+```
