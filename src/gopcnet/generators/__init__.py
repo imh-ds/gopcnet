@@ -7,9 +7,14 @@ Cholesky-based sampler -- see that module's docstring and
 `numpy.random.Generator.multivariate_normal`.
 """
 
+from .psych_networks import STRUCTURES, PsychTruth, make_truth, sample_data
 from .sampling import cholesky_factor, covariance_from_precision, sample_gaussian
 
 __all__ = [
+    "STRUCTURES",
+    "PsychTruth",
+    "make_truth",
+    "sample_data",
     "cholesky_factor",
     "covariance_from_precision",
     "sample_gaussian",
