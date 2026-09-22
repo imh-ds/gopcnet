@@ -1,0 +1,17 @@
+# Stage 7a (docs/stage7a_charter.md): adjacency-engine non-inferiority (Part A)
+# and runtime scaling (Part B). Full configuration.
+part_a_dgps: [chain_fork_hub, overlap, triangle_balanced, triangle_moderate, triangle_strong]
+part_a_sample_sizes: [750, 1000, 1500, 1750]
+part_a_replicates: 1000
+part_a_strength: 0.5
+part_a_screening_alpha: 0.001
+pc_alpha: 0.01
+max_conditioning_size: 4
+development_replicates: [0, 499]
+validation_replicates: [500, 999]
+part_b_structures: [random_sparse, random_dense, clustered]
+part_b_ps: [10, 20, 30]
+part_b_n: 500
+part_b_replicates: 20
+component_budget_seconds: 60
+master_seed: 20260830
