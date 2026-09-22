@@ -11,8 +11,10 @@ Anchor cells (`legacy_chain_fork_hub`, `p = 15`) use Stage 5a's frozen
 sampler and seed derivation, so their draws equal the archived Stage 5g
 draws (gate G3).
 
-Sharding: `--structures` x `--ps` x `--sample-sizes`. A shard whose
-filters select no cells writes a header-only `raw_metrics.csv`.
+Sharding: `--cells` (`structure-pNN` tokens) x `--replicate-blocks` (e.g.
+`0-49`), the plan used for the full run; `--structures`, `--ps` and
+`--sample-sizes` filters also exist. A shard whose filters select no rows
+writes a header-only `raw_metrics.csv`.
 """
 
 from __future__ import annotations
@@ -297,10 +299,10 @@ def _empty_row(cell: Cell, method: str, replicate: int, seed: int) -> dict[str, 
     return row
 
 
-def _run_psych_cell(cell: Cell, config: Stage7bConfig) -> list[dict[str, Any]]:
+def _run_psych_cell(cell: Cell, config: Stage7bConfig, replicates: range) -> list[dict[str, Any]]:
     rows = []
     methods = methods_for(config, cell)
-    for replicate in range(config.replicates):
+    for replicate in replicates:
         truth = make_truth(cell.structure, cell.p, np.random.default_rng(truth_seed(config, cell, replicate)))
         seed = data_seed(config, cell, replicate)
         data = sample_data(truth, cell.n, np.random.default_rng(seed))
@@ -341,13 +343,13 @@ def _run_psych_cell(cell: Cell, config: Stage7bConfig) -> list[dict[str, Any]]:
     return rows
 
 
-def _run_anchor_cell(cell: Cell, config: Stage7bConfig) -> list[dict[str, Any]]:
+def _run_anchor_cell(cell: Cell, config: Stage7bConfig, replicates: range) -> list[dict[str, Any]]:
     dgp = _DGP_REGISTRY[ANCHOR_DGP]
     truth = _true_adjacency(dgp["true_edges"], int(dgp["p"]))  # type: ignore[arg-type]
     dgp_index = 0  # chain_fork_hub is Stage 5a's first DGP
     dpi_alpha = default_dpi_alpha(cell.n)
     rows = []
-    for replicate in range(config.replicates):
+    for replicate in replicates:
         seed = _condition_seed(STAGE5A_MASTER_SEED, dgp_index, cell.n_index, replicate)
         row = _empty_row(cell, ANCHOR_METHOD, replicate, seed)
         started = time.perf_counter()
@@ -363,9 +365,28 @@ def _run_anchor_cell(cell: Cell, config: Stage7bConfig) -> list[dict[str, Any]]:
     return rows
 
 
-def _run_cell(task: tuple[Cell, Stage7bConfig]) -> list[dict[str, Any]]:
-    cell, config = task
-    return _run_anchor_cell(cell, config) if cell.structure == ANCHOR else _run_psych_cell(cell, config)
+def _run_cell(task: tuple[Cell, Stage7bConfig, range]) -> list[dict[str, Any]]:
+    cell, config, replicates = task
+    runner = _run_anchor_cell if cell.structure == ANCHOR else _run_psych_cell
+    return runner(cell, config, replicates)
+
+
+def cell_token(cell: Cell) -> str:
+    """Shard token for one (structure, p) pair, e.g. `random_dense-p30`.
+    `-` is allowed in GitHub artifact names, and `:` is not."""
+    return f"{cell.structure}-p{cell.p}"
+
+
+def cell_tokens(config: Stage7bConfig) -> tuple[str, ...]:
+    return tuple(dict.fromkeys(cell_token(cell) for cell in cells_for(config)))
+
+
+def parse_replicate_block(block: str) -> range:
+    """`"50-99"` -> `range(50, 100)` (inclusive bounds, as in the config's splits)."""
+    low, high = (int(v) for v in block.split("-"))
+    if low < 0 or high < low:
+        raise ValueError(f"invalid replicate block {block!r}")
+    return range(low, high + 1)
 
 
 # --- evidence ------------------------------------------------------------
@@ -430,19 +451,28 @@ def run_stage7b(
     ps: tuple[int, ...] | None = None,
     sample_sizes: tuple[int, ...] | None = None,
     write_report: bool = True,
+    cells: tuple[str, ...] | None = None,
+    replicate_block: range | None = None,
 ) -> pd.DataFrame:
-    """Run every selected cell; seeds derive from the full grids."""
+    """Run every selected cell over the selected replicates. Seeds derive from
+    the full grids and are per replicate, so any split by cell or replicate
+    block reproduces an unsharded run exactly."""
+    replicates = range(config.replicates)
+    if replicate_block is not None:
+        replicates = range(max(replicate_block.start, 0), min(replicate_block.stop, config.replicates))
     started = time.perf_counter()
     git_commit = _git_commit(_repository_root(config))  # recorded at start, not at write time
     tasks = [
-        (cell, config)
+        (cell, config, replicates)
         for cell in cells_for(config)
-        if (structures is None or cell.structure in structures)
+        if (cells is None or cell_token(cell) in cells)
+        and (structures is None or cell.structure in structures)
         and (ps is None or cell.p in ps)
         and (sample_sizes is None or cell.n in sample_sizes)
     ]
     if max_workers is None:
-        max_workers = max(1, (os.cpu_count() or 2) - 1)
+        # leave one core free on a workstation; use both on a 2-vCPU CI runner
+        max_workers = max(2, (os.cpu_count() or 2) - 1)
     rows: list[dict[str, Any]] = []
     if max_workers > 1 and len(tasks) > 1:
         with ProcessPoolExecutor(max_workers=min(max_workers, len(tasks))) as executor:
@@ -468,6 +498,8 @@ def main() -> None:
     parser.add_argument("--structures", type=str, default=None)
     parser.add_argument("--ps", type=str, default=None)
     parser.add_argument("--sample-sizes", type=str, default=None)
+    parser.add_argument("--cells", type=str, default=None, help="comma-separated structure-pNN tokens")
+    parser.add_argument("--replicate-blocks", type=str, default=None, help="one inclusive block, e.g. 0-49")
     parser.add_argument("--no-report", action="store_true", help="skip the report (use for CI shards)")
     arguments = parser.parse_args()
     run_stage7b(
@@ -478,6 +510,8 @@ def main() -> None:
         ps=tuple(int(v) for v in arguments.ps.split(",")) if arguments.ps else None,
         sample_sizes=tuple(int(v) for v in arguments.sample_sizes.split(",")) if arguments.sample_sizes else None,
         write_report=not arguments.no_report,
+        cells=tuple(arguments.cells.split(",")) if arguments.cells else None,
+        replicate_block=parse_replicate_block(arguments.replicate_blocks) if arguments.replicate_blocks else None,
     )
 
 

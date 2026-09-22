@@ -97,6 +97,36 @@ def test_sharded_run_matches_unsharded(tmp_path: Path) -> None:
     pd.testing.assert_frame_equal(left, right)
 
 
+def test_cell_and_replicate_block_sharding_matches_unsharded(tmp_path: Path) -> None:
+    """The plan used for the full run: `--cells` x `--replicate-blocks`."""
+    config = replace(_tiny(), structures=("random_sparse", "clustered"))
+    whole = run_stage7b(config, tmp_path / "whole", max_workers=1, write_report=False)
+    shards = [
+        run_stage7b(config, tmp_path / f"{token}_{block}", max_workers=1, write_report=False,
+                    cells=(token,), replicate_block=stage7b.parse_replicate_block(block))  # fmt: skip
+        for token in stage7b.cell_tokens(config)
+        for block in ("0-1", "2-3")
+    ]
+    combined = pd.concat(shards, ignore_index=True)
+
+    assert len(combined) == expected_row_count(config)
+    key = ["structure", "p", "n", "method", "replicate"]
+    left = whole.sort_values(key).reset_index(drop=True).drop(columns="elapsed_seconds")
+    right = combined.sort_values(key).reset_index(drop=True).drop(columns="elapsed_seconds")
+    pd.testing.assert_frame_equal(left, right)
+
+
+def test_cell_tokens_and_block_parsing() -> None:
+    full = load_stage7b_config(REPOSITORY_ROOT / "configs/stage7b_external_validity.yaml")
+
+    tokens = stage7b.cell_tokens(full)
+    assert len(tokens) == 5 * 3 + 1 and "random_dense-p30" in tokens and f"{ANCHOR}-p15" in tokens
+    assert all(":" not in token for token in tokens)  # GitHub artifact names reject ':'
+    assert stage7b.parse_replicate_block("50-99") == range(50, 100)
+    with pytest.raises(ValueError):
+        stage7b.parse_replicate_block("9-3")
+
+
 def test_empty_shard_writes_header_only_csv(tmp_path: Path) -> None:
     raw = run_stage7b(_tiny(), tmp_path, structures=(ANCHOR,), ps=(10,))
 
