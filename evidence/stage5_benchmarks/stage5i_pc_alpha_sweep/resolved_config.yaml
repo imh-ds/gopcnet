@@ -1,0 +1,58 @@
+d012_alpha_by_n:
+  750: 0.14759319397068432
+  1000: 0.13131301828020525
+  1500: 0.1083673993888285
+  1750: 0.09964387995292345
+development_replicates:
+- 0
+- 999
+gopc_matched_max_conditioning_size: 2
+master_seed: 20260830
+matched_gopc_alphas:
+- 0.01
+- 0.1
+max_conditioning_size: 4
+methods:
+- pc@0.001
+- pc@0.005
+- pc@0.01
+- pc@0.025
+- pc@0.05
+- pc@0.1
+- pc@0.2
+- pc@matched
+- gopc_growing@validated
+- gopc_matched@0.01
+- gopc_matched@0.1
+- pc@0.0125
+- pc@0.125
+noise_floor_alphas:
+- 0.0125
+- 0.125
+pc_alpha_grid:
+- 0.001
+- 0.005
+- 0.01
+- 0.025
+- 0.05
+- 0.1
+- 0.2
+replicates: 2000
+sample_sizes:
+- 750
+- 1000
+- 1500
+- 1750
+screening_alpha: 0.001
+stage5a_sample_sizes_for_seeding:
+- 400
+- 500
+- 600
+- 750
+- 1000
+- 1500
+- 1750
+strength: 0.5
+validation_replicates:
+- 1000
+- 1999

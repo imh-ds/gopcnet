@@ -16,6 +16,7 @@ permanent regardless of that clock).
 | `stage5f_diagnostic` | D-052 | Local copy, contemporaneous with the above |
 | `stage5g_growing_subset` | D-053 (this repo's own, 2026-09-05) | GitHub Actions run [33952536740](https://github.com/imh-ds/gopcnet/actions/runs/33952536740) |
 | `stage5h_strength_sweep_four_way` | D-054 (2026-09-06) | GitHub Actions run [34072202687](https://github.com/imh-ds/gopcnet/actions/runs/34072202687) |
+| `stage5i_pc_alpha_sweep` | D-065 (2026-09-21) | GitHub Actions run [35563055191](https://github.com/imh-ds/gopcnet/actions/runs/35563055191); its own aggregate step failed (missing `write_report` alias, fixed), so the 20 shard artifacts were aggregated locally. `raw_metrics.csv.gz` is gzip-compressed (65 MB uncompressed). Gates G1/G2 failed on `overlap` -- see D-065. |
 
 Each directory contains the same `raw_metrics.csv` / `report.json` /
 `resolved_config.yaml` / `metadata.json` / `*_report.md` (plus figures

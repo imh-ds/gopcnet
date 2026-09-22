@@ -125,8 +125,20 @@ def _gate(
         }
         for (dgp, n), cell in joined[~in_scope].groupby(["dgp", "n"])
     }
+    diagnosis: dict[str, object] = {}
+    for (dgp, n), cell in joined.groupby(["dgp", "n"]):
+        if cell["_identical"].all():
+            continue
+        entry: dict[str, object] = {"rows": int(len(cell)), "identical_row_fraction": float(cell["_identical"].mean())}
+        for column in columns:
+            x, y = cell[column].dropna(), cell[f"{column}_archived"].dropna()
+            se = float(np.sqrt(x.var() / len(x) + y.var() / len(y))) if len(x) > 1 and len(y) > 1 else 0.0
+            diff = float(x.mean() - y.mean())
+            entry[column] = {"this_run": float(x.mean()), "archived": float(y.mean()), "diff": diff, "unpaired_z": (diff / se) if se > 0 else None}
+        diagnosis[f"{dgp}|{n}"] = entry
     return {
         "passed": bool(fraction >= GATE_ROW_FRACTION and worst <= GATE_CELL_TOLERANCE),
+        "post_hoc_cell_diagnosis": diagnosis,
         "rows_compared": int(len(scoped)),
         "identical_row_fraction": fraction,
         "worst_cell_mean_difference": worst,
@@ -411,12 +423,38 @@ def _markdown(report: dict[str, object], config: Stage5iConfig) -> str:
             f"identical fraction {gate.get('identical_row_fraction', float('nan')):.5f}, "
             f"worst cell-mean difference {gate.get('worst_cell_mean_difference', float('nan')):.5f}"
         )
+        for cell, info in (gate.get("post_hoc_cell_diagnosis") or {}).items():
+            z = "; ".join(
+                f"{c} diff {info[c]['diff']:+.4f} (z={info[c]['unpaired_z']:.2f})"
+                for c in ("n_estimated_edges", "precision", "recall")
+                if info[c]["unpaired_z"] is not None
+            )
+            lines.append(f"  - post-hoc, not predeclared — {cell}: identical fraction {info['identical_row_fraction']:.4f}; {z}")
         for cell, info in (gate.get("excluded_known_archive_anomalies") or {}).items():
             lines.append(
                 f"  - excluded per charter amendment (archive anomaly, reported not gated): {cell}, "
                 f"{info['rows']} rows, identical fraction {info['identical_row_fraction']:.4f}"
             )
-    lines += ["", "## Single-alpha selection (development replicates)", ""]
+    lines += [
+        "",
+        "**Gate outcome and post-hoc diagnosis (added after the full run; not part of the frozen charter).** "
+        "Both gates FAIL as the charter defined them and are reported as failed. Every failing cell is "
+        "`overlap`; all other cells reproduce the archives exactly. The most likely cause: the `overlap` "
+        "sampler draws with `numpy.random.Generator.multivariate_normal`, which factors the covariance by SVD, "
+        "and that covariance has a repeated singular value (0.8, twice), so the SVD's rotation within that "
+        "2-D subspace is not pinned down and can depend on the machine's floating-point behavior. Every "
+        "rotation is a valid factorization of the same covariance, so draws follow the same distribution but "
+        "a given seed can yield different data. Supporting evidence: a local check that swaps the "
+        "factorization (`svd` vs `eigh`) on identical seeds changes PC's edge count in 8% (N=1000) to 16% "
+        "(N=1500) of replicates, the same order as the 17-19% seen here. NOT directly demonstrated: that "
+        "the CI machines actually differ in this way. The per-cell unpaired z-scores above show the "
+        "differing cells agree within sampling noise. This does not affect any comparison inside this run, "
+        "where every method sees the same draw. "
+        "`triangle_balanced` shares the repeated-singular-value property but its edge counts cannot reveal it.",
+        "",
+        "## Single-alpha selection (development replicates)",
+        "",
+    ]
     selection = report["selection"]  # type: ignore[assignment]
     lines += ["| N | primary (50/50) | equal per shape | composed only | triangles only |", "|---|---|---|---|---|"]
     for n in config.sample_sizes:
@@ -508,3 +546,8 @@ def write_stage5i_report(raw: pd.DataFrame, config: Stage5iConfig, output_dir: P
     _grid_table(validation).to_csv(output_dir / "full_grid_validation.csv", index=False)
     (output_dir / "stage5i_report.md").write_text(_markdown(report, config), encoding="utf-8")
     _figure(validation, config, output_dir)
+
+
+# Generic shard-aggregation contract (see stage5a_reporting.py): the
+# aggregator calls `write_report(raw, config, output_dir)`.
+write_report = write_stage5i_report

@@ -5345,3 +5345,86 @@ Consequences: `examples/tutorial.py`, `examples/tutorial.ipynb`, and
 package). This closes the longest-standing deferred item from this
 package's own development sequence. No change to any installed
 module, dependency list, or public API.
+
+
+## D-065: Stage 5i — PC significance-level sweep: the recall gap was alpha; GOPC's decoupled screen/prune design keeps precision at loose alpha; gates G1/G2 failed on `overlap` (non-reproducible sampler)
+
+Date: 2026-09-21
+
+Stage: R6 / Stage 5i (follow-up to D-051 and D-053), charter
+`docs/stage5i_charter.md` (FROZEN before results, with two pre-run
+amendments and one implementation-time cap, all recorded in the charter).
+Evidence: `evidence/stage5_benchmarks/stage5i_pc_alpha_sweep/`
+(GitHub Actions run 35563055191; aggregated locally because the workflow's
+own aggregate step failed on a missing `write_report` alias — a bug in the
+new reporting module, fixed; all 20 shards had succeeded and passed the
+aggregator's row-count and coverage checks).
+
+Status: Descriptive results with two hard gates. **Both gates FAILED as the
+charter defined them and are reported as failed; they were not amended after
+the fact.**
+
+Question: Is the PC-vs-growing-order-GOPC tradeoff in D-051/D-053 a property
+of the algorithms or an artifact of their default significance levels?
+
+Gates (pipeline integrity):
+
+- **G1** (`pc@.01` vs archived Stage 5e): FAILED, identical-row fraction
+  `.9909` (needed `.999`). **G2** (`gopc_growing@validated` vs Stage 5g):
+  FAILED, `.9903`.
+- Every failing cell is `overlap` (G1: `N = 1500, 1750`; G2: `N = 1500`);
+  every other cell reproduces the archives exactly. Cell means in the
+  failing cells agree with the archives within sampling noise (unpaired
+  `|z| <= 1.07`; post-hoc, not predeclared).
+- **Most likely cause (not directly demonstrated):** the `overlap` DGP
+  draws via `Generator.multivariate_normal` (SVD-based) from a covariance
+  with a repeated singular value (`.8`, twice; `triangle_balanced` has the
+  same property). The SVD rotation within a repeated-value subspace is not
+  pinned down and may depend on the machine's floating point, so a given
+  seed can yield different (equally valid) data on different machines. A
+  local check swapping the factorization (`svd` vs `eigh`) on identical
+  seeds changed PC's edge count in `8%` (`N = 1000`) to `16%` (`N = 1500`)
+  of replicates, the same order as the observed `17`-`19%`. **Consequence:**
+  comparisons *within* this run are unaffected (all methods see the same
+  draw); comparison with archived `overlap` rows is distributional, not
+  paired, in some cells; and the same machine-dependence applies to
+  D-047/D-051/D-053, whose archived `overlap` rows are valid draws from
+  the right distribution but not bitwise-reproducible. The frozen sampler
+  was not changed. Future charters should use a sampler whose draws do not
+  depend on an SVD of a degenerate covariance (e.g. Cholesky).
+
+Results (validation replicates, `N in {750, 1000, 1500, 1750}`):
+
+- **Q1 (weak-edge recall):** `pc@matched` recall equals
+  `gopc_growing@validated` recall in all `8` cells (paired difference
+  `0.0000`). The recall deficit reported in D-051/D-053 was the
+  significance level. The predeclared power-formula predictions were met
+  to within `.007` in every cell.
+- **Q2 (precision):** at GOPC's own `alpha(N)`, PC's precision is
+  `.47`-`.58` (`chain_fork_hub`) and `.64`-`.73` (`overlap`) against GOPC's
+  `.93`-`.97`: GOPC's strict marginal screen plus loose prune reaches
+  precision that a single-alpha PC cannot at the same loose level.
+- **Q3 (does one alpha suffice):** the best single PC alpha per `N`
+  (`.005`/`.01`, primary rule) is comparable-or-better in `14` of `20`
+  cells and on all five shapes at **no** `N`; alpha chosen separately per
+  shape group matches GOPC in `20` of `20`. Reading: PC can match GOPC only
+  if the regime (weak-edge triangles vs sparse noisy composed networks) is
+  known in advance; GOPC's single default covers both.
+- **Q4 (mechanism):** matched-alpha GOPC (conditioning order capped at `2`;
+  uncapped was infeasible at `p = 15`) and PC differ by `0.02`-`0.5` edges
+  per replicate against noise floors of `0.08`-`1.35`: effectively the same
+  search. The difference between the methods is the marginal screen and the
+  decoupled alphas, not the search.
+- Negative control (`triangle_balanced`): no separation, as expected.
+
+Caveats: GOPC's `alpha(N)` was calibrated on these same DGPs (charter
+fairness disclosure); Gaussian data, `p <= 15`, five shapes; oracle
+per-group PC alpha is an upper bound, not a deployable method.
+
+Consequences (manuscript updates NOT yet made — pending, per the charter's
+own instruction that they land with this result): the "without PC's cost in
+recall on weak, asymmetric edges" claim in Sections 5.2, 6.1, 6.2 and 7 of
+`manuscript/paper.qmd` must be restated as a claim about PC at `alpha =
+.01`; the paper's contribution should be restated as robustness of a single
+default across regimes (Q2/Q3), not recall. `docs/validated_operating_ranges.md`
+addendum also pending.

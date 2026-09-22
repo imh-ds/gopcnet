@@ -1,0 +1,162 @@
+{
+ "shard-chain_fork_hub-1000": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:41:20.108489+00:00",
+  "runtime_seconds": 2307.7674579030004
+ },
+ "shard-chain_fork_hub-1500": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:19:53.689717+00:00",
+  "runtime_seconds": 1016.7876223540001
+ },
+ "shard-chain_fork_hub-1750": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:46:53.366320+00:00",
+  "runtime_seconds": 2641.233123285
+ },
+ "shard-chain_fork_hub-750": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:40:12.321552+00:00",
+  "runtime_seconds": 2237.962211965
+ },
+ "shard-overlap-1000": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:51:44.488044+00:00",
+  "runtime_seconds": 2933.636416589
+ },
+ "shard-overlap-1500": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:37:23.760269+00:00",
+  "runtime_seconds": 2077.350392567
+ },
+ "shard-overlap-1750": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T06:14:22.210192+00:00",
+  "runtime_seconds": 4291.101410906999
+ },
+ "shard-overlap-750": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T06:03:22.584195+00:00",
+  "runtime_seconds": 3628.383861832
+ },
+ "shard-triangle_balanced-1000": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:04:40.364618+00:00",
+  "runtime_seconds": 107.96597569200001
+ },
+ "shard-triangle_balanced-1500": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:04:48.197649+00:00",
+  "runtime_seconds": 115.558243207
+ },
+ "shard-triangle_balanced-1750": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:04:49.880715+00:00",
+  "runtime_seconds": 116.00427176699999
+ },
+ "shard-triangle_balanced-750": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:03:48.070102+00:00",
+  "runtime_seconds": 50.297053342
+ },
+ "shard-triangle_moderate-1000": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:04:17.670666+00:00",
+  "runtime_seconds": 84.875093158
+ },
+ "shard-triangle_moderate-1500": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:04:37.474557+00:00",
+  "runtime_seconds": 104.28221674299999
+ },
+ "shard-triangle_moderate-1750": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:04:26.274205+00:00",
+  "runtime_seconds": 94.00705189
+ },
+ "shard-triangle_moderate-750": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:04:39.916992+00:00",
+  "runtime_seconds": 104.92990496300001
+ },
+ "shard-triangle_strong-1000": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:03:27.153907+00:00",
+  "runtime_seconds": 40.575495476000015
+ },
+ "shard-triangle_strong-1500": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:04:40.507342+00:00",
+  "runtime_seconds": 108.50026187600001
+ },
+ "shard-triangle_strong-1750": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:03:54.472510+00:00",
+  "runtime_seconds": 64.73981002900001
+ },
+ "shard-triangle_strong-750": {
+  "charter_sha256": "3ea54648833295c97095bde35301fc1e183b83d22648adf721aa6aa85e4e78fa",
+  "git_commit": "9583b12ec2d932979199e65897beb44086a6b84b",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-21T05:05:06.971656+00:00",
+  "runtime_seconds": 98.309512576
+ }
+}
