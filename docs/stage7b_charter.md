@@ -1,9 +1,8 @@
 # Stage 7b Charter: External Validity — GOPC vs EBICglasso, PC and Non-Regularized Testing on Psych-Realistic Networks
 
-Status: **DRAFT — not frozen.** Blocked on Stage 7a's decision-log entry,
-which fixes `gopc_engine` below. Freeze (status line, date, SHA-256
-recorded by the runner) happens after the timing smoke and before any
-full run, per `docs/development_plan/README.md`.
+Status: **FROZEN before results** (timing smoke only: gates, errors and
+timings were read, and no outcome metric was used to set anything; see
+the final section).
 Date: 2026-09-22
 
 "Stage 7" continues this repository's own charter sequence. It is
@@ -267,6 +266,49 @@ GitHub's recommended per-file size.
 
 ## Resolutions of the pre-freeze questions
 
-*(To be filled in at freeze: the Stage 7a outcome and `gopc_engine`, the
-replicate count from the timing rule, and the shard plan. Each is
-recorded with its reason, before any full run.)*
+Recorded at freeze, 2026-09-22, before any full run.
+
+1. **`gopc_engine = "adjacency"`.** D-069 (Stage 7a) recorded Q1
+   NON-INFERIOR for all five legacy shapes, which is this charter's
+   stated condition. The component engine runs at `p = 10` only, as the
+   bridge.
+2. **Timing smoke.** `configs/stage7b_external_validity_smoke.yaml`,
+   5 replicates per cell, all 62 cells, run locally (20 threads, 19
+   concurrent fits), 11.4 minutes, 0 errors.
+   - Gates compute and pass on the smoke data. G1 is identical on
+     200 of 200 rows. G2 shows 0 of 75 truths differing across `N`. G3's
+     anchor precision and recall match the Stage 5g archive
+     (`|z| <= 0.28`), with seeds identical row for row.
+   - Question outcomes were not read.
+3. **Replicate-count rule: its stop condition fired, and the user
+   decided.**
+   - The slowest cell (`random_dense`, `p = 30`, `N = 2000`) costs about
+     133 s per replicate. That gives `R = floor(4 h x 3600 / 133) = 108`,
+     rounded down to 100, below the 200 floor. Per this charter, that
+     meant stopping and asking.
+   - The binding constraint was the rule's implicit assumption of one
+     shard per cell under a 4-hour budget, not total compute (about 80
+     CPU-hours at `R = 500`).
+   - The user chose to keep the target **`R = 500`** and add
+     **replicate-block sharding**. That is an engineering change with no
+     design effect: seeds are per replicate, so a split by block
+     reproduces an unsharded run exactly, which is tested.
+   - Replicates `0`–`249` are development and `250`–`499` validation,
+     as in the config.
+   - The smoke's timings were measured under full local load and are
+     likely pessimistic for a dedicated runner.
+4. **Shard plan (replaces the Sharding section's
+   `--structures x --ps x --sample-sizes`).**
+   - `.github/workflows/sharded_benchmark.yml` runs in two-dimension
+     mode:
+     - `dim1_flag=--cells`: 16 `structure-pNN` tokens, the 15
+       structure x `p` pairs plus `legacy_chain_fork_hub-p15`
+     - `dim2_flag=--replicate-blocks`: ten blocks of 50
+     - 160 jobs in total
+   - Each job runs its cell's `N` values with 2 workers.
+   - The heaviest job (`random_dense-p30`) is about 266 s x 50 replicates,
+     or about 3.7 CPU-hours, about 2 hours on 2 vCPUs, under GitHub's
+     6-hour job limit.
+   - Anchor jobs whose block extends past the anchor's replicates still
+     run: the anchor uses the same `R = 500`.
+   - Dispatching the workflow requires the user's go-ahead.
