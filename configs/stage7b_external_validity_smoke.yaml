@@ -1,0 +1,17 @@
+# Stage 7b (docs/stage7b_charter.md): external-validity benchmark. Smoke configuration (timing rule, gates and feasibility only).
+# `replicates` (and the dev/validation split) is a placeholder until the timing
+# smoke applies the charter's replicate-count rule; `gopc_engine` follows the
+# Stage 7a decision-log entry. Both are recorded in the charter at freeze.
+structures: [random_sparse, random_dense, small_world, clustered, random_with_isolates]
+ps: [10, 20, 30]
+sample_sizes: [250, 500, 1000, 2000]
+replicates: 5
+development_replicates: [0, 2]
+validation_replicates: [3, 4]
+pc_alphas: [0.001, 0.005, 0.01, 0.05]
+nonreg_alpha: 0.05
+ebicglasso_gamma: 0.5
+gopc_engine: adjacency
+anchor_sample_sizes: [1000, 1500]
+g1_subsample_replicates: 5
+master_seed: 20260830
