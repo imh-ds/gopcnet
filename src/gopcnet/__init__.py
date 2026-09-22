@@ -240,7 +240,7 @@ from gopcnet.metrics import (
     train_test_fit_indices,
 )
 from gopcnet.network_comparison import NetworkComparisonResult, network_comparison_test
-from gopcnet.pipeline import GOPCResult, fit_gopc, fit_gopc_fixed_order
+from gopcnet.pipeline import GOPCDiagnostics, GOPCResult, fit_gopc, fit_gopc_fixed_order
 from gopcnet.stability import (
     BootstrapReplicates,
     CaseDropResult,
@@ -260,6 +260,7 @@ __all__ = [
     "fit_gopc",
     "fit_gopc_fixed_order",
     "GOPCResult",
+    "GOPCDiagnostics",
     "default_dpi_alpha",
     "default_screening_alpha",
     "resolve_alphas",

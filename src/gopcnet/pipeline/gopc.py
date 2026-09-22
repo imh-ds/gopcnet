@@ -26,14 +26,16 @@ transparently.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 import numpy as np
 
 from gopcnet.defaults import ResolvedAlphas, resolve_alphas
 from gopcnet.pipeline.compose import compose_screen_then_prune
 from gopcnet.pipeline.growing_subset_dpi import growing_subset_dpi
+from gopcnet.pipeline.skeleton_core import pc_stable_skeleton
 from gopcnet.pipeline.weights import compute_fixed_order_weights, compute_growing_order_weights
-from gopcnet.screening import compute_pairwise_screening_evidence, screen_uncorrected
+from gopcnet.screening import ScreeningEvidence, compute_pairwise_screening_evidence, screen_uncorrected
 
 
 @dataclass(frozen=True)
@@ -59,6 +61,32 @@ class GOPCResult:
     weights: np.ndarray
     screening_alpha: float | None = None
     dpi_alpha: float | None = None
+    diagnostics: GOPCDiagnostics | None = None
+
+
+@dataclass(frozen=True)
+class GOPCDiagnostics:
+    """Per-pair evidence from `fit_gopc(..., engine="adjacency")`.
+
+    Not produced by the frozen component engine. See
+    `gopcnet.pipeline.skeleton_core.SkeletonResult` for the exact meaning
+    of each array.
+
+    - `screened`: the candidate graph after marginal screening.
+    - `max_p_value`: for a retained edge, the largest p-value over every
+      conditioning set tested for it.
+    - `n_tests`: the number of conditional tests run per pair.
+    - `cap_reached`: a retained edge for which larger conditioning sets
+      existed beyond `max_conditioning_size` but were never tested.
+    - `separating_set`: for each pruned edge `(i, j)` with `i < j`, the
+      set that removed it.
+    """
+
+    screened: np.ndarray
+    max_p_value: np.ndarray
+    n_tests: np.ndarray
+    cap_reached: np.ndarray
+    separating_set: dict[tuple[int, int], tuple[int, ...]]
 
 
 def fit_gopc(
@@ -67,6 +95,7 @@ def fit_gopc(
     screening_alpha: float | None = None,
     dpi_alpha: float | None = None,
     max_conditioning_size: int = 4,
+    engine: Literal["component", "adjacency"] = "component",
 ) -> GOPCResult:
     """Estimate a network with growing-order GOPC (the paper's
     recommended default; see `docs/decision_log.md`'s D-053).
@@ -102,6 +131,27 @@ def fit_gopc(
         retaining an edge unconditionally cleared up to that point.
         `4` is this method's own validated default (Stage 6a) and has
         not been re-tuned for other values.
+    engine : {"component", "adjacency"}, default "component"
+        Which conditioning sets the pruning step searches.
+
+        - `"component"` is the frozen, validated mechanism
+          (`growing_subset_dpi`) that every archived result used. It
+          draws sets from the edge's whole connected component in the
+          screened graph, fixed after screening. When screening passes
+          most pairs, as in densely inter-correlated item sets, the
+          number of tests grows combinatorially with `p`.
+        - `"adjacency"` runs the PC-stable search
+          (`gopcnet.pipeline.skeleton_core`) on the screened graph. It
+          draws sets from each endpoint's *current* neighbors, which
+          shrink as edges are pruned. That is far fewer tests, and it is
+          sufficient under PC's own assumptions. It also fills
+          `GOPCResult.diagnostics`.
+
+        The default stays `"component"` until a charter has validated
+        the adjacency engine against it
+        (`docs/development_plan/phase1_external_validity.md`,
+        Stage 7a). The adjacency engine's weights follow the same D-055
+        convention.
 
     Defaults and validated range
     ----------------------------
@@ -155,9 +205,15 @@ def fit_gopc(
     fit_gopc_fixed_order : the paper's other GOPC variant, closer in
         spirit to LOPC (Zuo et al., 2014).
     """
+    if engine not in ("component", "adjacency"):
+        raise ValueError('engine must be "component" or "adjacency"')
+    if int(max_conditioning_size) != max_conditioning_size or max_conditioning_size < 0:
+        raise ValueError("max_conditioning_size must be a non-negative integer")
     alphas = _resolve_for(data, screening_alpha, dpi_alpha)
     evidence = compute_pairwise_screening_evidence(data)
     screened = screen_uncorrected(evidence, alphas.screening_alpha)
+    if engine == "adjacency":
+        return _fit_adjacency_engine(np.asarray(data), evidence, screened, alphas, max_conditioning_size)
     result = growing_subset_dpi(data, screened, alphas.dpi_alpha, max_conditioning_size=max_conditioning_size)
     weights = compute_growing_order_weights(
         data,
@@ -255,6 +311,45 @@ def fit_gopc_fixed_order(
         weights=weights,
         screening_alpha=alphas.screening_alpha,
         dpi_alpha=alphas.dpi_alpha,
+    )
+
+
+def _fit_adjacency_engine(
+    data: np.ndarray,
+    evidence: ScreeningEvidence,
+    screened: np.ndarray,
+    alphas: ResolvedAlphas,
+    max_conditioning_size: int,
+) -> GOPCResult:
+    corr = evidence.correlation.copy()  # zero diagonal from screening; the tests need the unit diagonal
+    np.fill_diagonal(corr, 1.0)
+    # start_level=1: every screened-in pair already rejected a marginal test at
+    # screening_alpha <= dpi_alpha, so a level-0 test at dpi_alpha could not prune it.
+    core = pc_stable_skeleton(
+        corr,
+        data.shape[0],
+        alphas.dpi_alpha,
+        start_adjacency=screened,
+        start_level=1,
+        max_level=max_conditioning_size,
+    )
+    # D-055: minimum-magnitude partial correlation over tested sets of size >= 1;
+    # an edge never conditioning-tested keeps its marginal correlation.
+    weights = np.where(np.isnan(core.min_abs_partial), evidence.correlation, core.min_abs_partial)
+    weights = np.where(core.adjacency, weights, 0.0)
+    np.fill_diagonal(weights, 0.0)
+    return GOPCResult(
+        adjacency=core.adjacency,
+        weights=weights,
+        screening_alpha=alphas.screening_alpha,
+        dpi_alpha=alphas.dpi_alpha,
+        diagnostics=GOPCDiagnostics(
+            screened=screened,
+            max_p_value=core.max_p_value,
+            n_tests=core.n_tests,
+            cap_reached=core.cap_reached,
+            separating_set=core.separating_set,
+        ),
     )
 
 

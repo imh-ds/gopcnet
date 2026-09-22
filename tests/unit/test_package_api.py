@@ -11,6 +11,7 @@ def test_public_api_matches_all() -> None:
         "fit_gopc",
         "fit_gopc_fixed_order",
         "GOPCResult",
+        "GOPCDiagnostics",
         "default_dpi_alpha",
         "default_screening_alpha",
         "resolve_alphas",
