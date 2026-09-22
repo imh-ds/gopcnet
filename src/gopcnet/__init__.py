@@ -13,8 +13,17 @@ algorithm. Both return a `GOPCResult` -- `.adjacency` (boolean) and
 D-055 for the convention).
 
     >>> from gopcnet import fit_gopc
+    >>> result = fit_gopc(data)  # default significance levels (gopcnet.defaults)
+    >>> result.adjacency, result.weights, result.screening_alpha, result.dpi_alpha
+
+Omitted significance levels come from `gopcnet.defaults` (see
+`docs/decision_log.md`'s D-068): the settings this project's own
+benchmarks were run with, validated for `N` in `[700, 3000]` and `p` in
+`[3, 30]`; outside that range the fit still runs but emits an
+`OutsideValidatedRangeWarning`. Pass `screening_alpha=`/`dpi_alpha=` to
+override either one:
+
     >>> result = fit_gopc(data, screening_alpha=0.001, dpi_alpha=0.01)
-    >>> result.adjacency, result.weights
 
 Two comparator methods used throughout this project's own benchmarks
 (`docs/decision_log.md`) are also exposed directly, for users who want
@@ -33,7 +42,8 @@ frequency, plus edge-weight mean/std where a weight exists:
     >>> from functools import partial
     >>> from gopcnet import fit_gopc, bootstrap_edge_stability
     >>> import numpy as np
-    >>> fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+    >>> full = fit_gopc(data)  # hold the full-sample alphas fixed across resamples
+    >>> fit = partial(fit_gopc, screening_alpha=full.screening_alpha, dpi_alpha=full.dpi_alpha)
     >>> stability = bootstrap_edge_stability(data, fit, bootstraps=1000, rng=np.random.default_rng(0))
 
 `compute_centrality` takes any weight matrix of the same shape
@@ -58,7 +68,8 @@ for the exact convention):
 
     >>> from functools import partial
     >>> from gopcnet import fit_gopc, strength, case_drop_bootstrap, cs_coefficient
-    >>> fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+    >>> full = fit_gopc(data)  # hold the full-sample alphas fixed across resamples
+    >>> fit = partial(fit_gopc, screening_alpha=full.screening_alpha, dpi_alpha=full.dpi_alpha)
     >>> case_drop = case_drop_bootstrap(
     ...     data, fit, lambda r: strength(r.weights), bootstraps_per_proportion=1000,
     ...     rng=np.random.default_rng(0),
@@ -123,7 +134,8 @@ statistic (see `docs/decision_log.md`'s D-060):
 
     >>> from functools import partial
     >>> from gopcnet import fit_gopc, train_test_fit_indices
-    >>> fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+    >>> full = fit_gopc(data)  # hold the full-sample alphas fixed across resamples
+    >>> fit = partial(fit_gopc, screening_alpha=full.screening_alpha, dpi_alpha=full.dpi_alpha)
     >>> result = train_test_fit_indices(data, fit, rng=np.random.default_rng(0))
     >>> result.in_sample.rmsea, result.out_of_sample.rmsea
 
@@ -150,8 +162,9 @@ how often a random re-split produces a global-strength or maximum-edge-weight
 difference at least as large as the one actually observed:
 
     >>> from functools import partial
-    >>> from gopcnet import fit_gopc, network_comparison_test
-    >>> fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+    >>> from gopcnet import fit_gopc, network_comparison_test, resolve_alphas
+    >>> alphas = resolve_alphas(min(len(data_group_a), len(data_group_b)), data_group_a.shape[1])
+    >>> fit = partial(fit_gopc, screening_alpha=alphas.screening_alpha, dpi_alpha=alphas.dpi_alpha)
     >>> result = network_comparison_test(
     ...     data_group_a, data_group_b, fit, permutations=1000, rng=np.random.default_rng(0),
     ... )
@@ -193,6 +206,13 @@ own benchmarks, not a tool for analyzing a real fitted network.
 """
 
 from gopcnet.comparators import EBICglassoResult, PCSkeletonResult, fit_ebicglasso, fit_pc_skeleton
+from gopcnet.defaults import (
+    OutsideValidatedRangeWarning,
+    ResolvedAlphas,
+    default_dpi_alpha,
+    default_screening_alpha,
+    resolve_alphas,
+)
 from gopcnet.metrics import (
     BridgeCentralityResult,
     CentralityResult,
@@ -240,6 +260,11 @@ __all__ = [
     "fit_gopc",
     "fit_gopc_fixed_order",
     "GOPCResult",
+    "default_dpi_alpha",
+    "default_screening_alpha",
+    "resolve_alphas",
+    "ResolvedAlphas",
+    "OutsideValidatedRangeWarning",
     "fit_ebicglasso",
     "EBICglassoResult",
     "fit_pc_skeleton",

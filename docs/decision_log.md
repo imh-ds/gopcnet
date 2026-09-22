@@ -5651,3 +5651,100 @@ Consequences: Every charter from Stage 7 onward uses this sampler. The
 `overlap` caveat in `docs/validated_operating_ranges.md` (D-065) still
 applies to archived evidence and to any rerun of the frozen samplers.
 
+## D-068: `fit_gopc` and `fit_gopc_fixed_order` get documented default significance levels (`gopcnet.defaults`); explicit-alpha calls are unchanged
+
+Date: 2026-09-22
+
+Stage: Engineering / API convention (Phase 0 of
+`docs/development_plan/`). Makes D-065's "one fixed default" callable.
+
+Status: Engineering convention. No new evidence; every value is taken
+from already-recorded decisions.
+
+Question: D-065 restated GOPC's contribution as "one fixed default is
+robust across regimes that PC needs per-dataset alpha tuning to
+handle". Yet `fit_gopc` had no defaults: both alphas were required,
+D-012's `alpha(N)` lived only in `gopcnet.experiments` (which is not
+shipped), and the tutorial used `.05/.05`, which is not the validated
+setting. What exactly should `fit_gopc(data)` do?
+
+Decision: A new public module, `gopcnet.defaults`, exported at the top
+level:
+
+- **`default_dpi_alpha(n)`** is D-012's `linear_log_n` form,
+  `alpha(N) = 0.5222288254774476 - 0.05659085931817262 * ln(N)`, with
+  the parameters copied at full precision from
+  `gopcnet.experiments.stage1j_fit`. A unit test pins them to `1e-15`
+  and checks that they reproduce the `d012_alpha_by_n` values archived
+  in Stage 5i's `resolved_config.yaml` to `1e-12`.
+  - Validated range: `N in [700, 3000]` (D-012); recommended floor
+    `N >= 750` (D-011).
+  - Outside the range, and in the `700 <= N < 750` thin-margin band, it
+    emits an `OutsideValidatedRangeWarning` but still returns a value.
+    A researcher with `N = 300` needs *some* setting, and the warning
+    carries the caveat.
+  - Clipped to `1e-4` where the fitted line goes non-positive
+    (`N` about 10,200 and above), with a warning.
+  - Raises only for `N < 4`.
+- **`default_screening_alpha(p)`** is `.001` for `p <= 15`, and above
+  that D-049's log-linear interpolation between Stage 2's anchors
+  `(15, .001)` and `(30, .0001)`, identical to
+  `gopcnet.experiments.stage5c._screening_alpha_for_p` (tested).
+  - **The `p <= 15` clamp is a deliberate deviation from extending the
+    interpolation downward.** The raw formula *rises* below `p = 15`
+    (about `.21` at `p = 3`), which was never validated. D-047 used
+    `.001` at both `p = 3` and `p = 15`, so the clamp reproduces every
+    archived configuration.
+  - Validated range: `p in [3, 30]`. D-047 covers `p = 3` and `15`,
+    Stage 5c covers the interpolation up to `27`, and `30` is Stage 2's
+    own calibrated anchor. It warns outside that range.
+- **`resolve_alphas(n, p, screening_alpha=None, dpi_alpha=None)`**
+  fills in whichever value is `None`, validates user values
+  (`0 < alpha < 1`), and returns a `ResolvedAlphas` record (values,
+  sources, warnings).
+  - User-supplied values are used exactly as given and are never
+    range-checked.
+  - A plain `UserWarning` is emitted if `screening_alpha > dpi_alpha`.
+    The design assumes the screen is the stricter test. This is not an
+    error, because Stage 5i's matched-alpha configurations set the two
+    equal on purpose.
+- **`fit_gopc` / `fit_gopc_fixed_order`:** both alphas are now optional
+  keyword arguments resolved through `resolve_alphas`. Warnings point
+  at the user's call site. `GOPCResult` gains trailing fields
+  `screening_alpha` and `dpi_alpha` (defaulting to `None`, so
+  constructing a result directly still works) recording the values
+  actually used.
+- **Resampling convention:** the bootstrap, case-drop, NCT and
+  train/test tools are unchanged. The documented convention, shown in
+  the tutorial, is to pass the full-sample resolved alphas explicitly
+  (e.g. `partial(fit_gopc, screening_alpha=r.screening_alpha,
+  dpi_alpha=r.dpi_alpha)`). Otherwise a case-drop subsample's smaller
+  `N` would change `dpi_alpha`, confounding stability with alpha drift.
+
+Evidence (unit tests, `tests/unit/test_defaults.py`):
+
+- a regression fixture (`tests/fixtures/gopc_explicit_alpha_regression.npz`,
+  generated at commit `0708f6e`, before this change) shows that
+  explicit-alpha outputs, both adjacency and weights, for both variants
+  are **bit-identical** to the pre-change implementation
+- `fit_gopc(data)` equals the explicit-default call
+- warnings fire where specified and are attributed to the caller
+- the full existing suite passes unchanged
+
+Every archived result therefore still reproduces exactly.
+
+Rationale: This adds no new calibration. It makes the already-validated
+settings the thing a user gets by default, labels everything outside
+their evidence as extrapolation, and records the settings used on the
+result so they can be reported.
+
+Consequences:
+
+- These are **v1 defaults**, the current best evidence and not a final
+  answer. They were calibrated on the same motif family the benchmarks
+  use (the D-065 fairness disclosure). Stage 7c
+  (`docs/development_plan/phase2_small_sample.md`) is planned to test
+  rules defined at any `N`, validated on held-out network families,
+  and, if adopted, to add them as a versioned "v2" with v1 kept
+  reproducible.
+- The README, tutorial and docstring examples now show `fit_gopc(data)`.

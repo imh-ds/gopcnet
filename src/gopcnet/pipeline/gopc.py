@@ -29,6 +29,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from gopcnet.defaults import ResolvedAlphas, resolve_alphas
 from gopcnet.pipeline.compose import compose_screen_then_prune
 from gopcnet.pipeline.growing_subset_dpi import growing_subset_dpi
 from gopcnet.pipeline.weights import compute_fixed_order_weights, compute_growing_order_weights
@@ -45,14 +46,27 @@ class GOPCResult:
     exactly what partial correlation each retained edge's weight is
     (it differs by variant, and by whether the edge was ever
     conditioning-tested at all).
+
+    `screening_alpha` and `dpi_alpha` record the significance levels the
+    fit actually used -- whether passed explicitly or filled in from
+    `gopcnet.defaults` -- so a fitted result can be reported
+    reproducibly. They default to `None` only so that a `GOPCResult`
+    built directly from an adjacency and weights (outside `fit_gopc`)
+    stays valid.
     """
 
     adjacency: np.ndarray
     weights: np.ndarray
+    screening_alpha: float | None = None
+    dpi_alpha: float | None = None
 
 
 def fit_gopc(
-    data: np.ndarray, *, screening_alpha: float, dpi_alpha: float, max_conditioning_size: int = 4
+    data: np.ndarray,
+    *,
+    screening_alpha: float | None = None,
+    dpi_alpha: float | None = None,
+    max_conditioning_size: int = 4,
 ) -> GOPCResult:
     """Estimate a network with growing-order GOPC (the paper's
     recommended default; see `docs/decision_log.md`'s D-053).
@@ -74,18 +88,32 @@ def fit_gopc(
         ``(n_samples, n_variables)`` array of continuous, approximately
         Gaussian observations. Categorical or ordinal data is out of
         scope (not validated).
-    screening_alpha : float
+    screening_alpha : float, optional
         Significance level for the initial pairwise correlation
         screen. A pair is a candidate edge only if its screening
-        p-value is at or below this threshold.
-    dpi_alpha : float
+        p-value is at or below this threshold. Omit it to use
+        `gopcnet.defaults.default_screening_alpha(p)`.
+    dpi_alpha : float, optional
         Significance level for the conditional-independence pruning
-        step. Independent of `screening_alpha`.
+        step. Independent of `screening_alpha`. Omit it to use
+        `gopcnet.defaults.default_dpi_alpha(N)`.
     max_conditioning_size : int, default 4
         Largest conditioning-set size tested before giving up and
         retaining an edge unconditionally cleared up to that point.
         `4` is this method's own validated default (Stage 6a) and has
         not been re-tuned for other values.
+
+    Defaults and validated range
+    ----------------------------
+    Called as `fit_gopc(data)`, both significance levels come from
+    `gopcnet.defaults`: the settings every archived Stage 5 benchmark
+    used (D-012's `alpha(N)` for pruning; `.001` for screening at
+    `p <= 15`, D-049's `p`-adjusted value above). They are validated
+    for `N` in `[700, 3000]` (recommended `N >= 750`) and `p` in
+    `[3, 30]`, Gaussian data only. Outside that range the fit still
+    runs but emits a `gopcnet.defaults.OutsideValidatedRangeWarning`.
+    The values used are recorded on the result. Explicitly passed
+    values are used exactly as given.
 
     Returns
     -------
@@ -95,6 +123,7 @@ def fit_gopc(
         correlations (zero where `.adjacency` is False) -- see
         `docs/decision_log.md`'s D-055 for exactly what each retained
         edge's weight represents for this variant.
+        `.screening_alpha`, `.dpi_alpha`: the significance levels used.
 
     Examples
     --------
@@ -110,14 +139,26 @@ def fit_gopc(
            [ True, False,  True],
            [False,  True, False]])
 
+    With the defaults (`N = 500` is below the validated range, so an
+    `OutsideValidatedRangeWarning` explains that the pruning level is
+    extrapolated):
+
+    >>> import warnings
+    >>> with warnings.catch_warnings():
+    ...     warnings.simplefilter("ignore")
+    ...     result = fit_gopc(data)
+    >>> result.screening_alpha, round(result.dpi_alpha, 4)
+    (0.001, 0.1705)
+
     See Also
     --------
     fit_gopc_fixed_order : the paper's other GOPC variant, closer in
         spirit to LOPC (Zuo et al., 2014).
     """
+    alphas = _resolve_for(data, screening_alpha, dpi_alpha)
     evidence = compute_pairwise_screening_evidence(data)
-    screened = screen_uncorrected(evidence, screening_alpha)
-    result = growing_subset_dpi(data, screened, dpi_alpha, max_conditioning_size=max_conditioning_size)
+    screened = screen_uncorrected(evidence, alphas.screening_alpha)
+    result = growing_subset_dpi(data, screened, alphas.dpi_alpha, max_conditioning_size=max_conditioning_size)
     weights = compute_growing_order_weights(
         data,
         result.adjacency,
@@ -125,10 +166,17 @@ def fit_gopc(
         result.conditioning_size_used,
         max_conditioning_size=max_conditioning_size,
     )
-    return GOPCResult(adjacency=result.adjacency, weights=weights)
+    return GOPCResult(
+        adjacency=result.adjacency,
+        weights=weights,
+        screening_alpha=alphas.screening_alpha,
+        dpi_alpha=alphas.dpi_alpha,
+    )
 
 
-def fit_gopc_fixed_order(data: np.ndarray, *, screening_alpha: float, dpi_alpha: float) -> GOPCResult:
+def fit_gopc_fixed_order(
+    data: np.ndarray, *, screening_alpha: float | None = None, dpi_alpha: float | None = None
+) -> GOPCResult:
     """Estimate a network with fixed-order GOPC (the paper's other
     variant; see `docs/decision_log.md`'s D-047 through D-052 and the
     paper's Section 3.1).
@@ -161,12 +209,13 @@ def fit_gopc_fixed_order(data: np.ndarray, *, screening_alpha: float, dpi_alpha:
         ``(n_samples, n_variables)`` array of continuous, approximately
         Gaussian observations. Categorical or ordinal data is out of
         scope (not validated).
-    screening_alpha : float
+    screening_alpha : float, optional
         Significance level for the initial pairwise correlation
-        screen.
-    dpi_alpha : float
+        screen. Omit it to use the same default as `fit_gopc`.
+    dpi_alpha : float, optional
         Significance level for the conditional-independence pruning
-        step.
+        step. Omit it to use the same default as `fit_gopc` (see its
+        "Defaults and validated range" section).
 
     Returns
     -------
@@ -196,8 +245,22 @@ def fit_gopc_fixed_order(data: np.ndarray, *, screening_alpha: float, dpi_alpha:
     fit_gopc : the paper's recommended default variant, which closes
         most of this variant's own precision gap with PC (D-053).
     """
+    alphas = _resolve_for(data, screening_alpha, dpi_alpha)
     evidence = compute_pairwise_screening_evidence(data)
-    screened = screen_uncorrected(evidence, screening_alpha)
-    final, shapes = compose_screen_then_prune(data, screened, dpi_alpha)
+    screened = screen_uncorrected(evidence, alphas.screening_alpha)
+    final, shapes = compose_screen_then_prune(data, screened, alphas.dpi_alpha)
     weights = compute_fixed_order_weights(data, final, shapes)
-    return GOPCResult(adjacency=final, weights=weights)
+    return GOPCResult(
+        adjacency=final,
+        weights=weights,
+        screening_alpha=alphas.screening_alpha,
+        dpi_alpha=alphas.dpi_alpha,
+    )
+
+
+def _resolve_for(data: np.ndarray, screening_alpha: float | None, dpi_alpha: float | None) -> ResolvedAlphas:
+    shape = np.shape(data)
+    if len(shape) != 2:
+        raise ValueError("data must be a two-dimensional array")
+    # stacklevel 4: resolve_alphas -> _resolve_for -> fit_gopc* -> user code
+    return resolve_alphas(shape[0], shape[1], screening_alpha, dpi_alpha, stacklevel=4)
