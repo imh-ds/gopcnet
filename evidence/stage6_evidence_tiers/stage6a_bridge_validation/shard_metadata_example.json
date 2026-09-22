@@ -1,0 +1,8 @@
+{
+  "charter_sha256": "16eb6aefc87c57e18cc560719060c57bbda0972f943481521b0c653e9c00f180",
+  "git_commit": "ada49f10ed2bf3d9cffe796f0358409ea3e9ae68",
+  "python": "3.11.16 (main, Aug 13 2026, 02:46:14) [GCC 13.3.0]",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "recorded_at_utc": "2026-09-22T08:15:27.195721+00:00",
+  "runtime_seconds": 40.704651391999995
+}

@@ -1,0 +1,36 @@
+bootstrap_n: 1000
+bootstrap_replicates: 40
+bootstrap_resamples: 200
+bootstrap_rho_bridge: 0.08
+bootstrap_rho_confound: 0.4
+development_replicates:
+- 0
+- 999
+master_seed: 20260830
+max_conditioning_size: 4
+replicates: 2000
+rho_bridge_grid:
+- 0.05
+- 0.08
+- 0.12
+- 0.18
+rho_confound_grid:
+- 0.2
+- 0.3
+- 0.4
+sample_sizes:
+- 500
+- 750
+- 1000
+- 1500
+- 3000
+screening_alpha: 0.001
+shapes:
+- confound_trap_observed
+- confound_trap_latent
+- no_bridge_negative_control
+- larger_clusters
+- double_bridge
+validation_replicates:
+- 1000
+- 1999

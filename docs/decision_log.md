@@ -5428,3 +5428,176 @@ recall on weak, asymmetric edges" claim in Sections 5.2, 6.1, 6.2 and 7 of
 .01`; the paper's contribution should be restated as robustness of a single
 default across regimes (Q2/Q3), not recall. `docs/validated_operating_ranges.md`
 addendum also pending.
+
+## D-066: Stage 6a — survival-fraction bridge ranking does not meet its predeclared Q1 bar; `gopcnet.evidence` is not built; the unmeasured-confound false-bridge rate stays flat in N, as expected
+
+Date: 2026-09-22
+
+Stage: Stage 6a (edge-evidence tiers and cross-community bridge
+inference), charter `docs/stage6a_charter.md` (FROZEN before results;
+one implementation-time amendment recorded in the charter:
+`larger_clusters` uses within-cluster strength `0.25` instead of `0.30`
+for positive definiteness).
+
+Status: Descriptive, one hard gate (G1): **PASSED**. Predeclared Q1
+bar: **not met**. Predeclared Q3 pattern: **not matched** (one of its
+two parts holds).
+
+Decision timing: Predeclared before results. The Q1 margin (`>= .20`
+at `>= 80%` of cells), the Q3 ratios (`>= 3x` shrinkage observed,
+`< 1.5x` latent) and the build/no-build consequence were all fixed in
+the charter before the run was dispatched.
+
+Question: Given a fitted candidate graph, does ranking cross-community
+pairs by the share of conditioning sets under which their partial
+correlation survives ("survival fraction") identify true weak bridges
+better than ranking by marginal correlation, when a confound is present
+and measured? And does it document, rather than fix, the unmeasured-
+confound case?
+
+Prior specification: `docs/stage6a_charter.md`:
+
+- five Gaussian shapes (`confound_trap_observed`,
+  `confound_trap_latent`, `no_bridge_negative_control`,
+  `larger_clusters`, `double_bridge`)
+- `rho_bridge in {.05, .08, .12, .18}`,
+  `rho_confound in {.20, .30, .40}`, `N in {500, 750, 1000, 1500, 3000}`
+- 2,000 replicates per cell (0–999 development, 1000–1999 validation)
+- screening `alpha = .001`, `max_conditioning_size = 4`
+- bootstrap calibration: 40 replicates x 200 resamples at
+  `rho_bridge = .08`, `rho_confound = .40`, `N = 1000`
+
+Evidence: GitHub Actions run
+[35703700288](https://github.com/imh-ds/gopcnet/actions/runs/35703700288)
+(commit `ada49f1`, 25 shards plus aggregate, all succeeded), archived at
+`evidence/stage6_evidence_tiers/stage6a_bridge_validation/`:
+
+- `raw_metrics.csv` (5,430,000 rows, equal to `expected_row_count`),
+  stored as two split gzip parts; the reassembly command and checksums
+  are in `evidence/stage6_evidence_tiers/README.md`
+- `report.json`, `stage6a_report.md`, `full_grid_validation.csv`,
+  `false_confirm_rate_vs_n.png`
+- `resolved_config.yaml` and `shard_metadata_example.json`, taken from
+  one shard because the aggregate artifact does not include them
+
+The recorded `charter_sha256` (`16eb6aef…f180`) equals the committed
+charter's hash.
+
+**G1 (pipeline integrity): PASSED.** The survival-fraction score's
+top-1 pick matches the `pMax`-style score's in `.964` of validation
+replicates on average (bar `.95`). The worst cell is `rho_bridge = .05`,
+`rho_confound = .40`, `N = 500` at `.791`. That is a close-call cell
+where both scores are weak, not a ranking bug.
+
+**Q1 — survival fraction vs marginal correlation
+(`confound_trap_observed`): does not confirm.** 29 of 60 cells (`.48`)
+show a top-1 recovery advantage of `>= .20`, against a predeclared bar
+of 80% of cells. Per the charter, this is recorded as a non-replication
+of the preliminary scratch finding at its predeclared threshold.
+
+**Post-hoc, not predeclared** (reported because it explains the
+aggregate, not to overturn it). Split by strength, the misses are
+concentrated where marginal-correlation ranking already works.
+
+Cells meeting the `.20` margin, out of 5 sample sizes each:
+
+| `rho_bridge` \ `rho_confound` | .20 | .30 | .40 |
+|---|---|---|---|
+| .05 | 4 | 5 | 5 |
+| .08 | 1 | 4 | 5 |
+| .12 | 0 | 0 | 5 |
+| .18 | 0 | 0 | 0 |
+
+Mean marginal-correlation top-1 recovery in the same layout:
+
+| `rho_bridge` \ `rho_confound` | .20 | .30 | .40 |
+|---|---|---|---|
+| .05 | .63 | .30 | .03 |
+| .08 | .88 | .65 | .14 |
+| .12 | .98 | .93 | .57 |
+| .18 | 1.00 | 1.00 | .95 |
+
+The survival fraction is never worse than marginal ranking (0 of 60
+cells). It clears the margin wherever the "trap" is active, meaning a
+weak bridge with a strong confound. It cannot clear it where marginal
+ranking is already near its ceiling. That pattern matches the mechanism
+the charter described, but it is a disaggregation chosen after seeing
+the results, and the predeclared verdict stands.
+
+**Second post-hoc observation, relevant to novelty:** the `pMax` score
+(the maximum p-value across tested conditioning sets, an existing PC
+diagnostic the charter included only as a sanity check) recovers bridges
+at least as well as the survival fraction at every `N`:
+
+| N | survival fraction | `pMax` |
+|---|---|---|
+| 500 | .882 | .888 |
+| 3000 | .980 | .986 |
+
+Even the favorable part of the result is therefore not specific to the
+proposed statistic.
+
+**Q2 — power scaling: as expected.** Top-1 recovery is monotone
+non-decreasing in `N` for all four bridge shapes, e.g.
+`confound_trap_observed` `.882 -> .981` from `N = 500` to `N = 3000`.
+
+**Q3 — false-confirmation rate:**
+
+| Shape | N = 500 | N = 3000 | Ratio | Predeclared |
+|---|---|---|---|---|
+| `confound_trap_observed` | `.019` | `.007` | 2.58x | `>= 3x` (**not met**) |
+| `confound_trap_latent` | `.094` | `.118` | 0.80x (flat, slightly rising) | `< 1.5x` (**met**) |
+
+The report's verdict is "does not match the predeclared pattern —
+limitation restated per the actual result". Restated: with the confound
+measured, spurious confirmation falls with `N` but more slowly than
+predicted. With it unmeasured, about **9–12% of non-bridge pairs are
+spuriously confirmed at every tested `N`**, and more data does not help.
+For comparison, the negative control (`no_bridge_negative_control`) is
+`.009 -> .005`.
+
+**Q4 — larger conditioning pool:** mean recovery difference `-.015`
+(`larger_clusters` minus `confound_trap_observed`). This is a small
+degradation, read with the disclosed `0.25` vs `0.30` within-cluster
+difference, so it is not a clean contrast.
+
+**Q5 — `double_bridge`:** mean per-bridge (top-3) recovery is `.880`,
+against `.924` for the matched single-bridge shape. The gap is largest
+at small `N` (`.780` vs `.882` at `N = 500`) and closes by `N = 3000`
+(`.977` vs `.980`). Exact joint recovery is in `report.json`.
+
+**Bootstrap calibration:** correctly ordered for both shapes. Mean
+confirmed rate for the bridge vs the decoy is `.65` vs `.05` when the
+confound is observed, and `.63` vs `.10` when it is latent.
+
+Decision: Per the charter's own Consequences section ("If Q1 does not
+replicate at the predeclared threshold, the feature is not built as
+proposed, and the scratch finding is recorded in the decision log as a
+non-replicated preliminary result"), **`gopcnet.evidence` is not
+built.** The per-edge statistics it would have exposed are reconsidered
+only under a separate, newly chartered question: Stage 7d,
+small-sample edge-evidence tiers
+(`docs/development_plan/phase2_small_sample.md`). That stage asks
+whether tiers are *calibrated* against ground truth, which is a
+different question, and it inherits nothing from this result. Given
+the `pMax` observation above, any such feature should present `pMax`
+as the established statistic rather than the survival fraction as a
+new one.
+
+Rationale: The predeclared bar was not met, and the charter fixed the
+consequence in advance. The post-hoc disaggregation is recorded because
+it is informative (the idea works where the problem it targets exists,
+and does no harm elsewhere), but using it to reverse a predeclared
+verdict is exactly what this project's charter discipline forbids. The
+`pMax` comparison further weakens the case for a new statistic,
+independent of Q1.
+
+Consequences:
+
+- No package code changes.
+- `docs/validated_operating_ranges.md` gains a standing caveat on
+  unmeasured confounding. It applies to any conditional-independence
+  estimator, GOPC included, and is permanent; no later charter is
+  expected to remove it.
+- `docs/handoff/2026-09-22_gopc.md`'s open question about building
+  `gopcnet.evidence` is resolved by this entry.

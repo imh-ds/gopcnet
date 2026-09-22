@@ -738,6 +738,21 @@ different machine. Any future charter reusing this DGP should expect
 this and, if bitwise reproducibility across machines matters, use a
 different factorization (e.g. Cholesky) instead.
 
+**Standing caveat: unmeasured confounding (Stage 6a, D-066).** Any
+conditional-independence estimator, GOPC included, can keep a spurious
+edge whose association comes from a common cause that is not among the
+measured variables: a variable that was never measured cannot be
+conditioned on. Stage 6a measured this directly. With the confound
+dropped from the data (`confound_trap_latent`), about 9–12% of
+non-bridge candidate pairs were spuriously "confirmed" at every tested
+sample size (`N = 500` to `3000`), with no decline as `N` grows. With
+the same confound measured, the rate was about 2% and falling, and the
+no-bridge control was about 1% and falling. More data does not fix this.
+It is a property of the question, not of the estimator, and no future
+charter is expected to remove this caveat. Interpret any retained edge,
+especially a weak cross-community "bridge", as "not explained by the
+measured variables", never as "direct".
+
 **Scope limitation, data type: continuous only — mixed/discrete data
 support is unvalidated, reserved for future work.** Every DGP validated
 anywhere in this project (Stage 0 through Stage 5d) is continuous
