@@ -1,8 +1,7 @@
 # Stage 7a Charter: Adjacency-Set GOPC Engine — Non-Inferiority on the Legacy Shapes and Runtime Scaling
 
-Status: **DRAFT — not frozen.** Freeze (status line, date, SHA-256
-recorded by the runner) happens after the smoke run and before any full
-run, per `docs/development_plan/README.md`.
+Status: **FROZEN before results** (smoke run only: gates and timing,
+no outcome metric used to set anything; see the final section).
 Date: 2026-09-22
 
 "Stage 7" here continues this repository's own charter sequence
@@ -207,6 +206,30 @@ Archived under `evidence/stage7_scalable_engine/stage7a_engine/`.
 
 ## Resolutions of the pre-freeze questions
 
-*(To be filled in at freeze, e.g. whether the timing smoke changes the
-Part B budget or replicate count. Any change is recorded here with its
-reason, before any full run.)*
+Recorded at freeze, 2026-09-22, from the smoke configuration
+(`configs/stage7a_engine_smoke.yaml`: 10 Part A replicates per cell, 3
+Part B replicates per cell; run locally, about 2 minutes, 0 errors).
+Only gates, feasibility and timings were read. Q1/Q2 outcome metrics
+were not used to set anything.
+
+1. **Gates compute and pass on the smoke data.** G1: identical fraction
+   `1.0000` over 200 rows. G2: max difference `5.6e-16` over 200 random
+   checks.
+2. **Part B budget and replicates: unchanged** (60 s, 20 replicates).
+   The smoke showed the component engine exceeding 60 s on every
+   `random_sparse`/`random_dense` fit at `p >= 20` (and 2 of 3 at
+   `clustered`, `p = 30`). The adjacency engine finished every fit,
+   with a median of about 0.8–3.4 s, except `random_dense` at `p = 30`
+   (about 20 s, about 164,000 tests per fit). Those timeouts are the
+   result Part B exists to measure, not a reason to change the design.
+   Worst case, Part B costs 20 x 9 x 60 s of component-engine time,
+   spread across local workers.
+3. **Run location: local.** Part A fits take about 0.005–0.02 s each, so
+   Part A's 100,000 fits and Part B's worst case both fit comfortably
+   inside the charter's two-hour local allowance. No sharded CI run is
+   needed. The report records the machine (`metadata.json`: platform,
+   CPU count).
+4. **Noted for Stage 7b (not a change here):** the adjacency engine's
+   cost on `random_dense` at `p = 30` (about 20 s per fit) sets that
+   charter's compute budget and should be accounted for in its
+   replicate-count rule.
