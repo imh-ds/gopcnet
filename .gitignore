@@ -193,3 +193,8 @@ results/generated/
 
 # Manuscript drafts (not part of the tracked evidence/decision record)
 manuscript/
+
+# Internal agent-to-agent handoff documents (machine-readable session
+# handoffs, not part of the tracked project record -- docs/handoff_stageN.md
+# files predate this convention and remain tracked separately)
+docs/handoff/

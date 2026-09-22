@@ -685,6 +685,59 @@ unmodified, since D-047 through D-052 and the bootstrap-stability
 tooling (`docs/stage3_charter.md`) were validated against it
 specifically. See D-053.
 
+**Correction, superseding D-051's own "plausible mechanism" for PC's
+recall deficit (D-065, Stage 5i significance-level sweep): the
+weak-edge recall difference between PC and growing-order GOPC is fully
+explained by their differing default significance levels, not by PC's
+OR-rule-across-many-tests mechanism as such.** PC (`alpha=.01` fixed)
+and growing-order GOPC (screening `.001`, pruning `alpha(N)` — 10-15x
+looser than PC's at the sample sizes tested, D-012) were re-run across a
+significance-level grid on the identical draws D-051/D-053 used. PC run
+at GOPC's own pruning `alpha(N)` matches growing-order GOPC's recall
+exactly (paired difference `0.0000`) on every `triangle_moderate`/
+`triangle_strong` cell, and a Fisher-z power calculation predicts each
+method's actual recall from its significance level alone to within
+`.007`. D-051's "OR-rule, more chances for one underpowered test to
+wrongly declare independence" framing is not wrong as a description of
+PC's mechanism, but it does not, on its own, explain the recall gap
+reported there — the gap disappears once the significance level is
+matched, so treat D-051's recall comparison as a statement about PC at
+`alpha=.01` specifically, not a general property of PC's search.
+
+**Precision does not mirror this, and this is the operating-range-
+relevant finding.** At GOPC's own (looser) pruning alpha, PC's own
+precision collapses (`chain_fork_hub`: `.47`-`.58`; `overlap`:
+`.64`-`.73`) while growing-order GOPC's does not (`.93`-`.97` on both,
+identical alpha, identical draws) — its separate, strict marginal
+screening step (Section 3.0 of `manuscript/paper.qmd`; run before any
+conditional test) is the reason, confirmed by a direct agreement check
+between the two procedures at matched alpha (`0.02`-`0.5` edges of
+disagreement per replicate, against a `0.08`-`1.35`-edge same-procedure
+noise floor — the two searches are effectively identical once the
+screening step's effect is accounted for). Practically: no single PC
+significance level matched growing-order GOPC's performance across all
+five DGP shapes tested at any sample size; a level chosen per shape did,
+but that requires knowing the true network's shape in advance. Growing-
+order GOPC's fixed default reaches this performance without that
+per-network tuning decision, across `N in {750, 1000, 1500, 1750}`. See
+D-065 and `evidence/stage5_benchmarks/stage5i_pc_alpha_sweep/`.
+
+**Known sampler non-reproducibility, `overlap` DGP (D-065).** The
+`overlap` shape's own sampler draws via `numpy.random.Generator.
+multivariate_normal`, whose SVD-based factorization is not uniquely
+determined when the covariance has a repeated singular value (`overlap`
+has one at `0.8`; `triangle_balanced` shares the property but its
+scoring cannot reveal it). A given seed can therefore produce different,
+equally-valid draws on different machines. This was diagnosed, not
+fixed, in D-065 (two of Stage 5i's own reproduction gates failed on
+`overlap` cells for exactly this reason, cell means agreeing within
+sampling noise despite the row-level mismatch); it also means every
+prior charter's own archived `overlap` rows (D-047 onward) are valid
+draws from the intended distribution but not bitwise-reproducible on a
+different machine. Any future charter reusing this DGP should expect
+this and, if bitwise reproducibility across machines matters, use a
+different factorization (e.g. Cholesky) instead.
+
 **Scope limitation, data type: continuous only — mixed/discrete data
 support is unvalidated, reserved for future work.** Every DGP validated
 anywhere in this project (Stage 0 through Stage 5d) is continuous
