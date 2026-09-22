@@ -426,7 +426,10 @@ def _resolved_config(config: Stage7aConfig) -> dict[str, Any]:
     return values
 
 
-def _write_evidence(config: Stage7aConfig, output_dir: Path, raw: pd.DataFrame, runtime_seconds: float) -> None:
+def _write_evidence(
+    config: Stage7aConfig, output_dir: Path, raw: pd.DataFrame, runtime_seconds: float, git_commit: str | None
+) -> None:
+    """`git_commit` is HEAD when the run *started* (see D-069's provenance note)."""
     output_dir.mkdir(parents=True, exist_ok=True)
     raw.to_csv(output_dir / "raw_metrics.csv", index=False)
     with (output_dir / "resolved_config.yaml").open("w", encoding="utf-8") as stream:
@@ -435,7 +438,7 @@ def _write_evidence(config: Stage7aConfig, output_dir: Path, raw: pd.DataFrame, 
     charter = repository_root / "docs/stage7a_charter.md"
     metadata = {
         "charter_sha256": hashlib.sha256(charter.read_bytes()).hexdigest() if charter.is_file() else None,
-        "git_commit": _git_commit(repository_root),
+        "git_commit": git_commit,
         "python": sys.version,
         "platform": platform.platform(),
         "cpu_count": os.cpu_count(),
@@ -458,6 +461,7 @@ def run_stage7a(
     """Run every selected cell. Seeds derive from the full grids, so any
     sharding reproduces an unsharded run."""
     started = time.perf_counter()
+    git_commit = _git_commit(_repository_root(config))  # recorded at start, not at write time
     selected = [
         cell
         for cell in cells_for(config)
@@ -486,7 +490,7 @@ def run_stage7a(
                 rows.extend(replicate_rows)
 
     raw = pd.DataFrame(rows, columns=list(RAW_COLUMNS))
-    _write_evidence(config, output_dir, raw, time.perf_counter() - started)
+    _write_evidence(config, output_dir, raw, time.perf_counter() - started, git_commit)
     if write_report and not raw.empty:
         from gopcnet.experiments.stage7a_reporting import write_stage7a_report
 
