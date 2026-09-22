@@ -772,6 +772,31 @@ dedicated future charter (new estimator, new DGPs with known discrete
 structure, the same falsification discipline as every other
 mechanism) validating it first.
 
+## Scalable pruning engine (Stage 7a, D-069)
+
+`fit_gopc(..., engine="adjacency")` runs PC-stable on the screened
+graph. It draws conditioning sets from each endpoint's current
+neighbors instead of the edge's whole connected component. On the five
+legacy shapes (`N` in `[750, 1750]`) it is **non-inferior** to the
+frozen component engine: recall is identical, and precision is at most
+`.008` lower (on `overlap`), within a predeclared `.02` margin.
+
+On psych-realistic random networks at `N = 500`, the component engine
+**cannot complete a fit within 60 s** in most cases at `p >= 20`
+(9–20 of 20 fits time out, depending on structure), while the adjacency
+engine finishes in about 0.1–5 s, or about 28 s for the densest
+structure at `p = 30`.
+
+Practical reading:
+
+- For `p` above about 15 on densely inter-correlated item sets, use
+  `engine="adjacency"`.
+- The default engine is still `"component"` until a decision-log entry
+  changes it, informed by Stage 7b.
+- The "orders of magnitude faster than EBICglasso" runtime finding
+  (D-047) applies only when the screened graph breaks into small
+  components.
+
 ## Maintenance
 
 Add a row (or update an existing one) whenever a new charter validates

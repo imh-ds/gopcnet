@@ -1,0 +1,14 @@
+{
+  "charter_sha256": "f3bb87a9358976fa5e8b081b6c70aff2cd7893da1f060d576ed2254ca04c4368",
+  "git_commit": "86f043decd944253484d94c664c8190527941311",
+  "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "cpu_count": 20,
+  "recorded_at_utc": "2026-09-22T21:05:22.508124+00:00",
+  "runtime_seconds": 691.4437928999978,
+  "g2_self_check": {
+    "checks": 200,
+    "max_abs_difference": 5.551115123125783e-16,
+    "passed": true
+  }
+}

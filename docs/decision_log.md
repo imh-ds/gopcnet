@@ -5748,3 +5748,129 @@ Consequences:
   and, if adopted, to add them as a versioned "v2" with v1 kept
   reproducible.
 - The README, tutorial and docstring examples now show `fit_gopc(data)`.
+
+## D-069: Stage 7a — the adjacency-set GOPC engine is non-inferior to the frozen component engine on all five legacy shapes, and is the only feasible engine at p >= 20
+
+Date: 2026-09-22
+
+Stage: Stage 7a (scalable engine), charter `docs/stage7a_charter.md`
+(FROZEN before results, commit `131ec7f`, SHA-256 `f3bb87a9…4368`;
+pre-freeze resolutions recorded in the charter, with no design changes
+after the smoke run).
+
+Status: **PROCEED.** Gates G1 and G2 passed. Q1 is NON-INFERIOR for
+all five shapes, which is the charter's condition for using the
+adjacency engine in Stage 7b.
+
+Decision timing: Predeclared before results. The margin (`-.02` on
+both precision and recall, Stage 5g's tolerance), the per-shape verdict
+rule, the gates and the consequences were fixed in the charter before
+the full run.
+
+Question: Is `fit_gopc(..., engine="adjacency")`, which runs PC-stable
+on the screened graph from level 1 up to `max_conditioning_size` with
+conditioning sets from each endpoint's current neighbors, non-inferior
+to the frozen component engine on the legacy shapes? And how does each
+engine's runtime scale with `p`?
+
+Prior specification: `docs/stage7a_charter.md`:
+
+- **Part A:** the five Stage 5a DGPs (frozen samplers, strength `.5`),
+  `N in {750, 1000, 1500, 1750}`, 1,000 replicates (500 development,
+  500 validation). Both engines ran on the same draw with
+  `screening_alpha = .001`, `dpi_alpha = default_dpi_alpha(N)` and a
+  conditioning cap of 4. `pc_frozen` and `pc_core` were fitted for G1,
+  and the component engine at 1.25 x alpha for the Q2 noise floor.
+- **Part B:** `random_sparse`, `random_dense` and `clustered`
+  (`gopcnet.generators.psych_networks`), `p in {10, 20, 30}`,
+  `N = 500`, 20 replicates, default alphas. Each fit ran in a child
+  process, with a 60 s budget for the component engine.
+
+Evidence: local run (Windows, 20 CPUs, Python 3.11.9; 11.5 minutes),
+archived at `evidence/stage7_scalable_engine/stage7a_engine/`:
+
+- `raw_metrics.csv.gz`, 100,360 rows, equal to `expected_row_count`
+- `report.json`, `stage7a_report.md`, `resolved_config.yaml`,
+  `metadata.json`
+- `q1_non_inferiority.png`, `q3_runtime_vs_p.png`
+
+**Provenance disclosure:** `metadata.json` records commit `86f043d`,
+because the runner reads HEAD when it writes metadata at the *end* of a
+run. The run started at `131ec7f`. The two commits in between only
+added Stage 7b files, so the code that produced this evidence is
+`131ec7f`'s. Both runners now record the commit when a run starts.
+
+**G1: PASSED.** `pc_core` equals `pc_frozen` on 20,000 of 20,000
+rows. **G2: PASSED.** The correlation-matrix primitive equals the frozen
+residual primitive to within `5.6e-16` over 200 random checks.
+
+**Q1 — non-inferiority (validation replicates): NON-INFERIOR on all five
+shapes, 20 of 20 cells.** Recall differences are exactly `0` in every
+cell. Precision differences:
+
+| Shape | Precision difference (adjacency minus component) | Notes |
+|---|---|---|
+| `chain_fork_hub` | `-.0002` to `-.0005` | |
+| `overlap` | `-.0019` to `-.0079` | Largest at `N = 1500` and `1750`; worst CI lower bound `-.0104`, inside the `-.02` margin |
+| three triangles | exactly `0` | |
+
+The adjacency engine tests fewer sets and so keeps slightly more edges
+on `overlap`. The effect is small and within the margin.
+
+**Q2 — agreement:** the mean symmetric edge difference between engines
+is below the same-engine noise floor in 19 of 20 cells:
+
+| Shape | Engine difference | Noise floor |
+|---|---|---|
+| `chain_fork_hub` | `.002–.004` | `.06–.09` |
+| triangles | `0` | |
+| `overlap`, `N <= 1000` | `.024–.030` | `.11–.14` |
+| `overlap`, `N = 1500` | `.088` | `.110` |
+| `overlap`, `N = 1750` | `.092` | `.088` (about equal) |
+
+**Q3 — runtime at `N = 500`, 20 fits per cell (median seconds per fit
+or timeouts):**
+
+| Structure | p | Component engine | Adjacency engine |
+|---|---|---|---|
+| `random_sparse` | 10 | `.22` | `.01` |
+| `random_sparse` | 20 | 15 of 20 time out | `.38` |
+| `random_sparse` | 30 | 20 of 20 time out | `4.7` |
+| `random_dense` | 10 | `2.2` | `.09` |
+| `random_dense` | 20 | 20 of 20 time out | `3.5` |
+| `random_dense` | 30 | 20 of 20 time out | `28.3` (p90 `57.5`) |
+| `clustered` | 10 | `.13` | `.01` |
+| `clustered` | 20 | 9 of 20 time out | `.08` |
+| `clustered` | 30 | 19 of 20 time out | `.31` |
+
+Where both finished, F1 was similar, e.g. `.850` vs `.847` for
+`random_sparse` at `p = 10`. That is descriptive only, 20 fits per
+cell.
+
+Decision: **PROCEED**, per the charter's Consequences:
+
+- Stage 7b uses `engine="adjacency"` as "GOPC". The component engine
+  appears there only at `p = 10`, as a bridge.
+- **`fit_gopc`'s default engine is not changed by this entry.** A
+  default switch needs its own entry, informed by Stage 7b.
+
+Rationale: On everything the frozen engine was validated on, the
+adjacency engine gives the same recall and at most `.008` lower
+precision (on `overlap`). On psych-realistic structures at `p >= 20`,
+the frozen engine cannot complete within a minute, so it is not a
+practical option there at all. D-047's "orders of magnitude faster than
+EBICglasso" runtime claim holds only for networks whose screened graph
+breaks into small components. For the adjacency engine, the densest
+structure at `p = 30` is still expensive (about 28 s per fit), which
+Stage 7b's replicate-count rule must budget for.
+
+Consequences:
+
+- Stage 7b's `gopc_engine` is `"adjacency"`, recorded in its
+  pre-freeze resolutions.
+- `docs/validated_operating_ranges.md` gains a short Stage 7a note: the
+  adjacency engine is non-inferior on the legacy shapes, and the
+  component engine is infeasible at `p >= 20` on dense, inter-correlated
+  structures.
+- The runners record the git commit at the start of a run (a
+  provenance fix; no behavior change).
