@@ -159,3 +159,17 @@ def test_internal_research_scaffolding_is_not_part_of_the_public_api() -> None:
     assert "experiments" not in gopcnet.__all__
     assert "simulation" not in gopcnet.__all__
     assert "bootstrap" not in gopcnet.__all__
+
+
+def test_generators_subpackage_is_shipped_and_importable() -> None:
+    """gopcnet.generators is shipped (unlike gopcnet.simulation): user-facing
+    tools such as the planned sample-size planner need it at install time."""
+    import tomllib
+    from pathlib import Path
+
+    from gopcnet.generators import cholesky_factor, covariance_from_precision, sample_gaussian
+
+    assert callable(sample_gaussian) and callable(cholesky_factor) and callable(covariance_from_precision)
+    pyproject = tomllib.loads((Path(__file__).resolve().parents[2] / "pyproject.toml").read_text(encoding="utf-8"))
+    excluded = pyproject["tool"]["setuptools"]["packages"]["find"]["exclude"]
+    assert not any(pattern.startswith("gopcnet.generators") for pattern in excluded)

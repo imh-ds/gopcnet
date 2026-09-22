@@ -5601,3 +5601,53 @@ Consequences:
   expected to remove it.
 - `docs/handoff/2026-09-22_gopc.md`'s open question about building
   `gopcnet.evidence` is resolved by this entry.
+
+## D-067: New data-generating processes sample through a Cholesky-based sampler (`gopcnet.generators.sampling`); existing samplers stay frozen
+
+Date: 2026-09-22
+
+Stage: Engineering convention (Phase 0 of
+`docs/development_plan/`; follow-up to D-065's reproducibility
+diagnosis).
+
+Status: Engineering convention. No evidence claim.
+
+Question: How should DGPs added after D-065 draw multivariate-normal
+data, so that a given seed produces the same data on every machine?
+
+Background: D-065 traced Stage 5i's G1/G2 reproduction failures on the
+`overlap` shape to `numpy.random.Generator.multivariate_normal`. That
+function factors the covariance by SVD. When the covariance has a
+repeated singular value, which `overlap`'s does, the rotation within the
+degenerate subspace is not pinned down and can differ across machines.
+
+Decision: Every DGP added from now on draws through
+`gopcnet.generators.sampling.sample_gaussian(covariance, n, rng)`:
+`rng.standard_normal((n, p)) @ L.T`, where `L` is the (unique) Cholesky
+factor. The module also provides `cholesky_factor`, which validates
+squareness, finiteness, symmetry and positive definiteness, and
+`covariance_from_precision`. It lives in a new **shipped** subpackage,
+`gopcnet.generators`, rather than under `gopcnet.simulation`, which
+`pyproject.toml` excludes from the built package. The planned
+sample-size planner (`docs/development_plan/phase2_small_sample.md`)
+needs these generators at install time.
+
+The existing samplers in `gopcnet.simulation` are **not** migrated.
+Archived evidence was drawn with them, and changing them would silently
+change what every earlier charter's seeds produce.
+
+Evidence (unit tests, `tests/unit/test_sampling.py`):
+
+- a seeded draw is reproducible
+- covariance recovery at `N = 200,000` (`atol .02`)
+- the D-065 case (the `overlap` precision's covariance, which has a
+  repeated eigenvalue) samples reproducibly
+- invalid covariances and invalid `n` raise `ValueError`
+
+`tests/unit/test_package_api.py` pins that `gopcnet.generators` is
+importable and not excluded from the package.
+
+Consequences: Every charter from Stage 7 onward uses this sampler. The
+`overlap` caveat in `docs/validated_operating_ranges.md` (D-065) still
+applies to archived evidence and to any rerun of the frozen samplers.
+
