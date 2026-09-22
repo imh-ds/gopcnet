@@ -27,10 +27,21 @@ as a Jupyter notebook).
 ```python
 from gopcnet import fit_gopc
 
-result = fit_gopc(data, screening_alpha=0.001, dpi_alpha=0.01)
+result = fit_gopc(data)
 result.adjacency  # (p, p) boolean, symmetric
 result.weights    # (p, p) signed partial correlations, zero where adjacency is False
+result.screening_alpha, result.dpi_alpha  # the significance levels actually used
 ```
+
+Called without significance levels, `fit_gopc` uses the defaults every
+archived benchmark in this repo was run with (`gopcnet.defaults`; see
+`docs/decision_log.md`'s D-068): `.001` for the marginal screen at
+`p <= 15` (a `p`-adjusted value above that), and D-012's `alpha(N)`
+formula for pruning. They are validated for `N` in `[700, 3000]`
+(recommended `N >= 750`) and `p` in `[3, 30]`. Outside that range the
+fit still runs but emits an `OutsideValidatedRangeWarning`; see
+`docs/validated_operating_ranges.md` for what that means in practice.
+Passing `screening_alpha=`/`dpi_alpha=` explicitly overrides either one.
 
 `fit_gopc` (growing-order GOPC) is the recommended default pipeline
 (see `docs/decision_log.md`'s D-053): it closes most of GOPC's
@@ -48,7 +59,7 @@ kept available for direct comparison:
 ```python
 from gopcnet import fit_gopc_fixed_order
 
-result = fit_gopc_fixed_order(data, screening_alpha=0.001, dpi_alpha=0.01)
+result = fit_gopc_fixed_order(data)  # same defaults as fit_gopc
 ```
 
 Both variants require continuous, approximately Gaussian data --
@@ -95,7 +106,11 @@ from functools import partial
 import numpy as np
 from gopcnet import fit_gopc, bootstrap_edge_stability
 
-fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+# Pass the full-sample significance levels explicitly, so every resample
+# is fit with the same thresholds (otherwise a smaller resample, e.g. in
+# case-drop, would get a different default dpi_alpha).
+full = fit_gopc(data)  # resolve the defaults once, on the full sample
+fit = partial(fit_gopc, screening_alpha=full.screening_alpha, dpi_alpha=full.dpi_alpha)
 stability = bootstrap_edge_stability(data, fit, bootstraps=1000, rng=np.random.default_rng(0))
 
 stability.inclusion_probability  # (p, p): fraction of resamples each pair was an edge
@@ -129,7 +144,8 @@ from functools import partial
 import numpy as np
 from gopcnet import fit_gopc, strength, case_drop_bootstrap, cs_coefficient
 
-fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+full = fit_gopc(data)  # resolve the defaults once, on the full sample
+fit = partial(fit_gopc, screening_alpha=full.screening_alpha, dpi_alpha=full.dpi_alpha)
 case_drop = case_drop_bootstrap(
     data, fit, lambda r: strength(r.weights),
     bootstraps_per_proportion=1000, rng=np.random.default_rng(0),
@@ -164,7 +180,8 @@ from functools import partial
 import numpy as np
 from gopcnet import fit_gopc, strength, bootstrap_replicates, difference_test
 
-fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+full = fit_gopc(data)  # resolve the defaults once, on the full sample
+fit = partial(fit_gopc, screening_alpha=full.screening_alpha, dpi_alpha=full.dpi_alpha)
 replicates = bootstrap_replicates(
     data, fit, lambda r: strength(r.weights), bootstraps=1000, rng=np.random.default_rng(0),
 )
@@ -298,7 +315,8 @@ from functools import partial
 from gopcnet import fit_gopc, train_test_fit_indices
 import numpy as np
 
-fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+full = fit_gopc(data)  # resolve the defaults once, on the full sample
+fit = partial(fit_gopc, screening_alpha=full.screening_alpha, dpi_alpha=full.dpi_alpha)
 result = train_test_fit_indices(data, fit, rng=np.random.default_rng(0))
 
 result.adjacency          # the structure, fit on the training rows only
@@ -355,10 +373,13 @@ network comparison test (van Borkulo et al., 2017):
 
 ```python
 from functools import partial
-from gopcnet import fit_gopc, network_comparison_test
+from gopcnet import fit_gopc, network_comparison_test, resolve_alphas
 import numpy as np
 
-fit = partial(fit_gopc, screening_alpha=0.01, dpi_alpha=0.05)
+# One set of thresholds for both groups (resolved at the smaller group's N),
+# so a difference in group size can't masquerade as a network difference.
+alphas = resolve_alphas(min(len(data_group_a), len(data_group_b)), data_group_a.shape[1])
+fit = partial(fit_gopc, screening_alpha=alphas.screening_alpha, dpi_alpha=alphas.dpi_alpha)
 result = network_comparison_test(
     data_group_a, data_group_b, fit, permutations=1000, rng=np.random.default_rng(0),
 )

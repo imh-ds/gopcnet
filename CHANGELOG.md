@@ -7,7 +7,24 @@ validation history in full.
 
 ## [Unreleased]
 
+### Added
+- Default significance levels (`gopcnet.defaults`): `default_dpi_alpha`,
+  `default_screening_alpha`, `resolve_alphas`, `ResolvedAlphas`, and
+  `OutsideValidatedRangeWarning`, all exported at the top level. The
+  defaults are exactly the settings the archived benchmarks used (see
+  `docs/decision_log.md`'s D-068).
+- `GOPCResult.screening_alpha` / `GOPCResult.dpi_alpha`: the
+  significance levels a fit actually used.
+- `gopcnet.generators` (shipped): a Cholesky-based Gaussian sampler for
+  reproducible data generation (D-067).
+
 ### Changed
+- `fit_gopc` and `fit_gopc_fixed_order`: `screening_alpha` and
+  `dpi_alpha` are now optional. Omitted values come from
+  `gopcnet.defaults`, with an `OutsideValidatedRangeWarning` outside the
+  validated range (`N` in `[700, 3000]`, `p` in `[3, 30]`). Calls that
+  pass both explicitly behave exactly as before (bit-identical output,
+  pinned by a regression test).
 - Renamed the importable package from `mintnet` to `gopcnet`
   (`pip install git+https://github.com/imh-ds/gopcnet.git`, then
   `from gopcnet import fit_gopc`). `mintnet.*` import paths no longer

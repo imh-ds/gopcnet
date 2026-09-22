@@ -198,7 +198,7 @@ def fit_gaussian_graphical_model(
     >>> x2 = 0.6 * x1 + np.sqrt(1 - 0.6**2) * rng.normal(size=500)
     >>> x3 = 0.6 * x2 + np.sqrt(1 - 0.6**2) * rng.normal(size=500)
     >>> data = np.column_stack([x1, x2, x3])
-    >>> result = fit_gopc(data, screening_alpha=0.05, dpi_alpha=0.05)
+    >>> result = fit_gopc(data, screening_alpha=0.05, dpi_alpha=0.05)  # or fit_gopc(data) for the defaults
     >>> fit = fit_gaussian_graphical_model(data, result.adjacency)
     >>> fit.aic, fit.bic, fit.ebic  # doctest: +SKIP
     """
@@ -315,7 +315,7 @@ def fit_indices(
     >>> x2 = 0.6 * x1 + np.sqrt(1 - 0.6**2) * rng.normal(size=500)
     >>> x3 = 0.6 * x2 + np.sqrt(1 - 0.6**2) * rng.normal(size=500)
     >>> data = np.column_stack([x1, x2, x3])
-    >>> result = fit_gopc(data, screening_alpha=0.05, dpi_alpha=0.05)
+    >>> result = fit_gopc(data, screening_alpha=0.05, dpi_alpha=0.05)  # or fit_gopc(data) for the defaults
     >>> indices = fit_indices(data, result.adjacency)
     >>> indices.rmsea, indices.cfi, indices.tli, indices.srmr  # doctest: +SKIP
     """
