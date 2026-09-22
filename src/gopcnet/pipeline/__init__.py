@@ -10,7 +10,12 @@ from .gopc import GOPCDiagnostics, GOPCResult, fit_gopc, fit_gopc_fixed_order
 from .growing_subset_dpi import GrowingSubsetResult, growing_subset_dpi
 from .sequential import PairDecision, sequential_screen_and_prune, sequential_screen_and_prune_detailed
 from .skeleton_core import SkeletonResult, pc_stable_skeleton
-from .weights import compute_fixed_order_weights, compute_growing_order_weights
+from .weights import (
+    compute_fixed_order_weights,
+    compute_growing_order_weights,
+    refit_weights,
+    refit_weights_from_correlation,
+)
 
 __all__ = [
     "compose_screen_then_prune",
@@ -30,4 +35,6 @@ __all__ = [
     "SkeletonResult",
     "compute_fixed_order_weights",
     "compute_growing_order_weights",
+    "refit_weights",
+    "refit_weights_from_correlation",
 ]

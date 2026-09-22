@@ -25,7 +25,7 @@ transparently.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal
 
 import numpy as np
@@ -34,7 +34,7 @@ from gopcnet.defaults import ResolvedAlphas, resolve_alphas
 from gopcnet.pipeline.compose import compose_screen_then_prune
 from gopcnet.pipeline.growing_subset_dpi import growing_subset_dpi
 from gopcnet.pipeline.skeleton_core import pc_stable_skeleton
-from gopcnet.pipeline.weights import compute_fixed_order_weights, compute_growing_order_weights
+from gopcnet.pipeline.weights import compute_fixed_order_weights, compute_growing_order_weights, refit_weights
 from gopcnet.screening import ScreeningEvidence, compute_pairwise_screening_evidence, screen_uncorrected
 
 
@@ -96,6 +96,7 @@ def fit_gopc(
     dpi_alpha: float | None = None,
     max_conditioning_size: int = 4,
     engine: Literal["component", "adjacency"] = "component",
+    weight_method: Literal["min_subset", "refit"] = "min_subset",
 ) -> GOPCResult:
     """Estimate a network with growing-order GOPC (the paper's
     recommended default; see `docs/decision_log.md`'s D-053).
@@ -152,6 +153,19 @@ def fit_gopc(
         (`docs/development_plan/phase1_external_validity.md`,
         Stage 7a). The adjacency engine's weights follow the same D-055
         convention.
+    weight_method : {"min_subset", "refit"}, default "min_subset"
+        What each retained edge's weight means.
+
+        - `"min_subset"` is D-055's convention: the smallest-magnitude
+          partial correlation among the conditioning sets tested.
+        - `"refit"` gives the partial correlation controlling for *all*
+          other variables, from the constrained maximum-likelihood GGM
+          on the selected edges (`gopcnet.pipeline.weights.refit_weights`),
+          which is the parameter psychology readers usually assume an
+          edge weight to be. Requires `N > p`.
+
+        The adjacency is identical either way. Which convention should
+        be the default is a question for Stage 7b.
 
     Defaults and validated range
     ----------------------------
@@ -207,21 +221,29 @@ def fit_gopc(
     """
     if engine not in ("component", "adjacency"):
         raise ValueError('engine must be "component" or "adjacency"')
+    if weight_method not in ("min_subset", "refit"):
+        raise ValueError('weight_method must be "min_subset" or "refit"')
     if int(max_conditioning_size) != max_conditioning_size or max_conditioning_size < 0:
         raise ValueError("max_conditioning_size must be a non-negative integer")
     alphas = _resolve_for(data, screening_alpha, dpi_alpha)
     evidence = compute_pairwise_screening_evidence(data)
     screened = screen_uncorrected(evidence, alphas.screening_alpha)
     if engine == "adjacency":
-        return _fit_adjacency_engine(np.asarray(data), evidence, screened, alphas, max_conditioning_size)
+        fitted = _fit_adjacency_engine(np.asarray(data), evidence, screened, alphas, max_conditioning_size)
+        if weight_method == "refit":
+            fitted = replace(fitted, weights=refit_weights(data, fitted.adjacency))
+        return fitted
     result = growing_subset_dpi(data, screened, alphas.dpi_alpha, max_conditioning_size=max_conditioning_size)
-    weights = compute_growing_order_weights(
-        data,
-        result.adjacency,
-        screened,
-        result.conditioning_size_used,
-        max_conditioning_size=max_conditioning_size,
-    )
+    if weight_method == "refit":
+        weights = refit_weights(data, result.adjacency)
+    else:
+        weights = compute_growing_order_weights(
+            data,
+            result.adjacency,
+            screened,
+            result.conditioning_size_used,
+            max_conditioning_size=max_conditioning_size,
+        )
     return GOPCResult(
         adjacency=result.adjacency,
         weights=weights,
