@@ -21,6 +21,8 @@ def test_public_api_matches_all() -> None:
         "EBICglassoResult",
         "fit_pc_skeleton",
         "PCSkeletonResult",
+        "fit_nonregularized_ggm",
+        "NonregularizedResult",
         "bootstrap_edge_stability",
         "EdgeStabilityResult",
         "case_drop_bootstrap",
