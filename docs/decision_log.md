@@ -6046,3 +6046,135 @@ Consequences:
   `N = 250` as characterization).
 - The manuscript's central claim (local, not tracked) needs
   restatement in whatever direction the user chooses.
+
+## D-071: Post hoc audit of Stage 7b — the benchmark is not tilted against GOPC in a way that changes D-070, and GOPC is not a more robust fixed default than PC or non-regularized BH; methodological development of GOPC stops
+
+Date: 2026-09-23
+
+Stage: Post hoc analysis of the archived Stage 7b evidence (D-070). No
+new simulation.
+
+Status: Descriptive. Closes GOPC's remaining claim. **GOPC's
+methodology is frozen as of this entry; no further estimator
+development.** What the project does next (archive with a post-mortem,
+or a benchmark and software output built on PC and non-regularized
+testing) is the user's pending choice.
+
+Decision timing: **Post hoc, after D-070's results.** Nothing here was
+predeclared, and none of it overrides D-070's predeclared verdicts. The
+analyses were chosen to test the two strongest remaining arguments for
+GOPC, not to search for a cell where it wins.
+
+Question: Two questions raised after D-070:
+
+1. Is Stage 7b's design tilted toward EBICglasso, PC and non-regularized
+   testing in a way that sets GOPC up to fail?
+2. Even if GOPC is not the best method in most cells, is its one fixed
+   default a more *robust* operating point across unseen network
+   families than an equally fixed competitor? This is the modest form of
+   D-065's claim ("strict screen, then looser pruning, gives a robust
+   single default").
+
+Evidence: `evidence/stage7_external_validity/d071_posthoc/`:
+`d071_posthoc.py` (reproducible from the archived Stage 7b raw metrics)
+and its outputs `operating_points.csv`, `fixed_setting_regret.csv` and
+`recall_by_edge_strength.csv`. Validation replicates 250–499 only; truths
+for the edge-strength analysis are regenerated from the frozen Stage 7b
+seeds.
+
+**1. Design audit.** Tilts found against GOPC, none large enough to
+change D-070:
+
+- *Asymmetric tuning in Q4.* The PC alpha was selected on development
+  replicates of the same families it was validated on, while GOPC's
+  defaults were calibrated on a different (motif) family. Conventional,
+  untuned PC settings (`.05`, `.01`) give the same picture (below), so
+  this does not drive the result.
+- *Out-of-range defaults at small N.* The pruning-alpha rule is
+  validated for `N` in `[700, 3000]` (D-068); `N = 250` and `500` are
+  extrapolations. This is a limitation of GOPC's own defaults.
+- *Weak-edge-heavy truths (70% of drawn weights in `[.08, .20]`).*
+  Checked directly: GOPC has the *highest* recall of the compared methods
+  on the weakest true edges (`|partial r| < .1`) at `N <= 1000`
+  (`.19/.34/.53` vs BH `.05/.18/.47` and PC@.05 `.16/.28/.47`). It loses
+  in the `.1–.2` band, mainly to PC@.05. The weight distribution does not
+  single out GOPC.
+
+The design is not "local-method-friendly" at GOPC's expense. All
+compared methods estimate the same partial-correlation graph from the
+same correlation matrix and `N`; GOPC is itself a local procedure (a
+marginal screen, then conditioning sets of at most 4 variables), and the
+full-order test used by non-regularized BH is the most global. The only
+step unique to GOPC, the marginal screen, pays off when many pairs are
+marginally independent; that regime was included
+(`random_with_isolates`), and it is where GOPC did best against BH
+(D-070 Q3).
+
+**2. Operating points.** Means over all validation cells:
+
+| Method | Sensitivity | Specificity | Precision | MCC |
+|---|---|---|---|---|
+| GOPC | `.733` | `.989` | `.957` | `.793` |
+| non-regularized BH | `.744` | `.991` | `.961` | `.801` |
+| PC@.01 | `.712` | `.997` | `.979` | `.791` |
+| PC@.05 | `.791` | `.985` | `.920` | `.811` |
+
+GOPC lies on (slightly inside) the segment between PC@.01 and PC@.05: it
+behaves like PC at an intermediate alpha, not like a distinct
+trade-off. No precision-weighted metric rescues it, since PC@.01 has
+higher precision at every `N` with nearly equal sensitivity.
+
+**3. Fixed-setting robustness.** For each `(structure, p, N)` cell,
+"regret" is a method's MCC shortfall from the best of the six compared
+fixed settings in that cell:
+
+| Fixed setting | Mean regret, N >= 500 | Worst regret, N >= 500 | Lowest cell precision | Best in cell (of 45) | Mean regret, all N |
+|---|---|---|---|---|---|
+| non-regularized BH | **`.010`** | **`.083`** | **`.952`** | 25 | `.029` |
+| PC@.05 | `.025` | `.094` | `.792` | 9 | **`.019`** |
+| GOPC | `.034` | `.109` | `.885` | 2 | `.038` |
+| PC@.01 | `.034` | `.129` | `.931` | 3 | `.039` |
+| non-regularized Holm | `.078` | `.262` | `.990` | 6 | `.108` |
+| EBICglasso | `.099` | `.247` | `.624` | 0 | `.090` |
+
+GOPC's fixed default does not swing less than a fixed competitor. At
+`N >= 500`, non-regularized BH at `.05` has the lowest mean and
+worst-case regret and the highest lowest-precision. Including `N = 250`,
+PC@.05 has the lowest mean regret. The robust-single-default claim fails
+on these families.
+
+Decision: **Stop methodological development of GOPC.** D-070's outcome
+C stands; neither a design tilt nor a robustness framing recovers a
+distinct advantage on Gaussian data with `p <= 30` and `N >= 250`.
+Stage 7c (default rules, including the FDR screen), Stage 7d and
+Phases 2–3 of `docs/development_plan/` are not started. The FDR-screen
+idea in particular is withdrawn: at best it would make GOPC tie
+non-regularized BH, a simpler established method.
+
+Rationale:
+
+- *Prior art.* Marginal screening followed by partial-correlation tests
+  of growing order is the structure of PC-simple (Bühlmann, Kalisch and
+  Maathuis, 2010) and closely related to LOPC. Non-regularized
+  partial-correlation networks with multiplicity control are an
+  established alternative to EBICglasso in network psychometrics. With
+  D-065 (matched-alpha GOPC ≈ PC) and this entry, GOPC reduces to known
+  PC-family behavior.
+- *Stopping rule.* Further estimator changes made after seeing these
+  results would be tuning to the benchmark, which this project's charter
+  discipline forbids.
+
+Consequences:
+
+- **No code or default changes.** The Q6 refit-weight and default-engine
+  recommendations from D-069/D-070 are not adopted, since the estimator
+  is frozen.
+- **Untested regime, recorded as a limitation:** `p` close to `N` (for
+  example `p = 40–80`, `N = 100–300`), where full-order tests lose power.
+  It could matter for a benchmark or software output (whether to
+  recommend PC or non-regularized BH there), not for rescuing GOPC.
+- **Still useful from this project** for a post-mortem or benchmark
+  paper: EBICglasso's precision falls with `N` out of sample (D-070 Q1);
+  non-regularized BH is the most robust fixed default here; PC's results
+  depend on its alpha; the marginal screen's gains and losses (D-070 Q5);
+  and matched-alpha GOPC ≈ PC (D-065).

@@ -16,3 +16,16 @@ as permanent tracked files (same convention as
 |---|---|
 | `raw_metrics.csv.gz` | `674dbc1e641fb202ff829886e2a61a099908c433fd58c03c91cac3645b863659` |
 | `raw_metrics.csv` | `d88ce9570ef77047a1507b190d3717c745a920c0eb2d37707a87c96fa5bcc836` |
+
+## `d071_posthoc/`
+
+Post hoc analyses behind D-071 (2026-09-23), computed from
+`stage7b_benchmark/raw_metrics.csv.gz` (validation replicates 250–499).
+Not predeclared. Reproduce from the repository root with:
+
+```
+py -3.11 evidence/stage7_external_validity/d071_posthoc/d071_posthoc.py
+```
+
+Outputs: `operating_points.csv`, `fixed_setting_regret.csv`,
+`recall_by_edge_strength.csv`.
