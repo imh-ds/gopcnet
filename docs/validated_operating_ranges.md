@@ -772,6 +772,61 @@ dedicated future charter (new estimator, new DGPs with known discrete
 structure, the same falsification discipline as every other
 mechanism) validating it first.
 
+## Scalable pruning engine (Stage 7a, D-069)
+
+`fit_gopc(..., engine="adjacency")` runs PC-stable on the screened
+graph. It draws conditioning sets from each endpoint's current
+neighbors instead of the edge's whole connected component. On the five
+legacy shapes (`N` in `[750, 1750]`) it is **non-inferior** to the
+frozen component engine: recall is identical, and precision is at most
+`.008` lower (on `overlap`), within a predeclared `.02` margin.
+
+On psych-realistic random networks at `N = 500`, the component engine
+**cannot complete a fit within 60 s** in most cases at `p >= 20`
+(9–20 of 20 fits time out, depending on structure), while the adjacency
+engine finishes in about 0.1–5 s, or about 28 s for the densest
+structure at `p = 30`.
+
+Practical reading:
+
+- For `p` above about 15 on densely inter-correlated item sets, use
+  `engine="adjacency"`.
+- The default engine is still `"component"` until a decision-log entry
+  changes it, informed by Stage 7b.
+- The "orders of magnitude faster than EBICglasso" runtime finding
+  (D-047) applies only when the screened graph breaks into small
+  components.
+
+## External validity (Stage 7b, D-070)
+
+Scope: Gaussian data; random psych-realistic networks from five
+families (`gopcnet.generators.psych_networks`); `p` in `{10, 20, 30}`;
+`N` in `{500, 1000, 2000}`, plus `N = 250` as characterization only;
+GOPC with its default alphas and the adjacency engine.
+
+- **Against EBICglasso, the niche holds.** EBICglasso's precision falls
+  as `N` grows in every structure. Averaged over cells, its specificity
+  is `.96` at `N = 250` and `.89` at `N = 2000`. GOPC keeps specificity
+  at about `.99` at every `N` and beats EBICglasso's precision in every
+  cell (by `.05` to `.33`). The predeclared niche test holds in 4 of 5
+  structures and is partial in the fifth (`clustered`, where GOPC's F1
+  trails slightly at `N = 500`).
+- **Against non-regularized testing, it does not.** Full-order partial
+  correlations with Benjamini–Hochberg at `.05` reach the same
+  specificity with higher sensitivity once `N >= 1000`: MCC `.898` vs
+  `.866` at `N = 1000`, and `.957` vs `.923` at `N = 2000`. The two are
+  about equal at `N = 500`. GOPC is ahead only at `N = 250`. PC at `.05`
+  is comparable or better than GOPC in most cells at `N <= 1000`.
+- **Where GOPC loses sensitivity.** Almost all of GOPC's missed true
+  edges are dropped by the strict `.001` marginal screen: 47%, 27%, 13%
+  and 6% of true edges at `N = 250, 500, 1000, 2000`, against 3–4% lost
+  at pruning. The screen also does most of the specificity work. In
+  practice, GOPC's edges can be trusted, but weak edges are likely to be
+  missing, especially below `N = 1000`.
+- **Weights:** refit weights (`weight_method="refit"`) track the true
+  partial correlations slightly better (lower error in 96% of cells),
+  but the default is unchanged pending its own decision-log entry.
+
 ## Maintenance
 
 Add a row (or update an existing one) whenever a new charter validates

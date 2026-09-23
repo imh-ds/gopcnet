@@ -205,7 +205,14 @@ here -- it's a validation-only 3x3 motif scorer for this repository's
 own benchmarks, not a tool for analyzing a real fitted network.
 """
 
-from gopcnet.comparators import EBICglassoResult, PCSkeletonResult, fit_ebicglasso, fit_pc_skeleton
+from gopcnet.comparators import (
+    EBICglassoResult,
+    NonregularizedResult,
+    PCSkeletonResult,
+    fit_ebicglasso,
+    fit_nonregularized_ggm,
+    fit_pc_skeleton,
+)
 from gopcnet.defaults import (
     OutsideValidatedRangeWarning,
     ResolvedAlphas,
@@ -240,7 +247,7 @@ from gopcnet.metrics import (
     train_test_fit_indices,
 )
 from gopcnet.network_comparison import NetworkComparisonResult, network_comparison_test
-from gopcnet.pipeline import GOPCResult, fit_gopc, fit_gopc_fixed_order
+from gopcnet.pipeline import GOPCDiagnostics, GOPCResult, fit_gopc, fit_gopc_fixed_order
 from gopcnet.stability import (
     BootstrapReplicates,
     CaseDropResult,
@@ -260,6 +267,7 @@ __all__ = [
     "fit_gopc",
     "fit_gopc_fixed_order",
     "GOPCResult",
+    "GOPCDiagnostics",
     "default_dpi_alpha",
     "default_screening_alpha",
     "resolve_alphas",
@@ -269,6 +277,8 @@ __all__ = [
     "EBICglassoResult",
     "fit_pc_skeleton",
     "PCSkeletonResult",
+    "fit_nonregularized_ggm",
+    "NonregularizedResult",
     "bootstrap_edge_stability",
     "EdgeStabilityResult",
     "case_drop_bootstrap",

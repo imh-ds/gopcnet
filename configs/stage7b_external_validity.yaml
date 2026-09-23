@@ -1,0 +1,16 @@
+# Stage 7b (docs/stage7b_charter.md): external-validity benchmark. Full configuration.
+# replicates = 500 and gopc_engine = adjacency are fixed by the charter's pre-freeze
+# resolutions (D-069 for the engine; replicate-block sharding for the count).
+structures: [random_sparse, random_dense, small_world, clustered, random_with_isolates]
+ps: [10, 20, 30]
+sample_sizes: [250, 500, 1000, 2000]
+replicates: 500
+development_replicates: [0, 249]
+validation_replicates: [250, 499]
+pc_alphas: [0.001, 0.005, 0.01, 0.05]
+nonreg_alpha: 0.05
+ebicglasso_gamma: 0.5
+gopc_engine: adjacency
+anchor_sample_sizes: [1000, 1500]
+g1_subsample_replicates: 30
+master_seed: 20260830

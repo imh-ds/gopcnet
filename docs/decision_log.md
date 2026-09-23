@@ -5748,3 +5748,433 @@ Consequences:
   and, if adopted, to add them as a versioned "v2" with v1 kept
   reproducible.
 - The README, tutorial and docstring examples now show `fit_gopc(data)`.
+
+## D-069: Stage 7a — the adjacency-set GOPC engine is non-inferior to the frozen component engine on all five legacy shapes, and is the only feasible engine at p >= 20
+
+Date: 2026-09-22
+
+Stage: Stage 7a (scalable engine), charter `docs/stage7a_charter.md`
+(FROZEN before results, commit `131ec7f`, SHA-256 `f3bb87a9…4368`;
+pre-freeze resolutions recorded in the charter, with no design changes
+after the smoke run).
+
+Status: **PROCEED.** Gates G1 and G2 passed. Q1 is NON-INFERIOR for
+all five shapes, which is the charter's condition for using the
+adjacency engine in Stage 7b.
+
+Decision timing: Predeclared before results. The margin (`-.02` on
+both precision and recall, Stage 5g's tolerance), the per-shape verdict
+rule, the gates and the consequences were fixed in the charter before
+the full run.
+
+Question: Is `fit_gopc(..., engine="adjacency")`, which runs PC-stable
+on the screened graph from level 1 up to `max_conditioning_size` with
+conditioning sets from each endpoint's current neighbors, non-inferior
+to the frozen component engine on the legacy shapes? And how does each
+engine's runtime scale with `p`?
+
+Prior specification: `docs/stage7a_charter.md`:
+
+- **Part A:** the five Stage 5a DGPs (frozen samplers, strength `.5`),
+  `N in {750, 1000, 1500, 1750}`, 1,000 replicates (500 development,
+  500 validation). Both engines ran on the same draw with
+  `screening_alpha = .001`, `dpi_alpha = default_dpi_alpha(N)` and a
+  conditioning cap of 4. `pc_frozen` and `pc_core` were fitted for G1,
+  and the component engine at 1.25 x alpha for the Q2 noise floor.
+- **Part B:** `random_sparse`, `random_dense` and `clustered`
+  (`gopcnet.generators.psych_networks`), `p in {10, 20, 30}`,
+  `N = 500`, 20 replicates, default alphas. Each fit ran in a child
+  process, with a 60 s budget for the component engine.
+
+Evidence: local run (Windows, 20 CPUs, Python 3.11.9; 11.5 minutes),
+archived at `evidence/stage7_scalable_engine/stage7a_engine/`:
+
+- `raw_metrics.csv.gz`, 100,360 rows, equal to `expected_row_count`
+- `report.json`, `stage7a_report.md`, `resolved_config.yaml`,
+  `metadata.json`
+- `q1_non_inferiority.png`, `q3_runtime_vs_p.png`
+
+**Provenance disclosure:** `metadata.json` records commit `86f043d`,
+because the runner reads HEAD when it writes metadata at the *end* of a
+run. The run started at `131ec7f`. The two commits in between only
+added Stage 7b files, so the code that produced this evidence is
+`131ec7f`'s. Both runners now record the commit when a run starts.
+
+**G1: PASSED.** `pc_core` equals `pc_frozen` on 20,000 of 20,000
+rows. **G2: PASSED.** The correlation-matrix primitive equals the frozen
+residual primitive to within `5.6e-16` over 200 random checks.
+
+**Q1 — non-inferiority (validation replicates): NON-INFERIOR on all five
+shapes, 20 of 20 cells.** Recall differences are exactly `0` in every
+cell. Precision differences:
+
+| Shape | Precision difference (adjacency minus component) | Notes |
+|---|---|---|
+| `chain_fork_hub` | `-.0002` to `-.0005` | |
+| `overlap` | `-.0019` to `-.0079` | Largest at `N = 1500` and `1750`; worst CI lower bound `-.0104`, inside the `-.02` margin |
+| three triangles | exactly `0` | |
+
+The adjacency engine tests fewer sets and so keeps slightly more edges
+on `overlap`. The effect is small and within the margin.
+
+**Q2 — agreement:** the mean symmetric edge difference between engines
+is below the same-engine noise floor in 19 of 20 cells:
+
+| Shape | Engine difference | Noise floor |
+|---|---|---|
+| `chain_fork_hub` | `.002–.004` | `.06–.09` |
+| triangles | `0` | |
+| `overlap`, `N <= 1000` | `.024–.030` | `.11–.14` |
+| `overlap`, `N = 1500` | `.088` | `.110` |
+| `overlap`, `N = 1750` | `.092` | `.088` (about equal) |
+
+**Q3 — runtime at `N = 500`, 20 fits per cell (median seconds per fit
+or timeouts):**
+
+| Structure | p | Component engine | Adjacency engine |
+|---|---|---|---|
+| `random_sparse` | 10 | `.22` | `.01` |
+| `random_sparse` | 20 | 15 of 20 time out | `.38` |
+| `random_sparse` | 30 | 20 of 20 time out | `4.7` |
+| `random_dense` | 10 | `2.2` | `.09` |
+| `random_dense` | 20 | 20 of 20 time out | `3.5` |
+| `random_dense` | 30 | 20 of 20 time out | `28.3` (p90 `57.5`) |
+| `clustered` | 10 | `.13` | `.01` |
+| `clustered` | 20 | 9 of 20 time out | `.08` |
+| `clustered` | 30 | 19 of 20 time out | `.31` |
+
+Where both finished, F1 was similar, e.g. `.850` vs `.847` for
+`random_sparse` at `p = 10`. That is descriptive only, 20 fits per
+cell.
+
+Decision: **PROCEED**, per the charter's Consequences:
+
+- Stage 7b uses `engine="adjacency"` as "GOPC". The component engine
+  appears there only at `p = 10`, as a bridge.
+- **`fit_gopc`'s default engine is not changed by this entry.** A
+  default switch needs its own entry, informed by Stage 7b.
+
+Rationale: On everything the frozen engine was validated on, the
+adjacency engine gives the same recall and at most `.008` lower
+precision (on `overlap`). On psych-realistic structures at `p >= 20`,
+the frozen engine cannot complete within a minute, so it is not a
+practical option there at all. D-047's "orders of magnitude faster than
+EBICglasso" runtime claim holds only for networks whose screened graph
+breaks into small components. For the adjacency engine, the densest
+structure at `p = 30` is still expensive (about 28 s per fit), which
+Stage 7b's replicate-count rule must budget for.
+
+Consequences:
+
+- Stage 7b's `gopc_engine` is `"adjacency"`, recorded in its
+  pre-freeze resolutions.
+- `docs/validated_operating_ranges.md` gains a short Stage 7a note: the
+  adjacency engine is non-inferior on the legacy shapes, and the
+  component engine is infeasible at `p >= 20` on dense, inter-correlated
+  structures.
+- The runners record the git commit at the start of a run (a
+  provenance fix; no behavior change).
+
+## D-070: Stage 7b — GOPC's fix for EBICglasso's precision problem holds on psych-realistic networks, but non-regularized testing with FDR control matches its specificity with better sensitivity at N >= 1000 (routing outcome C); the marginal screen is where GOPC loses weak edges
+
+Date: 2026-09-23
+
+Stage: Stage 7b (external validity), charter `docs/stage7b_charter.md`
+(FROZEN before results, commit `53cfcda`, SHA-256 `447cf737…c007`).
+Pre-freeze resolutions: engine `adjacency` (D-069); `R = 500` with
+replicate-block sharding, the user's decision after the
+replicate-count rule's stop condition fired.
+
+Status: Descriptive. Gates G1–G3 PASSED. **Predeclared routing outcome:
+C ("non-regularized dominates"). Per the charter, stop and ask the
+user; the paper's thesis changes.**
+
+Decision timing: Predeclared before results. Every threshold, verdict
+rule and the A/B/C/D routing table were fixed in the charter, and
+operationalized in `stage7b_reporting.py` before the full run.
+
+Question: Outside the motif family GOPC was calibrated on, does its
+single default still fix EBICglasso's precision problem without
+excessive sensitivity loss? And how does it compare with PC and with
+non-regularized full-order testing?
+
+Prior specification: `docs/stage7b_charter.md`:
+
+- 5 structures (`random_sparse`, `random_dense`, `small_world`,
+  `clustered`, `random_with_isolates`), `p in {10, 20, 30}`,
+  `N in {250, 500, 1000, 2000}`
+- 500 replicates, 0–249 development and 250–499 validation; truth
+  paired across `N`
+- methods: GOPC (default alphas, adjacency engine), PC at
+  `{.001, .005, .01, .05}`, EBICglasso (`gamma = .5`), non-regularized
+  full-order with Holm or BH at `.05`
+- the component engine at `p = 10`, and anchor cells for G3
+
+Evidence: GitHub Actions run
+[35787621191](https://github.com/imh-ds/gopcnet/actions/runs/35787621191)
+(160 shards plus aggregate, all succeeded), archived at
+`evidence/stage7_external_validity/stage7b_benchmark/`:
+
+- `raw_metrics.csv.gz`, 252,200 rows, all `ok`, equal to
+  `expected_row_count`
+- `report.json`, `stage7b_report.md`, three figures
+- `resolved_config.yaml` and `shard_metadata_example.json`, taken from
+  one shard
+
+**Gates: all PASSED.**
+
+- **G1:** the PC core equals the frozen PC on 1,200 of 1,200 rows.
+- **G2:** 0 of 7,500 truths differ across `N`.
+- **G3:** the anchor matches the Stage 5g archive, with precision
+  `.932` vs `.933` (`z = -0.35`) at `N = 1000` and `.947` vs `.945`
+  (`z = 0.50`) at `N = 1500`, recall `1.0` in both, and seeds identical
+  on 500 of 500 rows.
+
+**Q1 — EBICglasso's weakness exists out of sample.** Its precision
+*decreases* with `N` in all 15 `(structure, p)` series, e.g.
+`random_sparse` at `p = 30` goes `.751 -> .624`. Averaged over cells,
+its specificity falls from `.957` at `N = 250` to `.890` at `N = 2000`.
+This replicates D-050/D-054's pattern on networks with no pure-noise
+columns.
+
+**Q2 — the niche claim against EBICglasso: HOLDS in 4 of 5 structures,
+PARTIAL in 1.**
+
+| Structure | Verdict | Cells supporting |
+|---|---|---|
+| `random_sparse` | HOLDS | 9/9 |
+| `small_world` | HOLDS | 8/9 |
+| `random_dense` | HOLDS | 7/9 |
+| `random_with_isolates` | HOLDS | 7/9 |
+| `clustered` | PARTIAL | 6/9 |
+
+GOPC's precision exceeds EBICglasso's in every cell (`+.05` to `+.33`).
+The cells that fail do so on the F1 guard at `N = 500`, where GOPC's F1
+trails by `.01–.03`. Averaged over cells, GOPC's specificity is
+`.987–.990` at every `N`.
+
+**Q3 — against non-regularized testing (MCC, counted over the 9 cells
+with `N >= 500` per structure):**
+
+| Comparison | Result |
+|---|---|
+| vs Holm | GOPC better in 25 of 45 cells, worse in 10. Holm's family-wise control costs too much sensitivity. |
+| vs BH | **GOPC worse in the majority of cells in 4 structures** (clustered 7/9, small world 7/9, random dense 6/9, random sparse 6/9), and in 3 of 9 with isolates |
+
+Averaged over cells:
+
+| | N = 250 | 500 | 1000 | 2000 |
+|---|---|---|---|---|
+| GOPC MCC | `.619` | `.762` | `.866` | `.923` |
+| BH MCC | `.579` | `.770` | `.898` | `.957` |
+| GOPC sensitivity | `.486` | `.686` | `.839` | `.921` |
+| BH sensitivity | `.427` | `.690` | `.884` | `.975` |
+
+Specificity is essentially equal (`~.99` for both). GOPC's advantage
+over BH is therefore confined to `N = 250`, and it is gone by
+`N = 500`.
+
+**Q4 — one default vs one PC alpha: DOES NOT REPLICATE.** The PC alpha
+selected on development data (`.05` at `N <= 1000`, `.01` at
+`N = 2000`) is comparable or better than GOPC in 12–13 of 15 validation
+cells at every `N`. GOPC is comparable or better than it in only 2–6.
+No single PC alpha matched GOPC *everywhere*, which is part of D-065's
+claim, but the charter's second condition (GOPC comparable or better in
+at least 80% of cells) fails at every `N`. Averaged over cells, `pc@.05`
+has MCC `.666/.791/.873/.915` and `pc@.01` has
+`.614/.756/.866/.929`, against GOPC's `.619/.762/.866/.923`.
+
+**Q5 — mechanism: prediction 1 NOT HELD, prediction 2 held.** This is
+the reverse of the review's concern: the marginal screen *does* most of
+GOPC's precision work on these networks. Over the four structures
+without isolates:
+
+| | N = 250 | 500 | 1000 | 2000 |
+|---|---|---|---|---|
+| True non-edges removed by the screen | 93% | 86% | 78% | 70% |
+| True non-edges removed by pruning | 6% | 12% | 20% | 29% |
+| **True edges lost at the screen** | **47%** | **27%** | **13%** | **6%** |
+| True edges lost at pruning | 3–4% | 3–4% | 3–4% | 3–4% |
+
+The screen is also where GOPC's sensitivity goes. A strict `.001`
+marginal test drops weak true edges whose marginal correlation is small.
+With isolates, the screen removes 91–98% of true non-edges. The
+review's one-replicate probe, which had 71% of pairs passing the screen,
+used a denser, more uniformly positive network than these families.
+
+**Q6 — weights: RECOMMEND REFIT.** The refit weights' MAE against the
+true partial correlations is lower in 95.6% of counted cells. The
+effect is small in absolute terms (mean MAE `.0124` vs `.0128`) but
+consistent.
+
+**Q7 — runtime (median seconds per fit, validation):** GOPC `.08`;
+PC `.08–.12`; EBICglasso `4.97`; non-regularized under `.01`. The
+densest cells are much slower for GOPC and PC (Stage 7a).
+
+Decision: **Routing outcome C, as predeclared.** Per the charter's
+consequences table: "EBICglasso's weakness is fixed by non-regularized
+testing in general. Ask the user; the paper's thesis changes." No
+Phase 2 or Phase 3 work starts before that conversation. The Q6 weight
+switch and a default-engine switch are recommendations awaiting their
+own entries. Neither is made here.
+
+Rationale:
+
+- **The positive half is strong and new.** On psych-realistic networks
+  with no pure-noise variables, GOPC's default keeps specificity near
+  `.99` at every `N` while EBICglasso's degrades with `N`, and GOPC
+  beats EBICglasso's precision in every cell. That directly extends
+  D-050 and D-054 out of sample.
+- **The negative half is equally clear.** A simpler, standard method,
+  full-order partial correlations with BH at `.05`, reaches the same
+  specificity with more sensitivity once `N >= 1000`. PC at `.05`
+  does as well or better at small `N`. D-065's framing that "one
+  default is robust where PC needs tuning" does not hold out of sample
+  at the charter's bar.
+- **The mechanism result shows where GOPC could improve.** The strict
+  marginal screen buys specificity but costs weak edges. Screening with
+  FDR control rather than a fixed `.001` (Stage 7c's candidate rules S1
+  and S2) targets exactly this, but that is a new, separately chartered
+  question. Nothing here claims it would work.
+
+Consequences:
+
+- **No code or default changes follow automatically.**
+- `docs/validated_operating_ranges.md` gains an "External validity
+  (Stage 7b)" section with these results, scoped to Gaussian data,
+  `p <= 30`, these five structure families, and `N >= 500` (with
+  `N = 250` as characterization).
+- The manuscript's central claim (local, not tracked) needs
+  restatement in whatever direction the user chooses.
+
+## D-071: Post hoc audit of Stage 7b — the benchmark is not tilted against GOPC in a way that changes D-070, and GOPC is not a more robust fixed default than PC or non-regularized BH; methodological development of GOPC stops
+
+Date: 2026-09-23
+
+Stage: Post hoc analysis of the archived Stage 7b evidence (D-070). No
+new simulation.
+
+Status: Descriptive. Closes GOPC's remaining claim. **GOPC's
+methodology is frozen as of this entry; no further estimator
+development.** What the project does next (archive with a post-mortem,
+or a benchmark and software output built on PC and non-regularized
+testing) is the user's pending choice.
+
+Decision timing: **Post hoc, after D-070's results.** Nothing here was
+predeclared, and none of it overrides D-070's predeclared verdicts. The
+analyses were chosen to test the two strongest remaining arguments for
+GOPC, not to search for a cell where it wins.
+
+Question: Two questions raised after D-070:
+
+1. Is Stage 7b's design tilted toward EBICglasso, PC and non-regularized
+   testing in a way that sets GOPC up to fail?
+2. Even if GOPC is not the best method in most cells, is its one fixed
+   default a more *robust* operating point across unseen network
+   families than an equally fixed competitor? This is the modest form of
+   D-065's claim ("strict screen, then looser pruning, gives a robust
+   single default").
+
+Evidence: `evidence/stage7_external_validity/d071_posthoc/`:
+`d071_posthoc.py` (reproducible from the archived Stage 7b raw metrics)
+and its outputs `operating_points.csv`, `fixed_setting_regret.csv` and
+`recall_by_edge_strength.csv`. Validation replicates 250–499 only; truths
+for the edge-strength analysis are regenerated from the frozen Stage 7b
+seeds.
+
+**1. Design audit.** Tilts found against GOPC, none large enough to
+change D-070:
+
+- *Asymmetric tuning in Q4.* The PC alpha was selected on development
+  replicates of the same families it was validated on, while GOPC's
+  defaults were calibrated on a different (motif) family. Conventional,
+  untuned PC settings (`.05`, `.01`) give the same picture (below), so
+  this does not drive the result.
+- *Out-of-range defaults at small N.* The pruning-alpha rule is
+  validated for `N` in `[700, 3000]` (D-068); `N = 250` and `500` are
+  extrapolations. This is a limitation of GOPC's own defaults.
+- *Weak-edge-heavy truths (70% of drawn weights in `[.08, .20]`).*
+  Checked directly: GOPC has the *highest* recall of the compared methods
+  on the weakest true edges (`|partial r| < .1`) at `N <= 1000`
+  (`.19/.34/.53` vs BH `.05/.18/.47` and PC@.05 `.16/.28/.47`). It loses
+  in the `.1–.2` band, mainly to PC@.05. The weight distribution does not
+  single out GOPC.
+
+The design is not "local-method-friendly" at GOPC's expense. All
+compared methods estimate the same partial-correlation graph from the
+same correlation matrix and `N`; GOPC is itself a local procedure (a
+marginal screen, then conditioning sets of at most 4 variables), and the
+full-order test used by non-regularized BH is the most global. The only
+step unique to GOPC, the marginal screen, pays off when many pairs are
+marginally independent; that regime was included
+(`random_with_isolates`), and it is where GOPC did best against BH
+(D-070 Q3).
+
+**2. Operating points.** Means over all validation cells:
+
+| Method | Sensitivity | Specificity | Precision | MCC |
+|---|---|---|---|---|
+| GOPC | `.733` | `.989` | `.957` | `.793` |
+| non-regularized BH | `.744` | `.991` | `.961` | `.801` |
+| PC@.01 | `.712` | `.997` | `.979` | `.791` |
+| PC@.05 | `.791` | `.985` | `.920` | `.811` |
+
+GOPC lies on (slightly inside) the segment between PC@.01 and PC@.05: it
+behaves like PC at an intermediate alpha, not like a distinct
+trade-off. No precision-weighted metric rescues it, since PC@.01 has
+higher precision at every `N` with nearly equal sensitivity.
+
+**3. Fixed-setting robustness.** For each `(structure, p, N)` cell,
+"regret" is a method's MCC shortfall from the best of the six compared
+fixed settings in that cell:
+
+| Fixed setting | Mean regret, N >= 500 | Worst regret, N >= 500 | Lowest cell precision | Best in cell (of 45) | Mean regret, all N |
+|---|---|---|---|---|---|
+| non-regularized BH | **`.010`** | **`.083`** | **`.952`** | 25 | `.029` |
+| PC@.05 | `.025` | `.094` | `.792` | 9 | **`.019`** |
+| GOPC | `.034` | `.109` | `.885` | 2 | `.038` |
+| PC@.01 | `.034` | `.129` | `.931` | 3 | `.039` |
+| non-regularized Holm | `.078` | `.262` | `.990` | 6 | `.108` |
+| EBICglasso | `.099` | `.247` | `.624` | 0 | `.090` |
+
+GOPC's fixed default does not swing less than a fixed competitor. At
+`N >= 500`, non-regularized BH at `.05` has the lowest mean and
+worst-case regret and the highest lowest-precision. Including `N = 250`,
+PC@.05 has the lowest mean regret. The robust-single-default claim fails
+on these families.
+
+Decision: **Stop methodological development of GOPC.** D-070's outcome
+C stands; neither a design tilt nor a robustness framing recovers a
+distinct advantage on Gaussian data with `p <= 30` and `N >= 250`.
+Stage 7c (default rules, including the FDR screen), Stage 7d and
+Phases 2–3 of `docs/development_plan/` are not started. The FDR-screen
+idea in particular is withdrawn: at best it would make GOPC tie
+non-regularized BH, a simpler established method.
+
+Rationale:
+
+- *Prior art.* Marginal screening followed by partial-correlation tests
+  of growing order is the structure of PC-simple (Bühlmann, Kalisch and
+  Maathuis, 2010) and closely related to LOPC. Non-regularized
+  partial-correlation networks with multiplicity control are an
+  established alternative to EBICglasso in network psychometrics. With
+  D-065 (matched-alpha GOPC ≈ PC) and this entry, GOPC reduces to known
+  PC-family behavior.
+- *Stopping rule.* Further estimator changes made after seeing these
+  results would be tuning to the benchmark, which this project's charter
+  discipline forbids.
+
+Consequences:
+
+- **No code or default changes.** The Q6 refit-weight and default-engine
+  recommendations from D-069/D-070 are not adopted, since the estimator
+  is frozen.
+- **Untested regime, recorded as a limitation:** `p` close to `N` (for
+  example `p = 40–80`, `N = 100–300`), where full-order tests lose power.
+  It could matter for a benchmark or software output (whether to
+  recommend PC or non-regularized BH there), not for rescuing GOPC.
+- **Still useful from this project** for a post-mortem or benchmark
+  paper: EBICglasso's precision falls with `N` out of sample (D-070 Q1);
+  non-regularized BH is the most robust fixed default here; PC's results
+  depend on its alpha; the marginal screen's gains and losses (D-070 Q5);
+  and matched-alpha GOPC ≈ PC (D-065).

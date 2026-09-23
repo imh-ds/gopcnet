@@ -1,0 +1,45 @@
+component_budget_seconds: 60.0
+development_replicates:
+- 0
+- 499
+master_seed: 20260830
+max_conditioning_size: 4
+noise_floor_multiplier: 1.25
+part_a_dgps:
+- chain_fork_hub
+- overlap
+- triangle_balanced
+- triangle_moderate
+- triangle_strong
+part_a_methods:
+- gopc_component
+- gopc_adjacency
+- pc_frozen
+- pc_core
+- gopc_component_floor
+part_a_replicates: 1000
+part_a_sample_sizes:
+- 750
+- 1000
+- 1500
+- 1750
+part_a_screening_alpha: 0.001
+part_a_strength: 0.5
+part_b_methods:
+- gopc_component
+- gopc_adjacency
+part_b_n: 500
+part_b_ps:
+- 10
+- 20
+- 30
+part_b_replicates: 20
+part_b_structures:
+- random_sparse
+- random_dense
+- clustered
+pc_alpha: 0.01
+stage_tag: 701
+validation_replicates:
+- 500
+- 999

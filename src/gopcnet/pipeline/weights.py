@@ -33,11 +33,13 @@ so `weights` and `adjacency` always agree on which edges exist.
 
 from __future__ import annotations
 
+import warnings
 from itertools import combinations
 
 import numpy as np
 
 from gopcnet.dpi.multi_conditional import compute_partial_correlation_evidence
+from gopcnet.metrics.fit import _fit_constrained_precision
 from gopcnet.pipeline.compose import connected_components
 from gopcnet.screening import compute_pairwise_screening_evidence
 
@@ -127,3 +129,55 @@ def compute_growing_order_weights(
     weights = np.where(mask, weights, 0.0)
     np.fill_diagonal(weights, 0.0)
     return weights
+
+
+def refit_weights_from_correlation(
+    corr: np.ndarray, adjacency: np.ndarray, *, max_iter: int = 100, tol: float = 1e-6
+) -> np.ndarray:
+    """Partial correlations from the constrained maximum-likelihood GGM
+    on `adjacency`'s support: `-K_ij / sqrt(K_ii K_jj)` for the fitted
+    precision `K`, zero off the support.
+
+    This is the quantity psychology readers usually take an edge weight
+    to mean: the partial correlation controlling for *all* other
+    variables, given the selected structure. The default D-055 weights
+    are instead the smallest-magnitude low-order partial correlation
+    among the tested sets.
+
+    The fit is the same covariance-selection algorithm as
+    `gopcnet.metrics.fit.fit_gaussian_graphical_model` (iterative
+    proportional scaling). Partial correlations are scale-invariant, so
+    a correlation matrix gives the same result as a covariance matrix.
+    Warns if the fit does not converge within `max_iter`.
+    """
+    matrix = np.asarray(corr, dtype=float)
+    support = np.asarray(adjacency, dtype=bool)
+    p = matrix.shape[0]
+    if matrix.shape != (p, p) or support.shape != (p, p):
+        raise ValueError("corr and adjacency must be matching square matrices")
+    if not np.array_equal(support, support.T) or np.diag(support).any():
+        raise ValueError("adjacency must be symmetric with a False diagonal")
+    precision, _, converged, _ = _fit_constrained_precision(matrix, support, max_iter=max_iter, tol=tol)
+    if not converged:
+        warnings.warn(
+            f"constrained GGM fit did not converge within {max_iter} iterations; refit weights are approximate",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+    scale = np.sqrt(np.diag(precision))
+    partial = -precision / np.outer(scale, scale)
+    partial = (partial + partial.T) / 2.0
+    weights = np.where(support, partial, 0.0)
+    np.fill_diagonal(weights, 0.0)
+    return weights
+
+
+def refit_weights(data: np.ndarray, adjacency: np.ndarray, *, max_iter: int = 100, tol: float = 1e-6) -> np.ndarray:
+    """`refit_weights_from_correlation` on the data's Pearson correlation
+    matrix. Requires more rows than columns."""
+    values = np.asarray(data, dtype=float)
+    if values.ndim != 2:
+        raise ValueError("data must be a two-dimensional array")
+    if values.shape[0] <= values.shape[1]:
+        raise ValueError("data must have more rows than columns for the constrained MLE")
+    return refit_weights_from_correlation(np.corrcoef(values, rowvar=False), adjacency, max_iter=max_iter, tol=tol)
