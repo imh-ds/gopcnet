@@ -1,0 +1,75 @@
+anchor: legacy_chain_fork_hub
+anchor_method: gopc_component_anchor
+anchor_sample_sizes:
+- 1000
+- 1500
+default_alphas:
+  p=10,N=1000:
+    dpi: 0.13131301828020525
+    screening: 0.001
+  p=10,N=2000:
+    dpi: 0.09208722369834943
+    screening: 0.001
+  p=10,N=250:
+    dpi: 0.209764607443917
+    screening: 0.001
+  p=10,N=500:
+    dpi: 0.17053881286206113
+    screening: 0.001
+  p=20,N=1000:
+    dpi: 0.13131301828020525
+    screening: 0.0003845585757936913
+  p=20,N=2000:
+    dpi: 0.09208722369834943
+    screening: 0.0003845585757936913
+  p=20,N=250:
+    dpi: 0.209764607443917
+    screening: 0.0003845585757936913
+  p=20,N=500:
+    dpi: 0.17053881286206113
+    screening: 0.0003845585757936913
+  p=30,N=1000:
+    dpi: 0.13131301828020525
+    screening: 0.0001
+  p=30,N=2000:
+    dpi: 0.09208722369834943
+    screening: 0.0001
+  p=30,N=250:
+    dpi: 0.209764607443917
+    screening: 0.0001
+  p=30,N=500:
+    dpi: 0.17053881286206113
+    screening: 0.0001
+development_replicates:
+- 0
+- 249
+ebicglasso_gamma: 0.5
+g1_subsample_replicates: 30
+gopc_engine: adjacency
+master_seed: 20260830
+nonreg_alpha: 0.05
+pc_alphas:
+- 0.001
+- 0.005
+- 0.01
+- 0.05
+ps:
+- 10
+- 20
+- 30
+replicates: 500
+sample_sizes:
+- 250
+- 500
+- 1000
+- 2000
+stage_tag: 702
+structures:
+- random_sparse
+- random_dense
+- small_world
+- clustered
+- random_with_isolates
+validation_replicates:
+- 250
+- 499

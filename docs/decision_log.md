@@ -5874,3 +5874,175 @@ Consequences:
   structures.
 - The runners record the git commit at the start of a run (a
   provenance fix; no behavior change).
+
+## D-070: Stage 7b — GOPC's fix for EBICglasso's precision problem holds on psych-realistic networks, but non-regularized testing with FDR control matches its specificity with better sensitivity at N >= 1000 (routing outcome C); the marginal screen is where GOPC loses weak edges
+
+Date: 2026-09-23
+
+Stage: Stage 7b (external validity), charter `docs/stage7b_charter.md`
+(FROZEN before results, commit `53cfcda`, SHA-256 `447cf737…c007`).
+Pre-freeze resolutions: engine `adjacency` (D-069); `R = 500` with
+replicate-block sharding, the user's decision after the
+replicate-count rule's stop condition fired.
+
+Status: Descriptive. Gates G1–G3 PASSED. **Predeclared routing outcome:
+C ("non-regularized dominates"). Per the charter, stop and ask the
+user; the paper's thesis changes.**
+
+Decision timing: Predeclared before results. Every threshold, verdict
+rule and the A/B/C/D routing table were fixed in the charter, and
+operationalized in `stage7b_reporting.py` before the full run.
+
+Question: Outside the motif family GOPC was calibrated on, does its
+single default still fix EBICglasso's precision problem without
+excessive sensitivity loss? And how does it compare with PC and with
+non-regularized full-order testing?
+
+Prior specification: `docs/stage7b_charter.md`:
+
+- 5 structures (`random_sparse`, `random_dense`, `small_world`,
+  `clustered`, `random_with_isolates`), `p in {10, 20, 30}`,
+  `N in {250, 500, 1000, 2000}`
+- 500 replicates, 0–249 development and 250–499 validation; truth
+  paired across `N`
+- methods: GOPC (default alphas, adjacency engine), PC at
+  `{.001, .005, .01, .05}`, EBICglasso (`gamma = .5`), non-regularized
+  full-order with Holm or BH at `.05`
+- the component engine at `p = 10`, and anchor cells for G3
+
+Evidence: GitHub Actions run
+[35787621191](https://github.com/imh-ds/gopcnet/actions/runs/35787621191)
+(160 shards plus aggregate, all succeeded), archived at
+`evidence/stage7_external_validity/stage7b_benchmark/`:
+
+- `raw_metrics.csv.gz`, 252,200 rows, all `ok`, equal to
+  `expected_row_count`
+- `report.json`, `stage7b_report.md`, three figures
+- `resolved_config.yaml` and `shard_metadata_example.json`, taken from
+  one shard
+
+**Gates: all PASSED.**
+
+- **G1:** the PC core equals the frozen PC on 1,200 of 1,200 rows.
+- **G2:** 0 of 7,500 truths differ across `N`.
+- **G3:** the anchor matches the Stage 5g archive, with precision
+  `.932` vs `.933` (`z = -0.35`) at `N = 1000` and `.947` vs `.945`
+  (`z = 0.50`) at `N = 1500`, recall `1.0` in both, and seeds identical
+  on 500 of 500 rows.
+
+**Q1 — EBICglasso's weakness exists out of sample.** Its precision
+*decreases* with `N` in all 15 `(structure, p)` series, e.g.
+`random_sparse` at `p = 30` goes `.751 -> .624`. Averaged over cells,
+its specificity falls from `.957` at `N = 250` to `.890` at `N = 2000`.
+This replicates D-050/D-054's pattern on networks with no pure-noise
+columns.
+
+**Q2 — the niche claim against EBICglasso: HOLDS in 4 of 5 structures,
+PARTIAL in 1.**
+
+| Structure | Verdict | Cells supporting |
+|---|---|---|
+| `random_sparse` | HOLDS | 9/9 |
+| `small_world` | HOLDS | 8/9 |
+| `random_dense` | HOLDS | 7/9 |
+| `random_with_isolates` | HOLDS | 7/9 |
+| `clustered` | PARTIAL | 6/9 |
+
+GOPC's precision exceeds EBICglasso's in every cell (`+.05` to `+.33`).
+The cells that fail do so on the F1 guard at `N = 500`, where GOPC's F1
+trails by `.01–.03`. Averaged over cells, GOPC's specificity is
+`.987–.990` at every `N`.
+
+**Q3 — against non-regularized testing (MCC, counted over the 9 cells
+with `N >= 500` per structure):**
+
+| Comparison | Result |
+|---|---|
+| vs Holm | GOPC better in 25 of 45 cells, worse in 10. Holm's family-wise control costs too much sensitivity. |
+| vs BH | **GOPC worse in the majority of cells in 4 structures** (clustered 7/9, small world 7/9, random dense 6/9, random sparse 6/9), and in 3 of 9 with isolates |
+
+Averaged over cells:
+
+| | N = 250 | 500 | 1000 | 2000 |
+|---|---|---|---|---|
+| GOPC MCC | `.619` | `.762` | `.866` | `.923` |
+| BH MCC | `.579` | `.770` | `.898` | `.957` |
+| GOPC sensitivity | `.486` | `.686` | `.839` | `.921` |
+| BH sensitivity | `.427` | `.690` | `.884` | `.975` |
+
+Specificity is essentially equal (`~.99` for both). GOPC's advantage
+over BH is therefore confined to `N = 250`, and it is gone by
+`N = 500`.
+
+**Q4 — one default vs one PC alpha: DOES NOT REPLICATE.** The PC alpha
+selected on development data (`.05` at `N <= 1000`, `.01` at
+`N = 2000`) is comparable or better than GOPC in 12–13 of 15 validation
+cells at every `N`. GOPC is comparable or better than it in only 2–6.
+No single PC alpha matched GOPC *everywhere*, which is part of D-065's
+claim, but the charter's second condition (GOPC comparable or better in
+at least 80% of cells) fails at every `N`. Averaged over cells, `pc@.05`
+has MCC `.666/.791/.873/.915` and `pc@.01` has
+`.614/.756/.866/.929`, against GOPC's `.619/.762/.866/.923`.
+
+**Q5 — mechanism: prediction 1 NOT HELD, prediction 2 held.** This is
+the reverse of the review's concern: the marginal screen *does* most of
+GOPC's precision work on these networks. Over the four structures
+without isolates:
+
+| | N = 250 | 500 | 1000 | 2000 |
+|---|---|---|---|---|
+| True non-edges removed by the screen | 93% | 86% | 78% | 70% |
+| True non-edges removed by pruning | 6% | 12% | 20% | 29% |
+| **True edges lost at the screen** | **47%** | **27%** | **13%** | **6%** |
+| True edges lost at pruning | 3–4% | 3–4% | 3–4% | 3–4% |
+
+The screen is also where GOPC's sensitivity goes. A strict `.001`
+marginal test drops weak true edges whose marginal correlation is small.
+With isolates, the screen removes 91–98% of true non-edges. The
+review's one-replicate probe, which had 71% of pairs passing the screen,
+used a denser, more uniformly positive network than these families.
+
+**Q6 — weights: RECOMMEND REFIT.** The refit weights' MAE against the
+true partial correlations is lower in 95.6% of counted cells. The
+effect is small in absolute terms (mean MAE `.0124` vs `.0128`) but
+consistent.
+
+**Q7 — runtime (median seconds per fit, validation):** GOPC `.08`;
+PC `.08–.12`; EBICglasso `4.97`; non-regularized under `.01`. The
+densest cells are much slower for GOPC and PC (Stage 7a).
+
+Decision: **Routing outcome C, as predeclared.** Per the charter's
+consequences table: "EBICglasso's weakness is fixed by non-regularized
+testing in general. Ask the user; the paper's thesis changes." No
+Phase 2 or Phase 3 work starts before that conversation. The Q6 weight
+switch and a default-engine switch are recommendations awaiting their
+own entries. Neither is made here.
+
+Rationale:
+
+- **The positive half is strong and new.** On psych-realistic networks
+  with no pure-noise variables, GOPC's default keeps specificity near
+  `.99` at every `N` while EBICglasso's degrades with `N`, and GOPC
+  beats EBICglasso's precision in every cell. That directly extends
+  D-050 and D-054 out of sample.
+- **The negative half is equally clear.** A simpler, standard method,
+  full-order partial correlations with BH at `.05`, reaches the same
+  specificity with more sensitivity once `N >= 1000`. PC at `.05`
+  does as well or better at small `N`. D-065's framing that "one
+  default is robust where PC needs tuning" does not hold out of sample
+  at the charter's bar.
+- **The mechanism result shows where GOPC could improve.** The strict
+  marginal screen buys specificity but costs weak edges. Screening with
+  FDR control rather than a fixed `.001` (Stage 7c's candidate rules S1
+  and S2) targets exactly this, but that is a new, separately chartered
+  question. Nothing here claims it would work.
+
+Consequences:
+
+- **No code or default changes follow automatically.**
+- `docs/validated_operating_ranges.md` gains an "External validity
+  (Stage 7b)" section with these results, scoped to Gaussian data,
+  `p <= 30`, these five structure families, and `N >= 500` (with
+  `N = 250` as characterization).
+- The manuscript's central claim (local, not tracked) needs
+  restatement in whatever direction the user chooses.
